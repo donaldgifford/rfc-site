@@ -1,0 +1,17 @@
+# mise — tool version + task management for @donaldgifford/design-system.
+#
+# Install:  https://mise.jdx.dev/getting-started.html
+# Activate: `mise install` (one-time per checkout) — or `mise trust` first
+#           if mise warns about an untrusted config.
+#
+# Versions here are the source of truth for local development. CI pins the
+# same versions in `.github/workflows/{ci,release}.yml`; if you bump a
+# version here, bump it there too (and vice versa).
+
+[tools]
+# Matches `node-version: "22"` in CI.
+node = "22"
+# Matches `packageManager: "pnpm@10.33.2"` in package.json. Corepack also
+# resolves this from package.json — having it here means `pnpm` is on PATH
+# without needing `corepack enable` first.
+pnpm = "10.33.2"

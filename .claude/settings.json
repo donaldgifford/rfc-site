@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "ralph-loop@claude-plugins-official": true,
+    "claude-md@donaldgifford-claude-skills": true,
+    "shell-scripting@donaldgifford-claude-skills": true,
+    "typescript@donaldgifford-claude-skills": true,
+    "docz@donaldgifford-claude-skills": true
+  }
+}
