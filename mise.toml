@@ -15,3 +15,18 @@ node = "22"
 # resolves this from package.json — having it here means `pnpm` is on PATH
 # without needing `corepack enable` first.
 pnpm = "10.33.2"
+
+# Repo utilities
+# Formatters and linters
+markdownlint-cli2 = "0.18.1"
+yamlfmt = "0.20.0"
+yamllint = "1.37.1"
+prettier = "3.7.4"
+"github:donaldgifford/makefmt" = "latest"
+checkmake = "latest"
+git-cliff = "latest"
+
+# tools
+yq = "4.48.1"
+jq = "latest"
+"github:donaldgifford/docz" = "latest"
