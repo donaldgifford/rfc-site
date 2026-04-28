@@ -93,15 +93,15 @@ Reconcile `mise.toml` with the build guide's runtime commitment and stand up a T
 
 - [x] Add `bun = "latest"` to `mise.toml`; remove `pnpm = "10.33.2"`. Decide whether to keep `node = "22"` for tool compat (see Open Questions). *(node kept; bun 1.3.11 resolved by `latest`.)*
 - [x] `mise install`; verify `bun --version`, `mise current`. *(bun 1.3.11, node 22.22.2.)*
-- [ ] Initialize `package.json`: `bun init -y`, then trim to `{ name, version, type: "module", scripts, devDependencies }`. Set `"type": "module"`.
-- [ ] Add `tsconfig.json` mirroring [`donaldgifford/design-system`](https://github.com/donaldgifford/design-system/blob/main/tsconfig.json): `strict: true`, `target: ES2022`, `moduleResolution: bundler`, `jsx: react-jsx`, `lib: ["ES2022", "DOM", "DOM.Iterable"]`, plus paths/aliases as needed.
+- [x] Initialize `package.json`: `bun init -y`, then trim to `{ name, version, type: "module", scripts, devDependencies }`. Set `"type": "module"`. *(Hand-written instead of `bun init` to avoid scaffolded `index.ts`/`tsconfig.json` cleanup; scripts stubbed for not-yet-wired tools — populated as later Phase 1 tasks land.)*
+- [x] Add `tsconfig.json` mirroring [`donaldgifford/design-system`](https://github.com/donaldgifford/design-system/blob/main/tsconfig.json): `strict: true`, `target: ES2022`, `moduleResolution: bundler`, `jsx: react-jsx`, `lib: ["ES2022", "DOM", "DOM.Iterable"]`, plus paths/aliases as needed. *(Mirrored verbatim plus all extra strictness flags: `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals/Parameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `isolatedModules`. TypeScript pinned to ^5.7.2 to match design-system; resolves to 5.9.3.)*
 - [ ] Add ESLint v9 flat config (`eslint.config.js`) mirroring the design-system repo's ruleset (typescript-eslint, react, react-hooks, jsx-a11y).
 - [ ] Add `.prettierrc.json` with `{ printWidth: 100, semi: true, singleQuote: false, trailingComma: "all" }`.
 - [ ] Add `.prettierignore` (at minimum: `dist`, `coverage`, `node_modules`, `**/__generated__`).
 - [ ] Add `vitest.config.ts` with jsdom environment + `@testing-library/react` setup.
 - [ ] Add a single trivial smoke test (`tests/smoke.test.ts`: `expect(1).toBe(1)`) so vitest has something to find. (Will be removed once real tests exist.)
 - [ ] Add `package.json` scripts: `dev`, `build`, `start`, `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `test`, `test:watch`. Some will be no-ops or stubs until later phases fill them in.
-- [ ] Update `.gitignore` for `dist/`, `coverage/`, `*.tsbuildinfo` (already covered) and `src/portal/api/__generated__/` (Phase 3 prep).
+- [x] Update `.gitignore` for `dist/`, `coverage/`, `*.tsbuildinfo` (already covered) and `src/portal/api/__generated__/` (Phase 3 prep). *(Generated dir added; `bun.lock` deliberately NOT ignored — lockfiles are committed for reproducible installs.)*
 - [ ] Commit: "phase 1: tooling baseline".
 
 #### Success Criteria

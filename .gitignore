@@ -26,3 +26,7 @@ Thumbs.db
 
 # mise per-user overrides (mise.toml is committed; mise.local.toml is not)
 mise.local.toml
+
+# Generated TS client from api/openapi.yaml (orval output).
+# Per ADR-0001: drift = CI failure; output is never committed.
+src/portal/api/__generated__/

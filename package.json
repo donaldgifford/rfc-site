@@ -1,0 +1,23 @@
+{
+  "name": "rfc-site",
+  "version": "0.0.0",
+  "description": "SSR web frontend for the rfc-api Markdown portal. See docs/design/0001-portal-architecture-and-ds-candidates-promotion-model.md.",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'dev: stubbed until Phase 2 (RR7 + Vite)' && exit 0",
+    "build": "echo 'build: stubbed until Phase 2' && exit 0",
+    "start": "echo 'start: stubbed until Phase 2' && exit 0",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: stubbed until eslint config lands' && exit 0",
+    "lint:fix": "echo 'lint:fix: stubbed until eslint config lands' && exit 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
