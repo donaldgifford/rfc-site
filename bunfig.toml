@@ -1,0 +1,15 @@
+# Bun configuration. Mirrors the npm registry scoping so
+# `bun add @donaldgifford/<package>` resolves against GitHub Packages
+# rather than the public npm registry.
+#
+# Required environment variable: NPM_TOKEN (a GitHub PAT with the
+# `read:packages` scope, or `${{ secrets.GITHUB_TOKEN }}` in CI when
+# running under the same `donaldgifford` GitHub owner — that token
+# already grants `read:packages`).
+#
+# This file is the resolved choice from DESIGN-0001 §Resolved during
+# initial review (`bunfig.toml` over `.npmrc`); do NOT also commit
+# `.npmrc` — the build guide is explicit on the one-or-the-other rule.
+
+[install.scopes]
+"@donaldgifford" = { token = "$NPM_TOKEN", url = "https://npm.pkg.github.com/" }
