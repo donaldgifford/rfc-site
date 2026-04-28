@@ -1,0 +1,12 @@
+dist
+build
+node_modules
+coverage
+bun.lock
+*.md
+
+# Generated TS client from api/openapi.yaml — never hand-edit, never format.
+src/portal/api/__generated__
+
+# Vendored OpenAPI spec — sourced from rfc-api; format upstream.
+api/openapi.yaml
