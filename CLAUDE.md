@@ -25,7 +25,7 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- First promotion to `@donaldgifford/design-system` — Phase 6.
+- First promotion to `@donaldgifford/design-system` — Phase 6 is **blocked on [INV-0001](docs/investigation/0001-ship-css-modules-from-design-system-tsup-build.md)**. The local cherry-pick exists on `donaldgifford/design-system@feat/promote-badge` (uncommitted) but the design-system tsup build doesn't actually compile CSS Modules — it ships an empty `Badge_default = {}` and the primitive renders without base styles. INV-0001 lays out three recommendations (Vite library mode, postcss-modules prelude, drop CSS Modules); the rfc-site half (`bun update`, swap imports, delete ds-candidate) is mechanical once a `0.x.0` ships with the primitive working.
 
 ## Canonical specs (read these first)
 

@@ -257,26 +257,32 @@ Extract one primitive from the Phase 4 pages into `ds-candidates/`, shaped per D
 
 Promote the Phase 5 candidate into `@donaldgifford/design-system`. This phase spans two repos.
 
+> **Blocked on [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md)** — the local cherry-pick onto `donaldgifford/design-system@feat/promote-badge` exposed a build-pipeline gap: tsup does not actually compile CSS Modules, so `dist/index.js` ships an empty `Badge_default = {}` and the primitive renders without its base styles. The tasks below are blocked on the user picking one of the three INV-0001 recommendations (Vite library mode, postcss-modules prelude, or drop CSS Modules for primitives). The local prep below is recorded so the work can resume immediately once the bundler decision is made.
+
 #### Tasks (in `donaldgifford/design-system`)
 
-- [ ] Branch off `main`: `git switch -c feat/promote-<component>`.
-- [ ] `cp -r` the candidate folder from this repo into `src/primitives/<Component>/` (excluding the `.test.tsx`).
-- [ ] `git mv` (or copy + delete) the test file from this repo's `ds-candidates/<Component>/<Component>.test.tsx` into `tests/primitives/<Component>.test.tsx`. Adjust the import path inside the test if needed.
-- [ ] Update `src/index.ts` to re-export the primitive and its prop types.
-- [ ] Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` — all green.
-- [ ] Add a changeset (`pnpm changeset` → minor for new primitive, with a one-line description).
-- [ ] Open PR; merge.
+- [x] Branch off `main`: `git switch -c feat/promote-badge`.
+- [x] `cp -r` the candidate folder from this repo into `src/primitives/Badge/` (excluding the `.test.tsx`). **WIP, uncommitted on the branch.**
+- [x] `git mv` (or copy + delete) the test file from this repo's `ds-candidates/Badge/Badge.test.tsx` into `tests/primitives/Badge.test.tsx`. Adjust the import path inside the test (re-targeted to `../../src/primitives/Badge/Badge`).
+- [x] Update `src/index.ts` to re-export the primitive and its prop types (`Badge`, `BadgeProps`, `BadgeStatus`, `BadgeSize`, `BADGE_STATUSES`).
+- [x] Add `clsx` as a runtime dep (the primitive needs it to merge `className`).
+- [x] Add `src/types/css-modules.d.ts` ambient declaration so `tsc --noEmit` types the `*.module.css` import (rfc-site gets this for free via `vite/client`).
+- [ ] Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` — all green. **Blocked on INV-0001:** `pnpm build` succeeds but the JS class-map is empty; `pnpm typecheck` (and tests) need `tests/setup.ts` to register jest-dom matchers (small follow-up — design-system doesn't have RTL setup yet).
+- [ ] Add a changeset (`pnpm changeset` → minor for new primitive, with a one-line description). **Pending unblock.**
+- [ ] Open PR; merge. **Pending unblock + user authorization** (cross-repo PR is a shared-system action).
 - [ ] Wait for the release workflow's "Version Packages" PR; merge that too.
 - [ ] Confirm `@donaldgifford/design-system@0.x.0` is published to GitHub Packages.
 
 #### Tasks (in this repo, `rfc-site`)
 
+All blocked on the design-system half (which is blocked on INV-0001). Listed here so the swap is mechanical once `@donaldgifford/design-system@0.x.0` ships.
+
 - [ ] `bun update @donaldgifford/design-system` to the new published version.
-- [ ] Replace the imports of `<Component>` from `src/components/ds-candidates/<Component>` with imports from `@donaldgifford/design-system`.
-- [ ] Delete `src/components/ds-candidates/<Component>/` (component, css, index, test).
+- [ ] Replace the imports of `<Badge>` from `src/components/ds-candidates/Badge` with imports from `@donaldgifford/design-system`.
+- [ ] Delete `src/components/ds-candidates/Badge/` (component, css, index, test).
 - [ ] Run `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build` — all green.
 - [ ] Visual verification in dev: pages render identically before/after the swap.
-- [ ] Commit: "phase 6: promote `<Component>` to design-system".
+- [ ] Commit: "phase 6: promote `<Badge>` to design-system".
 
 #### Success Criteria
 
