@@ -228,18 +228,18 @@ Extract one primitive from the Phase 4 pages into `ds-candidates/`, shaped per D
 
 #### Tasks
 
-- [ ] First candidate is **`<Badge>`** for `Document.status` pills (used in both the directory cards and the RFC-page header per the mockup; see Open Questions §Phase 5). Props shape: `status: "Draft" | "Proposed" | "Accepted" | "Rejected" | "Superseded" | "Abandoned"` (string union from `api/openapi.yaml` `DocumentType.statuses`), plus the standard `forwardRef` + native `<span>` prop pass-through.
-- [ ] Implement under `src/components/ds-candidates/<Component>/` per the contract:
-  - `<Component>.tsx` with `forwardRef`, named export, native DOM prop pass-through, string-union variant/size/status props.
-  - `<Component>.module.css` co-located, references `var(--*)` design-system tokens only — never hard-coded colors / spacings.
-  - `index.ts` re-exporting the named component and its prop types.
-  - `<Component>.test.tsx` colocated (per [DESIGN-0001 §Resolved](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#resolved-during-initial-review)). Cover render, ref forwarding, className merge, prop pass-through.
-- [ ] Replace the inline / portal-styled usages from Phase 4 with the new candidate. Confirm ≥2 use sites.
-- [ ] Confirm the candidate imports nothing from `portal/`, `pages/`, `routes/`, or app state — and no API client / TanStack Query / orval imports.
-- [ ] Validate visually: pages render identically before and after the swap (or strictly better — no regressions).
-- [ ] Run lint, typecheck, test, build — all green.
-- [ ] Document the readiness state of the candidate (used in 2+ places ✓; API stable ✓; no portal deps ✓) in a comment block at the top of `<Component>.tsx` or in `index.ts`.
-- [ ] Commit: "phase 5: first ds-candidate (`<Component>`)".
+- [x] First candidate is **`<Badge>`** for `Document.status` pills (used in both the directory cards and the RFC-page header per the mockup; see Open Questions §Phase 5). Props shape: `status: BadgeStatus | (string & {})` (open string union — the closed enum is exported as `BADGE_STATUSES`, but consumers can pass any string from rfc-api and the component normalises it for the CSS variant lookup). Plus a `size: "sm" | "md"` prop (default `"sm"` for directory density, `"md"` for hero placement) and the standard `forwardRef` + native `<span>` prop pass-through.
+- [x] Implement under `src/components/ds-candidates/Badge/` per the contract:
+  - `Badge.tsx` with `forwardRef`, named export, native DOM prop pass-through, string-union variant/size/status props.
+  - `Badge.module.css` co-located, references `var(--*)` design-system tokens only — grep-validated, no hardcoded colors / spacings.
+  - `index.ts` re-exporting the named component and its prop types (`Badge`, `BadgeProps`, `BadgeStatus`, `BadgeSize`, `BADGE_STATUSES`).
+  - `Badge.test.tsx` colocated (per [DESIGN-0001 §Resolved](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#resolved-during-initial-review)). 9 tests cover: default rendering, custom children, status normalisation (case + whitespace), size variants, ref forwarding, className merge (clsx), native prop pass-through, and `BADGE_STATUSES` shape.
+- [x] Replace the inline / portal-styled usages from Phase 4 with the new candidate. Confirm ≥2 use sites — `<DocCard>` (directory card head row) and `src/routes/$type.$id.tsx` (doc-page header, `size="md"`). The Phase 4 inline `<StatusPill>` is deleted as superseded.
+- [x] Confirm the candidate imports nothing from `portal/`, `pages/`, `routes/`, or app state — and no API client / TanStack Query / orval imports. Grep-validated; only `clsx` and the colocated CSS module are imported.
+- [x] Validate visually: pages render identically before and after the swap (or strictly better — no regressions). Build pipeline produces a working SSR HTML; manual browser smoke is gated on rfc-api running. CSS contract is identical (same tokens, same data-status mapping).
+- [x] Run lint, typecheck, test, build — all green. `just check` + `just build` pass; 20 tests (Badge adds 9).
+- [x] Document the readiness state of the candidate (used in 2+ places ✓; API stable ✓; no portal deps ✓) in a comment block at the top of `<Component>.tsx` or in `index.ts`. Block lives at the top of `Badge.tsx`.
+- [x] Commit: "phase 5: first ds-candidate (`<Badge>`)".
 
 #### Success Criteria
 

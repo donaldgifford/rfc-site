@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-Phases 1 + 2 + 3 + 4 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else.
+Phases 1 + 2 + 3 + 4 + 5 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. The first ds-candidate, `<Badge>`, is in `src/components/ds-candidates/Badge/` and used in 2+ places — ready for Phase 6 promotion to `@donaldgifford/design-system`.
 
 What's wired:
 
@@ -12,7 +12,8 @@ What's wired:
 - `src/root.tsx`: Layout (sets `<html data-theme="dark">`) + App (wraps `<Outlet />` in `<QueryClientProvider>` with `useState(createQueryClient)` for SSR isolation).
 - Routes: `src/routes/_index.tsx` (directory card grid + Link-header pagination via `?cursor=`); `src/routes/$type.$id.tsx` (doc page with title h1, `<StatusPill>`, dateline, authors, `<pre>` body). Both wire `RouteErrorBoundary` as their `ErrorBoundary` export.
 - Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
-- Portal components: `<ThemeToggle>` (Phase 2), `<StatusPill>` (Phase 4 inline; promotes to `<Badge>` ds-candidate in Phase 5), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4).
+- Portal components: `<ThemeToggle>` (Phase 2), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4). `<StatusPill>` was inline in Phase 4 and superseded by the Phase 5 `<Badge>` candidate (deleted from portal/).
+- ds-candidates: `<Badge>` (Phase 5) — `forwardRef`, `status: BadgeStatus | (string & {})`, `size: "sm" | "md"`, `clsx` className merge, `data-status` / `data-size` attributes drive token-backed CSS variants. Used in `<DocCard>` (sm) and `src/routes/$type.$id.tsx` (md). Promotion-ready: 2+ use sites, zero portal deps, tokens-only CSS.
 - API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
 - vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
 - Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths); `_index` loader (cursors, Link header, query forwarding); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2). 11 tests across 5 files.
@@ -24,7 +25,6 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- First `ds-candidate` (Badge) — Phase 5.
 - First promotion to `@donaldgifford/design-system` — Phase 6.
 
 ## Canonical specs (read these first)
@@ -125,12 +125,12 @@ src/
     README.md                        ← documents the flat-routes convention
   components/
     portal/
-      ThemeToggle/                   ← first portal component (Phase 2; test colocated)
-      StatusPill/                    ← Phase 4 inline pill (promotes to <Badge> in Phase 5)
-      DocCard/                       ← Phase 4 directory card
+      ThemeToggle/                   ← Phase 2 (test colocated)
+      DocCard/                       ← Phase 4 directory card (consumes <Badge>)
       RouteErrorBoundary/            ← Phase 4 7807 → portal error UI (test colocated)
       README.md                      ← what belongs in portal/
     ds-candidates/
+      Badge/                         ← Phase 5 first candidate (test colocated; promotion-ready)
       README.md                      ← promotion contract reminder
   pages/                             ← (empty; reserve for page-specific composites)
   styles/                            ← (empty; portal-local CSS only — never tokens)

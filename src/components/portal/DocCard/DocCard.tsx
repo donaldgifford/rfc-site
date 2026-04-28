@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import type { Document } from "../../../portal/api/__generated__/model";
-import { StatusPill } from "../StatusPill";
+import { Badge } from "../../ds-candidates/Badge";
 import styles from "./DocCard.module.css";
 
 /**
@@ -20,7 +20,7 @@ export function DocCard({ doc }: { doc: Document }) {
     <Link to={`/${doc.type}/${doc.id}`} className={styles.card} aria-label={doc.title}>
       <div className={styles.head}>
         <span className={styles.id}>{doc.id}</span>
-        <StatusPill status={doc.status} />
+        <Badge status={doc.status} />
       </div>
       <h2 className={styles.title}>{doc.title}</h2>
       <p className={styles.meta}>

@@ -3,7 +3,7 @@ import { Link, useNavigation } from "react-router";
 import { getDoc } from "../portal/api/__generated__/docs/docs";
 import type { Document } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
-import { StatusPill } from "../components/portal/StatusPill";
+import { Badge } from "../components/ds-candidates/Badge";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./$type.$id.module.css";
 
@@ -39,7 +39,7 @@ export default function DocPage({ loaderData }: Route.ComponentProps) {
       <header className={styles.header}>
         <div className={styles.titleRow}>
           <h1 className={styles.heading}>{doc.title}</h1>
-          <StatusPill status={doc.status} />
+          <Badge status={doc.status} size="md" />
         </div>
         <p className={styles.dateline}>
           {doc.id} · updated <RelativeDate value={doc.updated_at} />
