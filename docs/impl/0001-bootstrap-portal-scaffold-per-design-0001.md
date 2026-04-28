@@ -128,8 +128,8 @@ Stand up the runnable React Router v7 + Vite + React 19 SSR app skeleton with Gi
 - [x] `bun add react@^19 react-dom@^19`.
 - [x] `bun add react-router @react-router/node @react-router/serve @react-router/fs-routes`.
 - [x] `bun add -d @react-router/dev vite @vitejs/plugin-react`.
-- [ ] Create `vite.config.ts` with `@react-router/dev/vite` plugin.
-- [ ] Create `react-router.config.ts` with `ssr: true` and the Vite plugin's defaults. (Decide on framework mode vs library mode — see Open Questions.)
+- [x] Create `vite.config.ts` with `@react-router/dev/vite` plugin.
+- [x] Create `react-router.config.ts` with `ssr: true` and the Vite plugin's defaults. (Decide on framework mode vs library mode — see Open Questions.)
 - [ ] Create the directory layout per DESIGN-0001:
   - `src/main.tsx` (or RR7's equivalent entry)
   - `src/components/ds-candidates/` with a `README.md` pointing at DESIGN-0001 §The `ds-candidates/` contract

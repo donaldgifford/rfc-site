@@ -1,5 +1,6 @@
 dist
 build
+.react-router
 node_modules
 coverage
 bun.lock

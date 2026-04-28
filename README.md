@@ -45,10 +45,11 @@ This resolves dependencies including `@donaldgifford/design-system` from GitHub 
 
 | Script | What it does |
 |---|---|
-| `bun run dev` | Vite dev server (Phase 2 — currently stubbed) |
-| `bun run build` | Production build (Phase 2 — currently stubbed) |
-| `bun run start` | Serve the production build (Phase 2 — currently stubbed) |
-| `bun run typecheck` | `tsc --noEmit` — strict TS check |
+| `bun run dev` | `react-router dev` — Vite dev server with SSR + HMR |
+| `bun run build` | `react-router build` — production server + client bundles into `build/` |
+| `bun run start` | `react-router-serve` — serves the built app |
+| `bun run typegen` | `react-router typegen` — regenerates `.react-router/types/` route types |
+| `bun run typecheck` | `react-router typegen && tsc --noEmit` — strict TS check |
 | `bun run lint` | ESLint v9 flat config |
 | `bun run lint:fix` | ESLint with `--fix` |
 | `bun run format` | Prettier write |

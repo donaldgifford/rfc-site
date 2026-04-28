@@ -22,8 +22,16 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDirs": [".", "./.react-router/types"],
+    "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*", "tests/**/*", "*.config.ts", "*.config.js"],
+  "include": [
+    ".react-router/types/**/*",
+    "src/**/*",
+    "tests/**/*",
+    "*.config.ts",
+    "*.config.js"
+  ],
   "exclude": ["node_modules", "dist", "build", "src/portal/api/__generated__"]
 }

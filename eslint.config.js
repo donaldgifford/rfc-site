@@ -13,6 +13,7 @@ export default tseslint.config(
     ignores: [
       "dist/**",
       "build/**",
+      ".react-router/**",
       "node_modules/**",
       "coverage/**",
       "src/portal/api/__generated__/**",
