@@ -23,16 +23,16 @@ Also referenced often:
 
 ## Tooling
 
-- **Runtime + package manager:** Bun (latest stable).
-- **Bundler:** Vite (resolved — RR7 is Vite-native, plugin ecosystem for OpenAPI codegen and Markdown rendering, best SSR story).
-- **Framework + router:** React 19 + React Router v7 — ratified in [ADR-0002](docs/adr/0002-adopt-portal-frontend-stack.md), following Oxide's [`rfd-site`](https://github.com/oxidecomputer/rfd-site) precedent.
-- **Data fetching:** TanStack Query (per Oxide stack). OpenAPI client generator: **`orval`** — picked because it auto-generates TanStack Query hooks (Oxide writes those by hand) and ships MSW handler generation. Note: Oxide's own `@oxide/openapi-gen-ts` is Dropshot-only and not portable to our hand-authored spec — see ADR-0001.
-- **Markdown rendering:** `react-markdown` + `remark-gfm` + `@shikijs/rehype` + `rehype-sanitize` + `mermaid` (client-side hydration). See [DESIGN-0002](docs/design/0002-markdown-rendering-pipeline.md) for the full plugin chain.
-- **Language:** TypeScript strict, `target: ES2022`, `moduleResolution: bundler` (mirror the design-system repo's `tsconfig.json`).
-- **Lint/format:** ESLint v9 flat config + Prettier (100-col, semi, double quotes, trailing commas) — mirror the design-system repo so promoted components don't churn.
-- **Tests:** vitest + jsdom + `@testing-library/react`.
+- **Runtime + package manager:** Bun (`mise.toml` pins `latest`; currently 1.3.11).
+- **Bundler:** Vite (resolved — RR7 is Vite-native; not yet installed, comes in Phase 2).
+- **Framework + router:** React 19 + React Router v7 — ratified in [ADR-0002](docs/adr/0002-adopt-portal-frontend-stack.md), following Oxide's [`rfd-site`](https://github.com/oxidecomputer/rfd-site) precedent. React 19.2.5 installed; RR7 install in Phase 2.
+- **Data fetching:** TanStack Query (per Oxide stack). OpenAPI client generator: **`orval`** — picked because it auto-generates TanStack Query hooks (Oxide writes those by hand) and ships MSW handler generation. Note: Oxide's own `@oxide/openapi-gen-ts` is Dropshot-only and not portable to our hand-authored spec — see ADR-0001. Both come in Phase 3.
+- **Markdown rendering:** `react-markdown` + `remark-gfm` + `@shikijs/rehype` + `rehype-sanitize` + `mermaid` (client-side hydration). See [DESIGN-0002](docs/design/0002-markdown-rendering-pipeline.md) for the full plugin chain. Comes after Phase 4 (separate IMPL doc TBD).
+- **Language:** TypeScript ^5.7.2 strict, `target: ES2022`, `moduleResolution: bundler`. `tsconfig.json` mirrors the design-system repo verbatim with all extra strictness (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `isolatedModules`, etc.).
+- **Lint/format:** ESLint v9 flat config + Prettier — mirror the design-system repo verbatim so promoted candidates pass lint in both repos with no churn. Versions: eslint ^9.17, typescript-eslint ^8.18, eslint-plugin-react ^7.37, react-hooks ^5.1, jsx-a11y ^6.10.
+- **Tests:** vitest ^2.1.8 + jsdom ^25.0.1 + `@testing-library/react` ^16.3.2 + `@testing-library/jest-dom` ^6.9.1. Setup file at `tests/setup.ts` extends expect with jest-dom matchers. Vitest discovers both `tests/**/*.test.{ts,tsx}` and `src/**/*.test.{ts,tsx}` (the latter for colocated `ds-candidate` tests per DESIGN-0001 §Resolved).
 
-`mise.toml` still pins `node = 22` and `pnpm = 10.33.2` from the design-system repo template — reconcile (add `bun`, drop `pnpm`) when scaffolding.
+`mise.toml` reconciled: `bun = "latest"` added, `pnpm = "10.33.2"` removed, `node = "22"` kept for tool compat headroom (drop later when every tool is confirmed Bun-native).
 
 GitHub Packages auth is required to install the design system. Commit `bunfig.toml` (resolved — `.npmrc` is not committed); `NPM_TOKEN` must have `read:packages`.
 

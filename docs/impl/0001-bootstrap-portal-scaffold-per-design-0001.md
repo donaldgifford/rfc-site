@@ -98,11 +98,11 @@ Reconcile `mise.toml` with the build guide's runtime commitment and stand up a T
 - [x] Add ESLint v9 flat config (`eslint.config.js`) mirroring the design-system repo's ruleset (typescript-eslint, react, react-hooks, jsx-a11y). *(Mirrored verbatim — `tseslint.configs.strictTypeChecked` + `stylisticTypeChecked`, react flat configs incl. `jsx-runtime`, react-hooks recommended, jsx-a11y recommended, `consistent-type-imports`, prettier compat. `ignores` adapted for portal paths incl. `src/portal/api/__generated__/**`. Versions match: eslint ^9.17, typescript-eslint ^8.18, react ^7.37, react-hooks ^5.1, jsx-a11y ^6.10.)*
 - [x] Add `.prettierrc.json` with `{ printWidth: 100, semi: true, singleQuote: false, trailingComma: "all" }`. *(Mirrored design-system verbatim, picking up additional settings: `tabWidth: 2`, `arrowParens: "always"`, `endOfLine: "lf"`, `bracketSpacing: true`, `useTabs: false`.)*
 - [x] Add `.prettierignore` (at minimum: `dist`, `coverage`, `node_modules`, `**/__generated__`). *(Plus `*.md` (matches design-system — markdown formatting is hand-tuned), `bun.lock`, and `api/openapi.yaml` (vendored — format upstream).)*
-- [ ] Add `vitest.config.ts` with jsdom environment + `@testing-library/react` setup.
-- [ ] Add a single trivial smoke test (`tests/smoke.test.ts`: `expect(1).toBe(1)`) so vitest has something to find. (Will be removed once real tests exist.)
-- [ ] Add `package.json` scripts: `dev`, `build`, `start`, `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `test`, `test:watch`. Some will be no-ops or stubs until later phases fill them in.
+- [x] Add `vitest.config.ts` with jsdom environment + `@testing-library/react` setup. *(Mirrors design-system: jsdom env, `globals: false`, dual include pattern (`tests/` + `src/`) so colocated candidate tests are auto-discovered. Adds `tests/setup.ts` for jest-dom matcher extensions. Coverage thresholds dropped until source code exists.)*
+- [x] Add a single trivial smoke test (`tests/smoke.test.ts`: `expect(1).toBe(1)`) so vitest has something to find. (Will be removed once real tests exist.) *(Smoke test runs in 1ms; deletion deferred to Phase 3 when generated-hook + MSW tests land.)*
+- [x] Add `package.json` scripts: `dev`, `build`, `start`, `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `test`, `test:watch`. Some will be no-ops or stubs until later phases fill them in. *(`dev`/`build`/`start` still stubbed — Phase 2 wires them. The rest are real and exit 0.)*
 - [x] Update `.gitignore` for `dist/`, `coverage/`, `*.tsbuildinfo` (already covered) and `src/portal/api/__generated__/` (Phase 3 prep). *(Generated dir added; `bun.lock` deliberately NOT ignored — lockfiles are committed for reproducible installs.)*
-- [ ] Commit: "phase 1: tooling baseline".
+- [x] Commit: "phase 1: tooling baseline". *(Split into four conventional commits on `feat/design-0001`: `chore(mise)`, `chore: TS toolchain baseline`, `chore: eslint v9 + prettier`, `chore(vitest): vitest config + smoke test`.)*
 
 #### Success Criteria
 
