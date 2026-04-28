@@ -16,7 +16,7 @@ What's wired:
 - ds-candidates: `<Badge>` (Phase 5) — `forwardRef`, `status: BadgeStatus | (string & {})`, `size: "sm" | "md"`, `clsx` className merge, `data-status` / `data-size` attributes drive token-backed CSS variants. Used in `<DocCard>` (sm) and `src/routes/$type.$id.tsx` (md). Promotion-ready: 2+ use sites, zero portal deps, tokens-only CSS.
 - API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
 - vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
-- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths); `_index` loader (cursors, Link header, query forwarding); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2). 11 tests across 5 files.
+- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths) + full-render via `createRoutesStub` (renders title/Badge/body/authors, 404 + 500 surfaces); `_index` loader (cursors, Link header, query forwarding) + full-render (cards, pagination links, empty state); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2); `<Badge>` (9 tests for the ds-candidate). 26 tests across 8 files.
 - CI: `.github/workflows/ci.yml` runs `bun install --frozen-lockfile` (using `secrets.GITHUB_TOKEN` for GitHub Packages), the orval drift check (`scripts/gen-api-check.sh`), and the full static-check + build pipeline.
 
 What's pending manual verification:
@@ -147,7 +147,9 @@ tests/
   api/server.ts                      ← shared MSW server + helpers (mockGetDoc, mockListDocs, mockProblem)
   api/getDoc.test.tsx                ← Phase 3 hook+MSW smoke test
   api/docPage.test.ts                ← Phase 4 $type.$id loader (200/404/500)
+  api/docPageRender.test.tsx         ← Phase 4 $type.$id full render via createRoutesStub
   api/indexRoute.test.ts             ← Phase 4 _index loader (cursors / Link header / query forwarding)
+  api/indexRouteRender.test.tsx      ← Phase 4 _index full render via createRoutesStub
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build
