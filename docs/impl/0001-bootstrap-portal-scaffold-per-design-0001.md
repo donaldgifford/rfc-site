@@ -165,21 +165,21 @@ Wire up the OpenAPI-driven client (`orval`) and TanStack Query so SSR routes can
 
 #### Tasks
 
-- [ ] `bun add -d orval`.
-- [ ] `bun add @tanstack/react-query`.
-- [ ] Decide HTTP transport (`fetch` vs `axios`) — see Open Questions.
-- [ ] Create `orval.config.ts` pointing at `api/openapi.yaml`, output dir `src/portal/api/__generated__/`, mode `react-query`, target HTTP transport per the decision above.
-- [ ] Add `bun run gen-api` script that runs `orval`.
-- [ ] Run `gen-api`; commit the config but **not** the generated output (per [ADR-0001](../adr/0001-consume-rfc-api-via-its-published-openapi-contract.md)).
-- [ ] Verify the generated dir is in `.gitignore`.
-- [ ] Configure ESLint and Prettier to ignore `src/portal/api/__generated__/`.
-- [ ] Add a CI step (or pre-commit / pre-push hook) that re-runs `gen-api` and fails if the working tree has any diff in the generated dir — this is the contract-drift check from ADR-0001.
-- [ ] Add `RFC_API_URL` env-var reading in a small `src/portal/api/config.ts` module. Default to `http://localhost:8080` for dev. Provide `.env.example` documenting it.
-- [ ] Wrap the app in `<QueryClientProvider client={queryClient}>` in the entry / root route.
-- [ ] Configure the orval-generated client to use `RFC_API_URL` as the base URL.
-- [ ] Decide on a dev-mode mock strategy (orval's MSW handlers? Live rfc-api dependency?) — see Open Questions.
-- [ ] Add an MSW + vitest smoke test that calls one generated hook and asserts the payload type.
-- [ ] Commit: "phase 3: api integration scaffold (orval + tanstack query)".
+- [x] `bun add -d orval`.
+- [x] `bun add @tanstack/react-query`.
+- [x] Decide HTTP transport (`fetch` vs `axios`) — see Open Questions. **Resolution: `fetch`** (zero deps; matches the modern web platform; TanStack Query handles retry/dedup that `axios` interceptors cover).
+- [x] Create `orval.config.ts` pointing at `api/openapi.yaml`, output dir `src/portal/api/__generated__/`, mode `react-query`, target HTTP transport per the decision above. Mock generation enabled (`mock: true`) so the smoke test can use orval's MSW handlers.
+- [x] Add `bun run gen-api` script that runs `orval`. Also added `bun run gen-api:check` (calls `scripts/gen-api-check.sh`) for the drift check.
+- [x] Run `gen-api`; commit the config but **not** the generated output (per [ADR-0001](../adr/0001-consume-rfc-api-via-its-published-openapi-contract.md)). Generated dir is `.gitignored` (Phase 1).
+- [x] Verify the generated dir is in `.gitignore`. Confirmed via `git check-ignore`.
+- [x] Configure ESLint and Prettier to ignore `src/portal/api/__generated__/`. Done in Phase 1 — generated code never lints/formats.
+- [x] Add a CI step (or pre-commit / pre-push hook) that re-runs `gen-api` and fails if the working tree has any diff in the generated dir — this is the contract-drift check from ADR-0001. Implemented as `.github/workflows/ci.yml` "API client drift check" step calling `bun run gen-api:check`. The script generates twice and `diff -r`s the outputs (the dir is gitignored, so the original `git diff` strategy doesn't apply — see `scripts/gen-api-check.sh` rationale).
+- [x] Add `RFC_API_URL` env-var reading in a small `src/portal/api/config.ts` module. Default to `http://localhost:8080` for dev. Provide `.env.example` documenting it.
+- [x] Wrap the app in `<QueryClientProvider client={queryClient}>` in the entry / root route. Lives in `src/root.tsx`'s `App` component, with `useState(createQueryClient)` so SSR doesn't share cache state across requests.
+- [x] Configure the orval-generated client to use `RFC_API_URL` as the base URL. Wired via the custom mutator at `src/portal/api/fetcher.ts` (orval `override.mutator`).
+- [x] Decide on a dev-mode mock strategy (orval's MSW handlers? Live rfc-api dependency?) — see Open Questions. **Resolution: require local rfc-api running for `bun run dev`.** orval's MSW handlers are used by the vitest smoke test only; revisit an `API_MODE=msw` fork (Oxide-style) if frontend-side iteration becomes hampered.
+- [x] Add an MSW + vitest smoke test that calls one generated hook and asserts the payload type. Lives at `tests/api/getDoc.test.tsx`; mounts `<QueryClientProvider>`, wires `getGetDocMockHandler` via `setupServer` (msw/node), and asserts the `Document` shape. Phase 1's trivial smoke test is removed.
+- [x] Commit: "phase 3: api integration scaffold (orval + tanstack query)".
 
 #### Success Criteria
 

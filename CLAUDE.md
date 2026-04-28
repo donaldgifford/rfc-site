@@ -4,19 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-Phases 1 + 2 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a placeholder index route at `/` styled with `@donaldgifford/design-system` tokens; `<html data-theme="dark">` is set on first paint; the `<ThemeToggle>` flips between dark and light and persists via `useTheme` (localStorage key `design-system:theme`).
+Phases 1 + 2 + 3 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a placeholder index route at `/` styled with `@donaldgifford/design-system` tokens; `<html data-theme="dark">` is set on first paint; the `<ThemeToggle>` flips between dark and light and persists via `useTheme`. The API integration scaffold (orval + TanStack Query + MSW for tests) is in place; the orval-generated `useGetDoc` hook is exercised end-to-end by `tests/api/getDoc.test.tsx`.
 
 What's wired:
 
 - React 19 + React Router v7 (framework mode) + Vite, served by `react-router-serve`.
-- `src/root.tsx` (Layout + App) and a single `src/routes/_index.tsx` (flat-routes via `@react-router/fs-routes`).
+- `src/root.tsx`: Layout (sets `<html data-theme="dark">`) + App (wraps `<Outlet />` in `<QueryClientProvider>` with `useState(createQueryClient)` for SSR isolation).
+- A single placeholder route at `src/routes/_index.tsx` (flat-routes via `@react-router/fs-routes`).
 - Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
 - `<ThemeToggle>` in `src/components/portal/ThemeToggle/` with co-located CSS module + vitest test.
-- vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`.
+- API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `__generated__/` (orval output, gitignored).
+- vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
+- CI: `.github/workflows/ci.yml` runs `bun install --frozen-lockfile` (using `secrets.GITHUB_TOKEN` for GitHub Packages), the orval drift check (`scripts/gen-api-check.sh`), and the full static-check + build pipeline.
 
 What's not wired yet:
 
-- API integration (orval + TanStack Query) — Phase 3.
 - Real routes against rfc-api — Phase 4.
 - First `ds-candidate` (Badge) — Phase 5.
 - First promotion to `@donaldgifford/design-system` — Phase 6.
@@ -41,7 +43,7 @@ Also referenced often:
 - **Runtime + package manager:** Bun (`mise.toml` pins `latest`; currently 1.3.11).
 - **Bundler:** Vite 8 (`@react-router/dev/vite` plugin owns dev/build/SSR entry generation in framework mode).
 - **Framework + router:** React 19.2.5 + React Router v7.14 (framework mode, `appDirectory: "src"`, `ssr: true`). Routes discovered via `@react-router/fs-routes` from `src/routes.ts` — `ignoredRouteFiles` excludes `**/*.module.css`, `**/*.test.{ts,tsx}`, `**/README.md`. Production server: `@react-router/serve`. Ratified in [ADR-0002](docs/adr/0002-adopt-portal-frontend-stack.md), following Oxide's [`rfd-site`](https://github.com/oxidecomputer/rfd-site) precedent.
-- **Data fetching:** TanStack Query (per Oxide stack). OpenAPI client generator: **`orval`** — picked because it auto-generates TanStack Query hooks (Oxide writes those by hand) and ships MSW handler generation. Note: Oxide's own `@oxide/openapi-gen-ts` is Dropshot-only and not portable to our hand-authored spec — see ADR-0001. Both come in Phase 3.
+- **Data fetching:** TanStack Query 5.100 + orval 8.9 (with MSW 2 for handler generation + `@faker-js/faker` 10 for response fixtures). orval is wired in `tags-split` mode at `src/portal/api/__generated__/` with a custom `fetch` mutator (`src/portal/api/fetcher.ts`) that prepends `RFC_API_URL` and forces `accept: application/json, application/problem+json` for the RFC 7807 error envelope. The QueryClient (`src/portal/api/queryClient.ts`) sets `staleTime: 5 * 60 * 1000`, `refetchOnWindowFocus: false`, `retry: 1` per IMPL-0001 §Phase 3. Generated dir is gitignored; run `just gen-api` after spec changes; CI runs `just gen-api-check` for the drift signal.
 - **Markdown rendering:** `react-markdown` + `remark-gfm` + `@shikijs/rehype` + `rehype-sanitize` + `mermaid` (client-side hydration). See [DESIGN-0002](docs/design/0002-markdown-rendering-pipeline.md) for the full plugin chain. Comes after Phase 4 (separate IMPL doc TBD).
 - **Language:** TypeScript ^5.7.2 strict, `target: ES2022`, `moduleResolution: bundler`. `tsconfig.json` mirrors the design-system repo verbatim with all extra strictness (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `isolatedModules`, etc.).
 - **Lint/format:** ESLint v9 flat config + Prettier — mirror the design-system repo verbatim so promoted candidates pass lint in both repos with no churn. Versions: eslint ^9.17, typescript-eslint ^8.18, eslint-plugin-react ^7.37, react-hooks ^5.1, jsx-a11y ^6.10.
@@ -109,7 +111,7 @@ docs/
   integration/                       ← non-docz reference docs (rfc-api cookbook)
   archive/                           ← frozen historical source material
 src/
-  root.tsx                           ← RR7 framework-mode root (Layout + App)
+  root.tsx                           ← RR7 framework-mode root (Layout + App + QueryClientProvider)
   routes.ts                          ← flatRoutes() with ignoredRouteFiles
   routes/
     _index.tsx                       ← placeholder index route
@@ -123,18 +125,28 @@ src/
       README.md                      ← promotion contract reminder
   pages/                             ← (empty; reserve for page-specific composites)
   styles/                            ← (empty; portal-local CSS only — never tokens)
+  portal/api/
+    config.ts                        ← RFC_API_URL reader (import.meta.env + process.env)
+    fetcher.ts                       ← orval custom mutator over fetch
+    queryClient.ts                   ← TanStack QueryClient factory (Phase 3 defaults)
+    __generated__/                   ← orval output (gitignored — never commit)
 tests/
   setup.ts                           ← jest-dom matchers + RTL afterEach(cleanup)
-  smoke.test.ts                      ← phase 1 smoke (drop in phase 3)
+  api/getDoc.test.tsx                ← Phase 3 hook+MSW smoke test
+scripts/
+  gen-api-check.sh                   ← orval drift check (CI + local)
+.github/workflows/ci.yml             ← CI: install + drift check + static checks + build
 api/openapi.yaml                     ← vendored
 bunfig.toml                          ← @donaldgifford → npm.pkg.github.com
+orval.config.ts                      ← react-query + fetch + MSW
 react-router.config.ts               ← appDirectory: "src", ssr: true
 vite.config.ts                       ← @react-router/dev plugin
 vitest.config.ts                     ← jsdom + dedupe react / react-dom
 justfile                             ← task runner (mirrors package.json scripts)
-mise.toml                            ← bun = latest, node = 22
+mise.toml                            ← bun = latest, node = 22, just = latest
+.env.example
 .docz.yaml
 CLAUDE.md
 ```
 
-Next doc-level / impl-level work: Phase 3 (orval + TanStack Query + MSW handlers).
+Next impl-level work: Phase 4 (wire one real route at `/$type/$id` against a running rfc-api).

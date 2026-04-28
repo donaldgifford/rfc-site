@@ -60,9 +60,13 @@ test-watch:
 # Composite: run all the static checks (CI parity)
 check: typecheck lint format-check test
 
-# Regenerate the rfc-api TS client (Phase 3 — not yet wired)
+# Regenerate the rfc-api TS client (orval -> src/portal/api/__generated__)
 gen-api:
     bun run gen-api
+
+# CI drift check: regenerate the client twice and fail if outputs diverge
+gen-api-check:
+    ./scripts/gen-api-check.sh
 
 # Local design-system workflow (CLAUDE.md §When iterating in parallel)
 ds-build:
