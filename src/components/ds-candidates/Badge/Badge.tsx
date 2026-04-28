@@ -25,7 +25,9 @@
 
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
 import clsx from "clsx";
-import styles from "./Badge.module.css";
+// CSS is shipped as a side-effect — see INV-0001 (option 3 resolution).
+// Class names are prefixed `.ds-*` to avoid collisions in consumer apps.
+import "./Badge.css";
 
 export const BADGE_STATUSES = [
   "draft",
@@ -64,7 +66,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
       ref={ref}
       data-status={variant}
       data-size={size}
-      className={clsx(styles.badge, className)}
+      className={clsx("ds-badge", className)}
       {...rest}
     >
       {children ?? humanise(status)}

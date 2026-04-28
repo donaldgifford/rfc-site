@@ -257,25 +257,27 @@ Extract one primitive from the Phase 4 pages into `ds-candidates/`, shaped per D
 
 Promote the Phase 5 candidate into `@donaldgifford/design-system`. This phase spans two repos.
 
-> **Blocked on [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md)** — the local cherry-pick onto `donaldgifford/design-system@feat/promote-badge` exposed a build-pipeline gap: tsup does not actually compile CSS Modules, so `dist/index.js` ships an empty `Badge_default = {}` and the primitive renders without its base styles. The tasks below are blocked on the user picking one of the three INV-0001 recommendations (Vite library mode, postcss-modules prelude, or drop CSS Modules for primitives). The local prep below is recorded so the work can resume immediately once the bundler decision is made.
+> **Unblocked 2026-04-28** — [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md) was resolved by adopting **option 3** (drop CSS Modules for `<Badge>`, ship prefixed global classes via a side-effect CSS import). The design-system local prep below is now complete and committed on `feat/promote-badge`. Remaining tasks split into "user-gated" (open PR, merge, publish — shared-system actions) and "mechanical" (the rfc-site swap, runs once a published version is available).
 
 #### Tasks (in `donaldgifford/design-system`)
 
 - [x] Branch off `main`: `git switch -c feat/promote-badge`.
-- [x] `cp -r` the candidate folder from this repo into `src/primitives/Badge/` (excluding the `.test.tsx`). **WIP, uncommitted on the branch.**
+- [x] `cp -r` the candidate folder from this repo into `src/primitives/Badge/` (excluding the `.test.tsx`).
 - [x] `git mv` (or copy + delete) the test file from this repo's `ds-candidates/Badge/Badge.test.tsx` into `tests/primitives/Badge.test.tsx`. Adjust the import path inside the test (re-targeted to `../../src/primitives/Badge/Badge`).
 - [x] Update `src/index.ts` to re-export the primitive and its prop types (`Badge`, `BadgeProps`, `BadgeStatus`, `BadgeSize`, `BADGE_STATUSES`).
 - [x] Add `clsx` as a runtime dep (the primitive needs it to merge `className`).
-- [x] Add `src/types/css-modules.d.ts` ambient declaration so `tsc --noEmit` types the `*.module.css` import (rfc-site gets this for free via `vite/client`).
-- [ ] Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` — all green. **Blocked on INV-0001:** `pnpm build` succeeds but the JS class-map is empty; `pnpm typecheck` (and tests) need `tests/setup.ts` to register jest-dom matchers (small follow-up — design-system doesn't have RTL setup yet).
-- [ ] Add a changeset (`pnpm changeset` → minor for new primitive, with a one-line description). **Pending unblock.**
-- [ ] Open PR; merge. **Pending unblock + user authorization** (cross-repo PR is a shared-system action).
-- [ ] Wait for the release workflow's "Version Packages" PR; merge that too.
-- [ ] Confirm `@donaldgifford/design-system@0.x.0` is published to GitHub Packages.
+- [x] ~~Add `src/types/css-modules.d.ts` ambient declaration so `tsc --noEmit` types the `*.module.css` import.~~ Superseded by INV-0001 option 3 — the primitive now does `import "./Badge.css"` (side-effect import; tsup ships this verbatim) so no ambient declaration is needed. The file was deleted.
+- [x] Add `tests/setup.ts` (jest-dom matcher registration + RTL `cleanup` after each test) and wire it into `vitest.config.ts` `setupFiles`. The design-system test suite previously had no RTL primitives and so didn't need this.
+- [x] Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` — all green. **312/312** tests pass; build emits literal `.ds-badge` selectors in `dist/index.css` and the literal `clsx(...)` call in `dist/index.js`.
+- [x] Add a changeset (`.changeset/promote-badge-primitive.md` → minor for new primitive).
+- [x] Commit on `feat/promote-badge` (`b118de6` — `feat(primitives): add Badge primitive promoted from rfc-site ds-candidates`).
+- [ ] Open PR; merge. **User-gated** (cross-repo PR is a shared-system action).
+- [ ] Wait for the release workflow's "Version Packages" PR; merge that too. **User-gated.**
+- [ ] Confirm `@donaldgifford/design-system@0.x.0` is published to GitHub Packages. **User-gated.**
 
 #### Tasks (in this repo, `rfc-site`)
 
-All blocked on the design-system half (which is blocked on INV-0001). Listed here so the swap is mechanical once `@donaldgifford/design-system@0.x.0` ships.
+Mechanical once `@donaldgifford/design-system@0.x.0` ships. (The user-gated steps above are the only remaining gate.)
 
 - [ ] `bun update @donaldgifford/design-system` to the new published version.
 - [ ] Replace the imports of `<Badge>` from `src/components/ds-candidates/Badge` with imports from `@donaldgifford/design-system`.

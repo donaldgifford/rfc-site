@@ -1,7 +1,7 @@
 ---
 id: INV-0001
 title: "Ship CSS Modules from design-system tsup build"
-status: Open
+status: Resolved
 author: Donald Gifford
 created: 2026-04-28
 ---
@@ -9,7 +9,8 @@ created: 2026-04-28
 
 # INV 0001: Ship CSS Modules from design-system tsup build
 
-**Status:** Open
+**Status:** Resolved (2026-04-28) — adopted **option 3** (drop CSS Modules
+for `<Badge>`, ship prefixed global classes via side-effect CSS import).
 **Author:** Donald Gifford
 **Date:** 2026-04-28
 
@@ -183,6 +184,54 @@ This INV blocks the design-system half of [IMPL-0001 §Phase
 6][impl-phase-6]. The rfc-site side (`bun update`, swap imports,
 delete the `ds-candidate`) cannot proceed until a published
 `@donaldgifford/design-system@0.x.0` ships a working `<Badge>`.
+
+## Decision (2026-04-28)
+
+**Adopted option 3** — drop CSS Modules for `<Badge>`, ship prefixed
+global classes via a side-effect CSS import.
+
+**Rationale.** Option 3 unblocks Phase 6 with the smallest reversible
+delta. Options 1 (Vite library-mode) and 2 (custom postcss-modules
+prelude) are both larger surgery on a single-primitive promotion: the
+former retunes the entire bundler, the latter adds bespoke build
+tooling. The contract delta from option 3 is also smaller than feared
+— DESIGN-0002 documents `*.module.css` as the *internal* shape of the
+primitive, not part of the consumer-facing API. Consumers still call
+`<Badge status="accepted" />`; the only change is that the class
+applied internally is `ds-badge` (a stable, prefixed, public class)
+rather than a hashed CSS-Module class.
+
+**Concrete shape (now landed in design-system `feat/promote-badge`):**
+
+- `src/primitives/Badge/Badge.tsx` does `import "./Badge.css"` (side
+  effect; no class-map binding) and `clsx("ds-badge", className)`.
+- `src/primitives/Badge/Badge.css` defines `.ds-badge` plus
+  `[data-status="…"]` / `[data-size="…"]` attribute-selector variants.
+  Tokens-only (`var(--*)`).
+- `dist/index.css` (verified locally) contains the literal `.ds-badge`
+  selectors. `dist/index.js` contains the literal string in the
+  `clsx(...)` call. The runtime mismatch from Finding 4 is gone.
+- `src/types/css-modules.d.ts` was deleted (no `*.module.css` imports
+  remain in design-system source). It can be re-introduced cheaply if
+  options 1 or 2 are revisited later.
+
+**Why this is reversible.** If we later want CSS Modules back (e.g.,
+to avoid the `.ds-` namespace constraint), we can pursue option 1 or
+2 incrementally — the public API of `<Badge>` (`status`, `size`,
+`className` merge, `forwardRef`, native span pass-through) is
+identical between the two shapes, so a future bundler swap doesn't
+change anything consumers depend on.
+
+**Follow-ups deliberately not done in this INV:**
+
+- Editing DESIGN-0002. The doc describes the internal styling
+  approach as `*.module.css` co-location; that's still aspirational
+  for primitives that don't have the `tsup` constraint (e.g.,
+  internal-only utilities). When primitive #2 lands and the bundler
+  decision becomes real, DESIGN-0002 should be updated then. For
+  now the option-3 deviation is documented here.
+- A sibling INV / RFC for choosing the long-run bundler. Defer until
+  a second primitive forces the decision; one data point isn't enough.
 
 ## References
 
