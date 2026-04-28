@@ -19,6 +19,9 @@ function renderWithThrow(payload: unknown, status: number): void {
         },
         Component: () => <p>should not render</p>,
         ErrorBoundary: RouteErrorBoundary,
+        // Silences createMemoryRouter's "No `HydrateFallback`"
+        // warning. Real routes export HydrateFallback at module level.
+        HydrateFallback: () => null,
       },
     ],
     { initialEntries: ["/"] },

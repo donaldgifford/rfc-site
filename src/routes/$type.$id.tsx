@@ -5,6 +5,7 @@ import type { Document } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { Badge } from "../components/ds-candidates/Badge";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
+import { Skeleton } from "../components/portal/Skeleton";
 import styles from "./$type.$id.module.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -61,6 +62,30 @@ export default function DocPage({ loaderData }: Route.ComponentProps) {
 }
 
 export const ErrorBoundary = RouteErrorBoundary;
+
+export function HydrateFallback() {
+  return (
+    <main className={styles.shell} aria-busy="true">
+      <nav className={styles.crumbs}>
+        <Skeleton width="64px" height="14px" />
+      </nav>
+      <header className={styles.header}>
+        <div className={styles.titleRow}>
+          <Skeleton width="60%" height="42px" variant="block" />
+          <Skeleton width="84px" height="28px" variant="block" />
+        </div>
+        <Skeleton width="240px" height="14px" />
+        <Skeleton width="180px" height="14px" />
+      </header>
+      <div className={styles.bodySkeleton}>
+        <Skeleton width="100%" height="14px" />
+        <Skeleton width="92%" height="14px" />
+        <Skeleton width="86%" height="14px" />
+        <Skeleton width="78%" height="14px" />
+      </div>
+    </main>
+  );
+}
 
 function RelativeDate({ value }: { value: string }) {
   const date = new Date(value);

@@ -12,7 +12,7 @@ What's wired:
 - `src/root.tsx`: Layout (sets `<html data-theme="dark">`) + App (wraps `<Outlet />` in `<QueryClientProvider>` with `useState(createQueryClient)` for SSR isolation).
 - Routes: `src/routes/_index.tsx` (directory card grid + Link-header pagination via `?cursor=`); `src/routes/$type.$id.tsx` (doc page with title h1, `<StatusPill>`, dateline, authors, `<pre>` body). Both wire `RouteErrorBoundary` as their `ErrorBoundary` export.
 - Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
-- Portal components: `<ThemeToggle>` (Phase 2), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4). `<StatusPill>` was inline in Phase 4 and superseded by the Phase 5 `<Badge>` candidate (deleted from portal/).
+- Portal components: `<ThemeToggle>` (Phase 2), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4), `<Skeleton>` (Phase 4 polish — shimmer placeholder backing the route-level `HydrateFallback` exports; honours `prefers-reduced-motion`). `<StatusPill>` was inline in Phase 4 and superseded by the Phase 5 `<Badge>` candidate (deleted from portal/).
 - ds-candidates: `<Badge>` (Phase 5) — `forwardRef`, `status: BadgeStatus | (string & {})`, `size: "sm" | "md"`, `clsx` className merge, `data-status` / `data-size` attributes drive token-backed CSS variants. Used in `<DocCard>` (sm) and `src/routes/$type.$id.tsx` (md). Promotion-ready: 2+ use sites, zero portal deps, tokens-only CSS.
 - API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
 - vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
@@ -128,6 +128,7 @@ src/
       ThemeToggle/                   ← Phase 2 (test colocated)
       DocCard/                       ← Phase 4 directory card (consumes <Badge>)
       RouteErrorBoundary/            ← Phase 4 7807 → portal error UI (test colocated)
+      Skeleton/                      ← Phase 4 polish: shimmer placeholder for HydrateFallback
       README.md                      ← what belongs in portal/
     ds-candidates/
       Badge/                         ← Phase 5 first candidate (test colocated; promotion-ready)

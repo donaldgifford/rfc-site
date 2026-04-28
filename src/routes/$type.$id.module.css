@@ -63,6 +63,17 @@
   color: var(--color-fg-secondary);
 }
 
+.bodySkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-code-bg);
+  color: var(--color-code-fg);
+  border: 1px solid var(--color-code-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
 .body {
   background: var(--color-code-bg);
   color: var(--color-code-fg);

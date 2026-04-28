@@ -5,6 +5,7 @@ import type { DocumentListResponse } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { parseLinkHeader, type PaginationCursors } from "../portal/api/pagination";
 import { DocCard } from "../components/portal/DocCard";
+import { Skeleton } from "../components/portal/Skeleton";
 import { ThemeToggle } from "../components/portal/ThemeToggle";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./_index.module.css";
@@ -86,3 +87,25 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 }
 
 export const ErrorBoundary = RouteErrorBoundary;
+
+export function HydrateFallback() {
+  return (
+    <main className={styles.main}>
+      <header className={styles.header}>
+        <Skeleton width="160px" height="38px" variant="block" />
+        <Skeleton width="92px" height="28px" variant="block" />
+      </header>
+      <ul className={styles.grid} aria-busy="true">
+        {Array.from({ length: 6 }, (_, i) => (
+          <li key={i}>
+            <div className={styles.skeletonCard}>
+              <Skeleton width="60px" height="14px" />
+              <Skeleton width="100%" height="22px" />
+              <Skeleton width="70%" height="16px" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
