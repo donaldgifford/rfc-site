@@ -1,11 +1,12 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { setupServer } from "msw/node";
 import { createQueryClient } from "../../src/portal/api/queryClient";
 import { useGetDoc } from "../../src/portal/api/__generated__/docs/docs";
 import { getGetDocMockHandler } from "../../src/portal/api/__generated__/docs/docs.msw";
 import type { Document } from "../../src/portal/api/__generated__/model";
+import { server } from "./server";
+import { setupMswLifecycle } from "../utils/msw";
 
 /**
  * Phase-3 smoke test (per IMPL-0001 §Phase 3 Success Criteria):
@@ -20,19 +21,7 @@ import type { Document } from "../../src/portal/api/__generated__/model";
  * contract has drifted — investigate before changing the test.
  */
 
-const server = setupServer();
-
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
-
-afterEach(() => {
-  server.resetHandlers();
-});
-
-afterAll(() => {
-  server.close();
-});
+setupMswLifecycle();
 
 function GetDocProbe({ docType, id }: { docType: string; id: string }) {
   const { data, isLoading, error } = useGetDoc(docType, id);

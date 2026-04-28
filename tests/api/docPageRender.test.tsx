@@ -1,29 +1,23 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { createRoutesStub, type LoaderFunction } from "react-router";
+import { describe, expect, it } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import DocPage, {
   loader as docLoader,
   HydrateFallback,
   ErrorBoundary,
 } from "../../src/routes/$type.$id";
-import { fixtureDoc, mockGetDoc, mockProblem, server } from "./server";
+import { fixtureDoc, mockGetDoc, mockProblem } from "./server";
+import { setupMswLifecycle } from "../utils/msw";
+import { renderRoute } from "../utils/renderRoute";
 
-// RR7's Route.LoaderArgs narrows `params` to the route's pattern; the
-// stub uses a generic `Params<string>`. The runtime contract matches —
-// cast to satisfy the stub typing.
-const stubLoader = docLoader as unknown as LoaderFunction;
+setupMswLifecycle();
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
-
-afterEach(() => {
-  server.resetHandlers();
-});
-
-afterAll(() => {
-  server.close();
-});
+const docPageFixture = {
+  path: "/:type/:id",
+  Component: DocPage,
+  loader: docLoader,
+  HydrateFallback,
+  ErrorBoundary,
+} as const;
 
 /**
  * Full-route integration test: mounts `$type.$id` via `createRoutesStub`
@@ -46,16 +40,7 @@ describe("/$type/$id route — full render", () => {
       body: "## Decision\n\nUse createRoutesStub.",
     });
 
-    const Stub = createRoutesStub([
-      {
-        path: "/:type/:id",
-        Component: DocPage,
-        loader: stubLoader,
-        HydrateFallback,
-        ErrorBoundary,
-      },
-    ]);
-    render(<Stub initialEntries={["/rfc/RFC-0042"]} />);
+    renderRoute(docPageFixture, ["/rfc/RFC-0042"]);
 
     await waitFor(() => {
       expect(
@@ -80,16 +65,7 @@ describe("/$type/$id route — full render", () => {
       request_id: "01HTZ-INTEGRATION",
     });
 
-    const Stub = createRoutesStub([
-      {
-        path: "/:type/:id",
-        Component: DocPage,
-        loader: stubLoader,
-        HydrateFallback,
-        ErrorBoundary,
-      },
-    ]);
-    render(<Stub initialEntries={["/rfc/RFC-9999"]} />);
+    renderRoute(docPageFixture, ["/rfc/RFC-9999"]);
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /document not found/i })).toBeInTheDocument();
@@ -108,16 +84,7 @@ describe("/$type/$id route — full render", () => {
       request_id: "01HTZ-INTEGRATION-500",
     });
 
-    const Stub = createRoutesStub([
-      {
-        path: "/:type/:id",
-        Component: DocPage,
-        loader: stubLoader,
-        HydrateFallback,
-        ErrorBoundary,
-      },
-    ]);
-    render(<Stub initialEntries={["/rfc/RFC-0001"]} />);
+    renderRoute(docPageFixture, ["/rfc/RFC-0001"]);
 
     await waitFor(() => {
       expect(

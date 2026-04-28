@@ -150,6 +150,8 @@ tests/
   api/docPageRender.test.tsx         ← Phase 4 $type.$id full render via createRoutesStub
   api/indexRoute.test.ts             ← Phase 4 _index loader (cursors / Link header / query forwarding)
   api/indexRouteRender.test.tsx      ← Phase 4 _index full render via createRoutesStub
+  utils/msw.ts                       ← setupMswLifecycle() — shared MSW beforeAll/afterEach/afterAll
+  utils/renderRoute.tsx              ← renderRoute() — createRoutesStub + RTL render in one call
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build

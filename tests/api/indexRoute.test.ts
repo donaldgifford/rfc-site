@@ -1,18 +1,9 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { loader } from "../../src/routes/_index";
 import { fixtureDoc, mockListDocs, server } from "./server";
+import { setupMswLifecycle } from "../utils/msw";
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
-
-afterEach(() => {
-  server.resetHandlers();
-});
-
-afterAll(() => {
-  server.close();
-});
+setupMswLifecycle();
 
 describe("/ index loader", () => {
   it("returns docs + parsed pagination cursors from the Link header", async () => {

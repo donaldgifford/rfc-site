@@ -1,21 +1,19 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { createRoutesStub } from "react-router";
+import { describe, expect, it } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import IndexRoute, { loader as indexLoader, HydrateFallback } from "../../src/routes/_index";
-import { fixtureDoc, mockListDocs, server } from "./server";
+import { fixtureDoc, mockListDocs } from "./server";
+import { setupMswLifecycle } from "../utils/msw";
+import { renderRoute } from "../utils/renderRoute";
 import type { Document } from "../../src/portal/api/__generated__/model";
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
+setupMswLifecycle();
 
-afterEach(() => {
-  server.resetHandlers();
-});
-
-afterAll(() => {
-  server.close();
-});
+const indexFixture = {
+  path: "/",
+  Component: IndexRoute,
+  loader: indexLoader,
+  HydrateFallback,
+} as const;
 
 /**
  * Full-route integration test: mounts `_index` via `createRoutesStub`
@@ -32,15 +30,7 @@ describe("/ index route — full render", () => {
     ];
     mockListDocs(docs);
 
-    const Stub = createRoutesStub([
-      {
-        path: "/",
-        Component: IndexRoute,
-        loader: indexLoader,
-        HydrateFallback,
-      },
-    ]);
-    render(<Stub initialEntries={["/"]} />);
+    renderRoute(indexFixture, ["/"]);
 
     await waitFor(() => {
       expect(screen.getByText("First doc")).toBeInTheDocument();
@@ -64,15 +54,7 @@ describe("/ index route — full render", () => {
       link: '</api/v1/docs?cursor=NEXT&limit=24>; rel="next", </api/v1/docs?cursor=PREV&limit=24>; rel="prev"',
     });
 
-    const Stub = createRoutesStub([
-      {
-        path: "/",
-        Component: IndexRoute,
-        loader: indexLoader,
-        HydrateFallback,
-      },
-    ]);
-    render(<Stub initialEntries={["/"]} />);
+    renderRoute(indexFixture, ["/"]);
 
     await waitFor(() => {
       expect(screen.getByText("Adopt portal frontend stack")).toBeInTheDocument();
@@ -88,15 +70,7 @@ describe("/ index route — full render", () => {
   it("renders the empty-state message when listDocs returns no docs", async () => {
     mockListDocs([]);
 
-    const Stub = createRoutesStub([
-      {
-        path: "/",
-        Component: IndexRoute,
-        loader: indexLoader,
-        HydrateFallback,
-      },
-    ]);
-    render(<Stub initialEntries={["/"]} />);
+    renderRoute(indexFixture, ["/"]);
 
     await waitFor(() => {
       expect(screen.getByText(/no documents yet/i)).toBeInTheDocument();

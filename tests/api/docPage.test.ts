@@ -1,18 +1,9 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { loader } from "../../src/routes/$type.$id";
-import { fixtureDoc, mockGetDoc, mockProblem, server } from "./server";
+import { fixtureDoc, mockGetDoc, mockProblem } from "./server";
+import { setupMswLifecycle } from "../utils/msw";
 
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: "error" });
-});
-
-afterEach(() => {
-  server.resetHandlers();
-});
-
-afterAll(() => {
-  server.close();
-});
+setupMswLifecycle();
 
 describe("$type.$id loader", () => {
   it("returns the parsed Document on a 200 response", async () => {
