@@ -130,20 +130,20 @@ Stand up the runnable React Router v7 + Vite + React 19 SSR app skeleton with Gi
 - [x] `bun add -d @react-router/dev vite @vitejs/plugin-react`.
 - [x] Create `vite.config.ts` with `@react-router/dev/vite` plugin.
 - [x] Create `react-router.config.ts` with `ssr: true` and the Vite plugin's defaults. (Decide on framework mode vs library mode — see Open Questions.)
-- [ ] Create the directory layout per DESIGN-0001:
-  - `src/main.tsx` (or RR7's equivalent entry)
+- [x] Create the directory layout per DESIGN-0001:
+  - `src/root.tsx` (RR7 framework-mode root) — replaces the standalone `main.tsx`; framework mode owns the entry.
   - `src/components/ds-candidates/` with a `README.md` pointing at DESIGN-0001 §The `ds-candidates/` contract
   - `src/components/portal/` with a `README.md` summarizing what belongs there
   - `src/pages/` (empty for now)
-  - `src/routes/` (RR7 file-system routes; create `_index.tsx` placeholder)
+  - `src/routes/` (RR7 file-system routes; created `_index.tsx` + co-located CSS module)
   - `src/styles/` (empty; reserve for portal-local CSS only — never tokens)
-- [ ] `bun add @donaldgifford/design-system@0.1.0` (no caret per [archived build guide §3](../archive/0001-rfc-site-build-guide.md)).
-- [ ] `import "@donaldgifford/design-system/tokens.css";` at the top of the app entry — exactly once.
-- [ ] Set `<html data-theme="dark">` in `index.html` per [DESIGN-0001 §Resolved](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#resolved-during-initial-review).
-- [ ] Build a `<ThemeToggle>` component in `src/components/portal/` that uses `useTheme` from `@donaldgifford/design-system/theme`. Render it on the placeholder index route.
-- [ ] Implement a placeholder index route (`src/routes/_index.tsx`) that renders an `<h1>` with a tokens-backed heading style, the theme toggle, and some token-styled content (e.g., a card with `var(--color-bg-raised)`).
-- [ ] Confirm the `Anti-patterns` section of DESIGN-0001 is respected: no Tailwind, no CSS-in-JS runtime, no `style={}` for non-dynamic values, no manual `data-theme` mutation outside `useTheme`.
-- [ ] Commit: "phase 2: framework scaffold + design-system wired".
+- [x] `bun add @donaldgifford/design-system@0.1.0` — installed via `bun link` against the local checkout (`link:@donaldgifford/design-system`) since the repo runs without an `NPM_TOKEN` set; flip back to `0.1.0` once `NPM_TOKEN` is available. Workflow recorded in `justfile` (`just ds-build`, `just ds-link`, `just ds-unlink`).
+- [x] `import "@donaldgifford/design-system/tokens.css";` at the top of the app entry — exactly once (in `src/root.tsx`).
+- [x] Set `<html data-theme="dark">` in `src/root.tsx`'s `Layout` per [DESIGN-0001 §Resolved](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#resolved-during-initial-review). Verified in production HTML output (`react-router-serve` curl shows `<html lang="en" data-theme="dark">`).
+- [x] Build a `<ThemeToggle>` component in `src/components/portal/` that uses `useTheme` from `@donaldgifford/design-system/theme`. Rendered on the placeholder index route. Co-located test asserts toggle flips `data-theme` and persists to `localStorage["design-system:theme"]`.
+- [x] Implement a placeholder index route (`src/routes/_index.tsx`) that renders an `<h1>` with a tokens-backed heading style, the theme toggle, and a token-styled card (`var(--color-bg-raised)` + `var(--color-border-default)`).
+- [x] Confirm the `Anti-patterns` section of DESIGN-0001 is respected: no Tailwind, no CSS-in-JS runtime, no `style={}` for non-dynamic values, no manual `data-theme` mutation outside `useTheme`. Grep-verified.
+- [x] Commit: "phase 2: framework scaffold + design-system wired".
 
 #### Success Criteria
 

@@ -4,7 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-Greenfield. No source code yet — `docs/`, `api/openapi.yaml`, and tooling config only. The portal will be the SSR frontend for [`rfc-api`](https://github.com/donaldgifford/rfc-api) and the first real consumer of [`@donaldgifford/design-system`](https://github.com/donaldgifford/design-system).
+Phases 1 + 2 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a placeholder index route at `/` styled with `@donaldgifford/design-system` tokens; `<html data-theme="dark">` is set on first paint; the `<ThemeToggle>` flips between dark and light and persists via `useTheme` (localStorage key `design-system:theme`).
+
+What's wired:
+
+- React 19 + React Router v7 (framework mode) + Vite, served by `react-router-serve`.
+- `src/root.tsx` (Layout + App) and a single `src/routes/_index.tsx` (flat-routes via `@react-router/fs-routes`).
+- Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
+- `<ThemeToggle>` in `src/components/portal/ThemeToggle/` with co-located CSS module + vitest test.
+- vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`.
+
+What's not wired yet:
+
+- API integration (orval + TanStack Query) — Phase 3.
+- Real routes against rfc-api — Phase 4.
+- First `ds-candidate` (Badge) — Phase 5.
+- First promotion to `@donaldgifford/design-system` — Phase 6.
 
 ## Canonical specs (read these first)
 
@@ -24,17 +39,21 @@ Also referenced often:
 ## Tooling
 
 - **Runtime + package manager:** Bun (`mise.toml` pins `latest`; currently 1.3.11).
-- **Bundler:** Vite (resolved — RR7 is Vite-native; not yet installed, comes in Phase 2).
-- **Framework + router:** React 19 + React Router v7 — ratified in [ADR-0002](docs/adr/0002-adopt-portal-frontend-stack.md), following Oxide's [`rfd-site`](https://github.com/oxidecomputer/rfd-site) precedent. React 19.2.5 installed; RR7 install in Phase 2.
+- **Bundler:** Vite 8 (`@react-router/dev/vite` plugin owns dev/build/SSR entry generation in framework mode).
+- **Framework + router:** React 19.2.5 + React Router v7.14 (framework mode, `appDirectory: "src"`, `ssr: true`). Routes discovered via `@react-router/fs-routes` from `src/routes.ts` — `ignoredRouteFiles` excludes `**/*.module.css`, `**/*.test.{ts,tsx}`, `**/README.md`. Production server: `@react-router/serve`. Ratified in [ADR-0002](docs/adr/0002-adopt-portal-frontend-stack.md), following Oxide's [`rfd-site`](https://github.com/oxidecomputer/rfd-site) precedent.
 - **Data fetching:** TanStack Query (per Oxide stack). OpenAPI client generator: **`orval`** — picked because it auto-generates TanStack Query hooks (Oxide writes those by hand) and ships MSW handler generation. Note: Oxide's own `@oxide/openapi-gen-ts` is Dropshot-only and not portable to our hand-authored spec — see ADR-0001. Both come in Phase 3.
 - **Markdown rendering:** `react-markdown` + `remark-gfm` + `@shikijs/rehype` + `rehype-sanitize` + `mermaid` (client-side hydration). See [DESIGN-0002](docs/design/0002-markdown-rendering-pipeline.md) for the full plugin chain. Comes after Phase 4 (separate IMPL doc TBD).
 - **Language:** TypeScript ^5.7.2 strict, `target: ES2022`, `moduleResolution: bundler`. `tsconfig.json` mirrors the design-system repo verbatim with all extra strictness (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `isolatedModules`, etc.).
 - **Lint/format:** ESLint v9 flat config + Prettier — mirror the design-system repo verbatim so promoted candidates pass lint in both repos with no churn. Versions: eslint ^9.17, typescript-eslint ^8.18, eslint-plugin-react ^7.37, react-hooks ^5.1, jsx-a11y ^6.10.
-- **Tests:** vitest ^2.1.8 + jsdom ^25.0.1 + `@testing-library/react` ^16.3.2 + `@testing-library/jest-dom` ^6.9.1. Setup file at `tests/setup.ts` extends expect with jest-dom matchers. Vitest discovers both `tests/**/*.test.{ts,tsx}` and `src/**/*.test.{ts,tsx}` (the latter for colocated `ds-candidate` tests per DESIGN-0001 §Resolved).
+- **Tests:** vitest ^2.1.8 + jsdom ^25.0.1 + `@testing-library/react` ^16.3.2 + `@testing-library/jest-dom` ^6.9.1 + `@testing-library/user-event` ^14.6.1. `tests/setup.ts` extends expect with jest-dom matchers and registers an `afterEach(cleanup)` so screen queries don't leak between tests. Vitest discovers both `tests/**/*.test.{ts,tsx}` and `src/**/*.test.{ts,tsx}` (the latter for colocated `portal/` and `ds-candidate` tests per DESIGN-0001 §Resolved). `vitest.config.ts` sets `resolve.dedupe: ["react", "react-dom"]` so a `bun link`'d design-system consumes rfc-site's React (otherwise jsdom hits the classic two-React `useState` is null crash).
 
 `mise.toml` reconciled: `bun = "latest"` added, `pnpm = "10.33.2"` removed, `node = "22"` kept for tool compat headroom (drop later when every tool is confirmed Bun-native).
 
-GitHub Packages auth is required to install the design system. Commit `bunfig.toml` (resolved — `.npmrc` is not committed); `NPM_TOKEN` must have `read:packages`.
+GitHub Packages auth is required to install the design system. Commit `bunfig.toml` (resolved — `.npmrc` is not committed); `NPM_TOKEN` must have `read:packages`. When `NPM_TOKEN` isn't set locally, the design-system can be consumed via `bun link` against `../design-system` (`just ds-build` then `just ds-link`); `package.json` declares the dep as `link:@donaldgifford/design-system` so `bun install` resolves it through the local checkout.
+
+## Task runner (`justfile`)
+
+A `justfile` mirrors `package.json` scripts as recipes. Prefer `just <recipe>` over `bun run x` for the loop. Composite: `just check` runs typecheck → lint → format-check → test (CI parity). Design-system local workflow: `just ds-build`, `just ds-link`, `just ds-unlink`. `just --list` for the full recipe list.
 
 ## Architecture: portal-first, primitives follow
 
@@ -81,20 +100,41 @@ When a `ds-candidate` meets the readiness checklist (DESIGN-0001 §The `ds-candi
 
 ```
 api/
-  openapi.yaml             ← vendored from rfc-api; sync mechanism TBD
+  openapi.yaml                       ← vendored from rfc-api; sync mechanism TBD
   README.md
 docs/
-  adr/                     ← docz-managed; ADR-0001 (API contract) and ADR-0002 (stack) are load-bearing
-  design/                  ← docz-managed; DESIGN-0001 (portal architecture) and DESIGN-0002 (Markdown pipeline) are load-bearing
-  impl/                    ← (empty; future IMPL-0001 will lift the build guide's operational steps)
-  rfc/                     ← (empty)
-  plan/                    ← (empty)
-  investigation/           ← (empty)
-  integration/             ← non-docz reference docs (rfc-api cookbook)
-  archive/                 ← frozen historical source material
-mise.toml                  ← still pins node + pnpm; reconcile when scaffolding
+  adr/                               ← docz-managed; ADR-0001 (API contract) and ADR-0002 (stack) are load-bearing
+  design/                            ← docz-managed; DESIGN-0001 (portal architecture) and DESIGN-0002 (Markdown pipeline) are load-bearing
+  impl/                              ← IMPL-0001 (bootstrap scaffold) — Phases 1-2 done, 3-6 pending
+  integration/                       ← non-docz reference docs (rfc-api cookbook)
+  archive/                           ← frozen historical source material
+src/
+  root.tsx                           ← RR7 framework-mode root (Layout + App)
+  routes.ts                          ← flatRoutes() with ignoredRouteFiles
+  routes/
+    _index.tsx                       ← placeholder index route
+    _index.module.css
+    README.md                        ← documents the flat-routes convention
+  components/
+    portal/
+      ThemeToggle/                   ← first portal component (test colocated)
+      README.md                      ← what belongs in portal/
+    ds-candidates/
+      README.md                      ← promotion contract reminder
+  pages/                             ← (empty; reserve for page-specific composites)
+  styles/                            ← (empty; portal-local CSS only — never tokens)
+tests/
+  setup.ts                           ← jest-dom matchers + RTL afterEach(cleanup)
+  smoke.test.ts                      ← phase 1 smoke (drop in phase 3)
+api/openapi.yaml                     ← vendored
+bunfig.toml                          ← @donaldgifford → npm.pkg.github.com
+react-router.config.ts               ← appDirectory: "src", ssr: true
+vite.config.ts                       ← @react-router/dev plugin
+vitest.config.ts                     ← jsdom + dedupe react / react-dom
+justfile                             ← task runner (mirrors package.json scripts)
+mise.toml                            ← bun = latest, node = 22
 .docz.yaml
 CLAUDE.md
 ```
 
-All four canonical specs (DESIGN-0001, DESIGN-0002, ADR-0001, ADR-0002) are now drafted. Scaffolding can start. Likely next doc-level item: an `IMPL-0001` plan that turns the lifted operational steps into a phased checklist.
+Next doc-level / impl-level work: Phase 3 (orval + TanStack Query + MSW handlers).
