@@ -125,9 +125,9 @@ Stand up the runnable React Router v7 + Vite + React 19 SSR app skeleton with Gi
 
 - [x] Add `bunfig.toml` with the `[install.scopes]` block for `@donaldgifford` per [archived build guide §2](../archive/0001-rfc-site-build-guide.md). Do **not** also add `.npmrc` (resolved in DESIGN-0001).
 - [x] Document `NPM_TOKEN` requirement and shell-export instructions in a top-level `README.md` section. Note that CI under the same GitHub owner can use `secrets.GITHUB_TOKEN`.
-- [ ] `bun add react@^19 react-dom@^19`.
-- [ ] `bun add react-router @react-router/node @react-router/serve @react-router/fs-routes`.
-- [ ] `bun add -d @react-router/dev vite @vitejs/plugin-react`.
+- [x] `bun add react@^19 react-dom@^19`.
+- [x] `bun add react-router @react-router/node @react-router/serve @react-router/fs-routes`.
+- [x] `bun add -d @react-router/dev vite @vitejs/plugin-react`.
 - [ ] Create `vite.config.ts` with `@react-router/dev/vite` plugin.
 - [ ] Create `react-router.config.ts` with `ssr: true` and the Vite plugin's defaults. (Decide on framework mode vs library mode — see Open Questions.)
 - [ ] Create the directory layout per DESIGN-0001:
