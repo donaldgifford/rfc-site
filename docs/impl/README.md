@@ -32,4 +32,5 @@ docz create impl "Your Implementation Title"
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
+| IMPL-0001 | Bootstrap portal scaffold per DESIGN-0001 | Draft | 2026-04-27 | Donald Gifford | [0001-bootstrap-portal-scaffold-per-design-0001.md](0001-bootstrap-portal-scaffold-per-design-0001.md) |
 <!-- END DOCZ AUTO-GENERATED -->
