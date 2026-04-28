@@ -1,0 +1,57 @@
+.shell {
+  background: var(--color-bg-base);
+  color: var(--color-fg-primary);
+  min-height: 100dvh;
+  padding: var(--space-12) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-size: var(--font-size-32);
+  font-weight: var(--font-weight-700);
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font-size: var(--font-size-16);
+  line-height: 1.55;
+  margin: 0;
+  color: var(--color-fg-secondary);
+}
+
+.actions {
+  margin: 0;
+}
+
+.link {
+  color: var(--color-accent-default);
+  text-decoration: none;
+  font-weight: var(--font-weight-500);
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.footnote {
+  margin-top: var(--space-12);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-hairline);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-13);
+}
+
+.requestId {
+  background: var(--color-code-bg);
+  color: var(--color-code-fg);
+  border: 1px solid var(--color-code-border);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-1);
+  font-size: 0.92em;
+}

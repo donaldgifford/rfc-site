@@ -1,0 +1,44 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-500);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  background: var(--color-bg-elevated);
+  color: var(--color-status-abandoned);
+  border: 1px solid var(--color-border-hairline);
+  text-transform: capitalize;
+}
+
+.pill[data-status="draft"] {
+  color: var(--color-status-draft);
+  border-color: var(--color-status-draft);
+}
+
+.pill[data-status="proposed"] {
+  color: var(--color-status-proposed);
+  border-color: var(--color-status-proposed);
+}
+
+.pill[data-status="accepted"] {
+  color: var(--color-status-accepted);
+  border-color: var(--color-status-accepted);
+}
+
+.pill[data-status="rejected"] {
+  color: var(--color-status-rejected);
+  border-color: var(--color-status-rejected);
+}
+
+.pill[data-status="superseded"] {
+  color: var(--color-status-superseded);
+  border-color: var(--color-status-superseded);
+}
+
+.pill[data-status="abandoned"] {
+  color: var(--color-status-abandoned);
+  border-color: var(--color-status-abandoned);
+}

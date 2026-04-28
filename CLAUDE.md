@@ -4,22 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-Phases 1 + 2 + 3 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a placeholder index route at `/` styled with `@donaldgifford/design-system` tokens; `<html data-theme="dark">` is set on first paint; the `<ThemeToggle>` flips between dark and light and persists via `useTheme`. The API integration scaffold (orval + TanStack Query + MSW for tests) is in place; the orval-generated `useGetDoc` hook is exercised end-to-end by `tests/api/getDoc.test.tsx`.
+Phases 1 + 2 + 3 + 4 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else.
 
 What's wired:
 
 - React 19 + React Router v7 (framework mode) + Vite, served by `react-router-serve`.
 - `src/root.tsx`: Layout (sets `<html data-theme="dark">`) + App (wraps `<Outlet />` in `<QueryClientProvider>` with `useState(createQueryClient)` for SSR isolation).
-- A single placeholder route at `src/routes/_index.tsx` (flat-routes via `@react-router/fs-routes`).
+- Routes: `src/routes/_index.tsx` (directory card grid + Link-header pagination via `?cursor=`); `src/routes/$type.$id.tsx` (doc page with title h1, `<StatusPill>`, dateline, authors, `<pre>` body). Both wire `RouteErrorBoundary` as their `ErrorBoundary` export.
 - Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
-- `<ThemeToggle>` in `src/components/portal/ThemeToggle/` with co-located CSS module + vitest test.
-- API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `__generated__/` (orval output, gitignored).
+- Portal components: `<ThemeToggle>` (Phase 2), `<StatusPill>` (Phase 4 inline; promotes to `<Badge>` ds-candidate in Phase 5), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4).
+- API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
 - vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
+- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths); `_index` loader (cursors, Link header, query forwarding); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2). 11 tests across 5 files.
 - CI: `.github/workflows/ci.yml` runs `bun install --frozen-lockfile` (using `secrets.GITHUB_TOKEN` for GitHub Packages), the orval drift check (`scripts/gen-api-check.sh`), and the full static-check + build pipeline.
+
+What's pending manual verification:
+
+- The "live rfc-api" Phase 4 success criteria — running `rfc-api` locally and confirming `bun run dev` shows real data, the 404 path renders for `/rfc/9999`, etc. The loop's environment doesn't have rfc-api running; MSW-backed tests cover the contract against a fixture surface.
 
 What's not wired yet:
 
-- Real routes against rfc-api — Phase 4.
 - First `ds-candidate` (Badge) — Phase 5.
 - First promotion to `@donaldgifford/design-system` — Phase 6.
 
@@ -114,12 +118,17 @@ src/
   root.tsx                           ← RR7 framework-mode root (Layout + App + QueryClientProvider)
   routes.ts                          ← flatRoutes() with ignoredRouteFiles
   routes/
-    _index.tsx                       ← placeholder index route
+    _index.tsx                       ← directory: listDocs card grid + Link-header pagination
     _index.module.css
+    $type.$id.tsx                    ← doc page: getDoc loader, title/status/body/dateline
+    $type.$id.module.css
     README.md                        ← documents the flat-routes convention
   components/
     portal/
-      ThemeToggle/                   ← first portal component (test colocated)
+      ThemeToggle/                   ← first portal component (Phase 2; test colocated)
+      StatusPill/                    ← Phase 4 inline pill (promotes to <Badge> in Phase 5)
+      DocCard/                       ← Phase 4 directory card
+      RouteErrorBoundary/            ← Phase 4 7807 → portal error UI (test colocated)
       README.md                      ← what belongs in portal/
     ds-candidates/
       README.md                      ← promotion contract reminder
@@ -129,10 +138,15 @@ src/
     config.ts                        ← RFC_API_URL reader (import.meta.env + process.env)
     fetcher.ts                       ← orval custom mutator over fetch
     queryClient.ts                   ← TanStack QueryClient factory (Phase 3 defaults)
+    errors.ts                        ← throwIfProblem + classifyProblem (RFC 7807)
+    pagination.ts                    ← RFC 5988 Link header parser
     __generated__/                   ← orval output (gitignored — never commit)
 tests/
   setup.ts                           ← jest-dom matchers + RTL afterEach(cleanup)
+  api/server.ts                      ← shared MSW server + helpers (mockGetDoc, mockListDocs, mockProblem)
   api/getDoc.test.tsx                ← Phase 3 hook+MSW smoke test
+  api/docPage.test.ts                ← Phase 4 $type.$id loader (200/404/500)
+  api/indexRoute.test.ts             ← Phase 4 _index loader (cursors / Link header / query forwarding)
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build

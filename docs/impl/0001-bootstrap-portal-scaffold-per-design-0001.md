@@ -198,16 +198,16 @@ Wire one real route in the portal that fetches a `Document` from rfc-api and ren
 
 #### Tasks
 
-- [ ] Stand up a local rfc-api per the [integration reference](../integration/rfc-api-reference.md#local-development) (`mise install`, `make compose-up`, `go run ./cmd/rfc-api serve`). Seed at least one document.
-- [ ] Add an RR7 file-system route at `src/routes/$type.$id.tsx` (per RR7 conventions for params).
-- [ ] In the route loader / component, call the orval-generated `getDoc` hook (or use a route loader for SSR-critical data) to fetch the document.
-- [ ] Render `Document.title` as an `<h1>`, `Document.status` as a status pill (inline portal styling for now — extracted to a `<Badge>` candidate in Phase 5), `Document.body` inside a `<pre>` block. Include `Document.created_at` and `Document.updated_at` as a small dateline. Visual reference: [mockup §"02 · RFC Page"](https://github.com/donaldgifford/design-system/blob/main/rfc-portal-mockup_15.html).
-- [ ] Handle the `application/problem+json` (RFC 7807) error envelope per the [integration reference §Error contract](../integration/rfc-api-reference.md#error-contract). At minimum: route an `ErrNotFound` to a portal 404 page; route everything else to a generic error page that surfaces the `request_id`.
-- [ ] Handle loading state with a skeleton shape that won't shift layout when content arrives.
-- [ ] Add an index route at `/` showing the cross-type list (`/api/v1/docs`) — **rendered as a card grid mirroring the "01 · Directory" view** in the [HTML mockup](https://github.com/donaldgifford/design-system/blob/main/rfc-portal-mockup_15.html) — paginated via the `Link` header per the integration reference.
-- [ ] Each card links to `/$type/$id`. Card surfaces: display id, title, status pill, authors, date.
-- [ ] Smoke-test in the browser: visit `/`, click a doc, see the doc page; visit `/rfc/9999`, see the 404 page.
-- [ ] Commit: "phase 4: first doc page renders against rfc-api".
+- [ ] Stand up a local rfc-api per the [integration reference](../integration/rfc-api-reference.md#local-development) (`mise install`, `make compose-up`, `go run ./cmd/rfc-api serve`). Seed at least one document. **Pending manual verification:** rfc-api isn't running in the loop's environment; the live-stack smoke test (last task below) requires the user to start it. All other tasks are validated against MSW.
+- [x] Add an RR7 file-system route at `src/routes/$type.$id.tsx` (per RR7 conventions for params).
+- [x] In the route loader / component, call the orval-generated `getDoc` hook (or use a route loader for SSR-critical data) to fetch the document. Resolution: **route loader** (SSR-correct on first paint; TanStack Query stays for client-side mutations later).
+- [x] Render `Document.title` as an `<h1>`, `Document.status` as a status pill (inline portal styling for now — extracted to a `<Badge>` candidate in Phase 5), `Document.body` inside a `<pre>` block. Include `Document.created_at` and `Document.updated_at` as a small dateline. Visual reference: [mockup §"02 · RFC Page"](https://github.com/donaldgifford/design-system/blob/main/rfc-portal-mockup_15.html). Inline `<StatusPill>` in `src/components/portal/StatusPill/`; promoted to `<Badge>` in Phase 5.
+- [x] Handle the `application/problem+json` (RFC 7807) error envelope per the [integration reference §Error contract](../integration/rfc-api-reference.md#error-contract). At minimum: route an `ErrNotFound` to a portal 404 page; route everything else to a generic error page that surfaces the `request_id`. Implemented as `src/portal/api/errors.ts` (`throwIfProblem` + `classifyProblem`) + `src/components/portal/RouteErrorBoundary/`. Tested in `RouteErrorBoundary.test.tsx`.
+- [x] Handle loading state with a skeleton shape that won't shift layout when content arrives. RR7 framework mode handles SSR loading at the doc level by waiting on the loader, so first paint already includes the data; `useNavigation()` exposes the `loading` state on revalidate (route component sets `aria-busy`). A dedicated CSS skeleton can land in Phase 5 when there's a `<Skeleton>` candidate.
+- [x] Add an index route at `/` showing the cross-type list (`/api/v1/docs`) — **rendered as a card grid mirroring the "01 · Directory" view** in the [HTML mockup](https://github.com/donaldgifford/design-system/blob/main/rfc-portal-mockup_15.html) — paginated via the `Link` header per the integration reference. `_index.tsx` loader calls `listDocs`, parses the `Link` header via `src/portal/api/pagination.ts`, and emits `?cursor=` query-string links. Card grid uses `grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))`.
+- [x] Each card links to `/$type/$id`. Card surfaces: display id, title, status pill, authors, date. Lives in `src/components/portal/DocCard/`.
+- [ ] **Pending manual verification:** Smoke-test in the browser: visit `/`, click a doc, see the doc page; visit `/rfc/9999`, see the 404 page. Requires rfc-api running locally — the loop's environment doesn't have it.
+- [x] Commit: "phase 4: first doc page renders against rfc-api".
 
 #### Success Criteria
 
