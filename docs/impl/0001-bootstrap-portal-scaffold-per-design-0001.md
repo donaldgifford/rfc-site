@@ -287,7 +287,7 @@ Mechanical now that `@donaldgifford/design-system@0.2.0` ships.
 - [x] Delete `src/components/ds-candidates/Badge/` (component, css, index, test).
 - [x] Run `just check` (typecheck, lint, format-check, test) and `just build` — all green. 17/17 tests pass (was 26 — the 9-test Badge candidate suite now lives in design-system at `tests/primitives/Badge.test.tsx`). Production CSS bundle (`build/client/assets/root-*.css`) contains all 9 `.ds-badge` selectors, confirming the styles.css import resolves through SSR.
 - [ ] Visual verification in dev: pages render identically before/after the swap. **Pending manual verification** — requires `bun run dev` + `rfc-api` running locally; the loop's environment can't smoke-test the rendered DOM. The full-render integration tests (`tests/api/docPageRender.test.tsx`, `tests/api/indexRouteRender.test.tsx`) cover the contract via `createRoutesStub`; CSS contains the same `.ds-badge` selectors targeted by the same `data-status` / `data-size` attributes.
-- [ ] Commit: "phase 6: promote `<Badge>` to design-system".
+- [x] Commit: "phase 6: promote `<Badge>` to design-system" (`3968fdc`).
 
 #### Success Criteria
 
