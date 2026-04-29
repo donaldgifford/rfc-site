@@ -5,7 +5,7 @@
     "": {
       "name": "rfc-site",
       "dependencies": {
-        "@donaldgifford/design-system": "link:@donaldgifford/design-system",
+        "@donaldgifford/design-system": "^0.2.0",
         "@react-router/fs-routes": "^7.14.2",
         "@react-router/node": "^7.14.2",
         "@react-router/serve": "^7.14.2",
@@ -123,7 +123,7 @@
 
     "@csstools/css-tokenizer": ["@csstools/css-tokenizer@3.0.4", "", {}, "sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw=="],
 
-    "@donaldgifford/design-system": ["@donaldgifford/design-system@link:@donaldgifford/design-system", {}],
+    "@donaldgifford/design-system": ["@donaldgifford/design-system@0.2.0", "https://npm.pkg.github.com/download/@donaldgifford/design-system/0.2.0/6dfa89fcca94eb619fed438b870354f70305f55d", { "dependencies": { "clsx": "^2.1.1" }, "peerDependencies": { "react": "^18 || ^19", "react-dom": "^18 || ^19" } }, "sha512-RFzbvjI9L+ezFVmEunX2V3wJN+hmGcthO2/hojDG0bV2iacMIoj30nLO8QGHyWaNM1TMMTViM7SHLLTgzJ0DNQ=="],
 
     "@emnapi/core": ["@emnapi/core@1.10.0", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.1", "tslib": "^2.4.0" } }, "sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw=="],
 
