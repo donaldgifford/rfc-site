@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import "@donaldgifford/design-system/tokens.css";
+import "@donaldgifford/design-system/styles.css";
 import { createQueryClient } from "./portal/api/queryClient";
 
 export function Layout({ children }: { children: React.ReactNode }) {

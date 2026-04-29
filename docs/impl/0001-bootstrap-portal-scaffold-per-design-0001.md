@@ -271,19 +271,22 @@ Promote the Phase 5 candidate into `@donaldgifford/design-system`. This phase sp
 - [x] Run `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build` — all green. **312/312** tests pass; build emits literal `.ds-badge` selectors in `dist/index.css` and the literal `clsx(...)` call in `dist/index.js`.
 - [x] Add a changeset (`.changeset/promote-badge-primitive.md` → minor for new primitive).
 - [x] Commit on `feat/promote-badge` (`b118de6` — `feat(primitives): add Badge primitive promoted from rfc-site ds-candidates`).
-- [ ] Open PR; merge. **User-gated** (cross-repo PR is a shared-system action).
-- [ ] Wait for the release workflow's "Version Packages" PR; merge that too. **User-gated.**
-- [ ] Confirm `@donaldgifford/design-system@0.x.0` is published to GitHub Packages. **User-gated.**
+- [x] Open PR; merge. [donaldgifford/design-system#5](https://github.com/donaldgifford/design-system/pull/5) — merged 2026-04-29 as `d97f441`.
+- [x] Wait for the release workflow's "Version Packages" PR; merge that too. [#6](https://github.com/donaldgifford/design-system/pull/6) — merged as `e85222a`.
+- [x] Confirm `@donaldgifford/design-system@0.2.0` is published to GitHub Packages.
+
+> **Note on the published shape.** The release added a new sub-path export at `@donaldgifford/design-system/styles.css` exposing the bundled primitive CSS at `dist/index.css`. Consumers must import this once at the app root alongside `tokens.css` — one import covers all current and future primitives.
 
 #### Tasks (in this repo, `rfc-site`)
 
-Mechanical once `@donaldgifford/design-system@0.x.0` ships. (The user-gated steps above are the only remaining gate.)
+Mechanical now that `@donaldgifford/design-system@0.2.0` ships.
 
-- [ ] `bun update @donaldgifford/design-system` to the new published version.
-- [ ] Replace the imports of `<Badge>` from `src/components/ds-candidates/Badge` with imports from `@donaldgifford/design-system`.
-- [ ] Delete `src/components/ds-candidates/Badge/` (component, css, index, test).
-- [ ] Run `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build` — all green.
-- [ ] Visual verification in dev: pages render identically before/after the swap.
+- [x] ~~`bun update @donaldgifford/design-system` to the new published version.~~ Documented; the `package.json` spec stays on `link:@donaldgifford/design-system` for the dev environment (no `NPM_TOKEN` available locally) — the link target is on `main`'s `0.2.0` source. Flip to `^0.2.0` once `NPM_TOKEN` is set per CLAUDE.md.
+- [x] Wire `import "@donaldgifford/design-system/styles.css";` into `src/root.tsx` alongside the existing `tokens.css` import. (New requirement from the published 0.2.0 — see "Note on the published shape" above.)
+- [x] Replace the imports of `<Badge>` from `src/components/ds-candidates/Badge` with imports from `@donaldgifford/design-system` (sites: `src/components/portal/DocCard/DocCard.tsx`, `src/routes/$type.$id.tsx`).
+- [x] Delete `src/components/ds-candidates/Badge/` (component, css, index, test).
+- [x] Run `just check` (typecheck, lint, format-check, test) and `just build` — all green. 17/17 tests pass (was 26 — the 9-test Badge candidate suite now lives in design-system at `tests/primitives/Badge.test.tsx`). Production CSS bundle (`build/client/assets/root-*.css`) contains all 9 `.ds-badge` selectors, confirming the styles.css import resolves through SSR.
+- [ ] Visual verification in dev: pages render identically before/after the swap. **Pending manual verification** — requires `bun run dev` + `rfc-api` running locally; the loop's environment can't smoke-test the rendered DOM. The full-render integration tests (`tests/api/docPageRender.test.tsx`, `tests/api/indexRouteRender.test.tsx`) cover the contract via `createRoutesStub`; CSS contains the same `.ds-badge` selectors targeted by the same `data-status` / `data-size` attributes.
 - [ ] Commit: "phase 6: promote `<Badge>` to design-system".
 
 #### Success Criteria

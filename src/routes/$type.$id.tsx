@@ -3,7 +3,7 @@ import { Link, useNavigation } from "react-router";
 import { getDoc } from "../portal/api/__generated__/docs/docs";
 import type { Document } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
-import { Badge } from "../components/ds-candidates/Badge";
+import { Badge } from "@donaldgifford/design-system";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import { Skeleton } from "../components/portal/Skeleton";
 import styles from "./$type.$id.module.css";

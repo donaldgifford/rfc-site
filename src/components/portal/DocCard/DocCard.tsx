@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import type { Document } from "../../../portal/api/__generated__/model";
-import { Badge } from "../../ds-candidates/Badge";
+import { Badge } from "@donaldgifford/design-system";
 import styles from "./DocCard.module.css";
 
 /**

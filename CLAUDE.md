@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-Phases 1 + 2 + 3 + 4 + 5 of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. The first ds-candidate, `<Badge>`, is in `src/components/ds-candidates/Badge/` and used in 2+ places — ready for Phase 6 promotion to `@donaldgifford/design-system`.
+All 6 phases of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. `<Badge>` was promoted to `@donaldgifford/design-system@0.2.0` in Phase 6 and is now consumed as a published primitive.
 
 What's wired:
 
@@ -13,10 +13,10 @@ What's wired:
 - Routes: `src/routes/_index.tsx` (directory card grid + Link-header pagination via `?cursor=`); `src/routes/$type.$id.tsx` (doc page with title h1, `<StatusPill>`, dateline, authors, `<pre>` body). Both wire `RouteErrorBoundary` as their `ErrorBoundary` export.
 - Design-system consumed via `bun link` against the local `../design-system` checkout (CLAUDE.md §When iterating in parallel) — `package.json` declares it as `link:@donaldgifford/design-system`. Flip back to `0.1.0` once `NPM_TOKEN` (read:packages) is available.
 - Portal components: `<ThemeToggle>` (Phase 2), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4), `<Skeleton>` (Phase 4 polish — shimmer placeholder backing the route-level `HydrateFallback` exports; honours `prefers-reduced-motion`). `<StatusPill>` was inline in Phase 4 and superseded by the Phase 5 `<Badge>` candidate (deleted from portal/).
-- ds-candidates: `<Badge>` (Phase 5) — `forwardRef`, `status: BadgeStatus | (string & {})`, `size: "sm" | "md"`, `clsx` className merge, `data-status` / `data-size` attributes drive token-backed CSS variants. Used in `<DocCard>` (sm) and `src/routes/$type.$id.tsx` (md). CSS shipped as a side-effect import (`Badge.css`, prefixed `.ds-badge`) — see [INV-0001](docs/investigation/0001-ship-css-modules-from-design-system-tsup-build.md) for why the primitive doesn't use CSS Modules.
+- `<Badge>` is now consumed from `@donaldgifford/design-system` (promoted in Phase 6, published as `0.2.0`). Import sites: `src/components/portal/DocCard/DocCard.tsx`, `src/routes/$type.$id.tsx`. The primitive's CSS is loaded via the `@donaldgifford/design-system/styles.css` sub-path import in `src/root.tsx` — one import covers all current and future primitives. Prefixed-global-class shape is documented in [INV-0001](docs/investigation/0001-ship-css-modules-from-design-system-tsup-build.md).
 - API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
 - vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
-- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths) + full-render via `createRoutesStub` (renders title/Badge/body/authors, 404 + 500 surfaces); `_index` loader (cursors, Link header, query forwarding) + full-render (cards, pagination links, empty state); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2); `<Badge>` (9 tests for the ds-candidate). 26 tests across 8 files.
+- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths) + full-render via `createRoutesStub` (renders title/Badge/body/authors, 404 + 500 surfaces); `_index` loader (cursors, Link header, query forwarding) + full-render (cards, pagination links, empty state); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2). 17 tests across 7 files. (The 9-test `<Badge>` suite migrated to design-system at `tests/primitives/Badge.test.tsx` in Phase 6.)
 - CI: `.github/workflows/ci.yml` runs `bun install --frozen-lockfile` (using `secrets.GITHUB_TOKEN` for GitHub Packages), the orval drift check (`scripts/gen-api-check.sh`), and the full static-check + build pipeline.
 
 What's pending manual verification:
@@ -25,7 +25,7 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- First promotion to `@donaldgifford/design-system` — Phase 6 is **mid-flight, awaiting user-gated cross-repo PR/merge/publish**. Local prep complete: design-system `feat/promote-badge` is committed (`b118de6`) with the Badge primitive, a `tests/setup.ts` (RTL cleanup + jest-dom matchers), a changeset (minor), and 312/312 tests passing. The `tsup` CSS Module gap surfaced by [INV-0001](docs/investigation/0001-ship-css-modules-from-design-system-tsup-build.md) was resolved via **option 3** (drop CSS Modules for `<Badge>`, ship `.ds-badge` prefixed global classes via side-effect CSS import) — verified `dist/index.css` contains the literal selectors. Remaining: open PR → merge → "Version Packages" PR → publish to GitHub Packages → `bun update @donaldgifford/design-system` → swap imports → delete ds-candidate. The rfc-site half is mechanical once a published `0.x.0` lands.
+- _(none — IMPL-0001 is complete.)_
 
 ## Canonical specs (read these first)
 
@@ -131,7 +131,7 @@ src/
       Skeleton/                      ← Phase 4 polish: shimmer placeholder for HydrateFallback
       README.md                      ← what belongs in portal/
     ds-candidates/
-      Badge/                         ← Phase 5 first candidate (test colocated; promotion-ready)
+      (empty — `<Badge>` was promoted out in Phase 6)
       README.md                      ← promotion contract reminder
   pages/                             ← (empty; reserve for page-specific composites)
   styles/                            ← (empty; portal-local CSS only — never tokens)
@@ -168,4 +168,4 @@ mise.toml                            ← bun = latest, node = 22, just = latest
 CLAUDE.md
 ```
 
-Next impl-level work: Phase 4 (wire one real route at `/$type/$id` against a running rfc-api).
+Next impl-level work: TBD. IMPL-0001 closed at Phase 6. The Markdown rendering pipeline (DESIGN-0002) is the natural next IMPL.
