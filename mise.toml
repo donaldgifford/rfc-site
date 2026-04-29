@@ -11,6 +11,14 @@
 # Stack reference: ADR-0002 (React 19 + RR7 + TanStack Query + orval, with
 # Bun as runtime + package manager and Vite as bundler).
 
+[env]
+# Auto-load project-local environment variables from `.env.local` when
+# `cd`'ing into this directory. `.env.local` is gitignored — keep
+# secrets (e.g. `NPM_TOKEN` for the GitHub Packages registry) here,
+# never in `mise.toml`. See `.env.example` for the canonical list of
+# variables this project reads.
+_.file = ".env.local"
+
 [tools]
 # Bun is the runtime + package manager per ADR-0002.
 bun = "latest"
