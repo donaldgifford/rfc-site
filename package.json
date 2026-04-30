@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "react-router dev",
+    "dev:msw": "API_MODE=msw VITE_API_MODE=msw react-router dev",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "typegen": "react-router typegen",

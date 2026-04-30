@@ -464,8 +464,8 @@ Make `dev:msw` discoverable. Mostly file-level edits.
 
 #### Tasks
 
-- [ ] `package.json`: add `"dev:msw": "API_MODE=msw VITE_API_MODE=msw react-router dev"`.
-- [ ] `justfile`: add a `dev-msw` recipe (just doesn't accept `:`
+- [x] `package.json`: add `"dev:msw": "API_MODE=msw VITE_API_MODE=msw react-router dev"`.
+- [x] `justfile`: add a `dev-msw` recipe (just doesn't accept `:`
   in recipe names; alias as `dev-msw`).
   ```just
   # Run the dev server with MSW handlers backing the API surface.
@@ -473,15 +473,15 @@ Make `dev:msw` discoverable. Mostly file-level edits.
   dev-msw:
       bun run dev:msw
   ```
-- [ ] `.env.example`: add `API_MODE=msw` and `VITE_API_MODE=msw`
+- [x] `.env.example`: add `API_MODE=msw` and `VITE_API_MODE=msw`
   with a comment explaining the script sets these for you.
-- [ ] `README.md`: add a "Local development without rfc-api"
+- [x] `README.md`: add a "Local development without rfc-api"
   section that:
   - Calls out the trade-off (fast iteration vs no contract
     verification).
   - Shows `just dev-msw` as the entry point.
   - Points at PLAN-0001 + IMPL-0002 for the why.
-- [ ] `CLAUDE.md`: one-line pointer in the "Tooling" section so
+- [x] `CLAUDE.md`: one-line pointer in the "Tooling" section so
   future Claude sessions know about the flag.
 
 #### Success Criteria
