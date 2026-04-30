@@ -332,26 +332,26 @@ diff stays reviewable.
 
 #### Tasks
 
-- [ ] Refactor `tests/api/server.ts`:
+- [x] Refactor `tests/api/server.ts`:
   - Drop `mockGetDoc` / `mockListDocs`.
   - Re-export the Phase 3 `handlers` array (or wrap a
     `setupMswServer()` helper that mounts them).
   - Keep `mockProblem(status, problem?)` for error-path tests.
   - Keep `setupMswLifecycle(server)` (already shared).
-- [ ] Migrate `tests/api/getDoc.test.tsx`:
+- [x] Migrate `tests/api/getDoc.test.tsx`:
   - Replace `mockGetDoc(...)` with the default fixture-backed
     handler. Pick a fixture ID present in the corpus.
-- [ ] Migrate `tests/api/docPage.test.ts`:
+- [x] Migrate `tests/api/docPage.test.ts`:
   - Happy path → fixture-backed.
   - 404 / 500 paths → keep `mockProblem(404)` / `mockProblem(500)`
     with `server.use(...)` overrides.
-- [ ] Migrate `tests/api/docPageRender.test.tsx`:
+- [x] Migrate `tests/api/docPageRender.test.tsx`:
   - Same pattern as above; assert that the rendered title /
     body / Badge match the fixture frontmatter / body / status.
-- [ ] Migrate `tests/api/indexRoute.test.ts`:
+- [x] Migrate `tests/api/indexRoute.test.ts`:
   - Cursor / Link-header tests now use the *real* paginated
     handler from Phase 3 — no per-test mock data.
-- [ ] Migrate `tests/api/indexRouteRender.test.tsx`:
+- [x] Migrate `tests/api/indexRouteRender.test.tsx`:
   - Card grid renders cards whose IDs / titles match fixture
     frontmatter.
 

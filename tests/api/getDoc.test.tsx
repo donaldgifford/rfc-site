@@ -3,19 +3,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "../../src/portal/api/queryClient";
 import { useGetDoc } from "../../src/portal/api/__generated__/docs/docs";
-import { getGetDocMockHandler } from "../../src/portal/api/__generated__/docs/docs.msw";
 import type { Document } from "../../src/portal/api/__generated__/model";
-import { server } from "./server";
 import { setupMswLifecycle } from "../utils/msw";
 
 /**
- * Phase-3 smoke test (per IMPL-0001 §Phase 3 Success Criteria):
+ * Phase-3 smoke test (per IMPL-0001 §Phase 3 Success Criteria), now
+ * routed through the fixture-backed MSW handlers (IMPL-0002 Phase 4).
  *
  * - Mounts a `<QueryClientProvider>`.
- * - Wires the orval-generated MSW handler for `GET /api/v1/{type}/{id}`.
- * - Calls the generated `useGetDoc` hook.
+ * - Lets the shared `setupServer(...handlers)` answer the request.
+ * - Calls the generated `useGetDoc` hook for a known fixture id.
  * - Asserts the returned payload narrows to the `Document` shape (200
- *   branch of the orval discriminated-union response).
+ *   branch of the orval discriminated-union response) and matches the
+ *   fixture's frontmatter.
  *
  * If this test fails after a regen, the orval contract or fetcher
  * contract has drifted — investigate before changing the test.
@@ -54,24 +54,12 @@ function GetDocProbe({ docType, id }: { docType: string; id: string }) {
   );
 }
 
-describe("orval-generated useGetDoc hook + MSW", () => {
-  it("returns a typed Document via TanStack Query against an MSW handler", async () => {
-    const fixture: Document = {
-      id: "RFC-0001",
-      type: "rfc",
-      title: "Adopt portal frontend stack",
-      status: "Accepted",
-      created_at: "2025-12-01T00:00:00Z",
-      updated_at: "2026-04-20T00:00:00Z",
-      source: { repo: "donaldgifford/rfc-site", path: "docs/rfc/0001.md" },
-    };
-
-    server.use(getGetDocMockHandler(fixture));
-
+describe("orval-generated useGetDoc hook + MSW fixture handlers", () => {
+  it("returns a typed Document via TanStack Query against the fixture handler", async () => {
     const queryClient = createQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <GetDocProbe docType="rfc" id="0001" />
+        <GetDocProbe docType="rfc" id="RFC-0001" />
       </QueryClientProvider>,
     );
 
@@ -81,7 +69,9 @@ describe("orval-generated useGetDoc hook + MSW", () => {
 
     expect(screen.getByTestId("id")).toHaveTextContent("RFC-0001");
     expect(screen.getByTestId("type")).toHaveTextContent("rfc");
-    expect(screen.getByTestId("title")).toHaveTextContent("Adopt portal frontend stack");
-    expect(screen.getByTestId("status")).toHaveTextContent("Accepted");
+    expect(screen.getByTestId("title")).toHaveTextContent(
+      "Adopt MSW-backed dev mode for the portal",
+    );
+    expect(screen.getByTestId("status")).toHaveTextContent("proposed");
   });
 });
