@@ -1,3 +1,8 @@
+// Side-effect: starts MSW (`setupServer`) on the server when
+// `API_MODE=msw`. No-op in production / when the flag is unset; see
+// src/portal/api/msw/setup.ts and IMPL-0002 Phase 5.
+import "./portal/api/msw/setup";
+
 import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";

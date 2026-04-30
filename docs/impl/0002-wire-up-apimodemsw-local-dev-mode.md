@@ -384,15 +384,15 @@ and **committed** — MSW's worker version is baked in.
 
 #### Tasks
 
-- [ ] `bunx msw init public/ --save` to scaffold `mockServiceWorker.js`.
+- [x] `bunx msw init public/ --save` to scaffold `mockServiceWorker.js`.
   Confirm the command also writes `package.json msw.workerDirectory`
   — keep that key.
-- [ ] Verify `public/` is served by RR7 framework mode at the site
+- [x] Verify `public/` is served by RR7 framework mode at the site
   root. If RR7 needs an opt-in (e.g., a `publicDir` field in
   `react-router.config.ts` or `vite.config.ts`), add it. Smoke
   via `curl http://localhost:5173/mockServiceWorker.js` once the
-  dev server is up.
-- [ ] Create `src/portal/api/msw/setup.ts` — the side-effect SSR
+  dev server is up. _(Vite default `publicDir = "public"` covers it.)_
+- [x] Create `src/portal/api/msw/setup.ts` — the side-effect SSR
   boot module:
   ```ts
   if (typeof window === "undefined" && process.env.API_MODE === "msw") {
@@ -403,10 +403,19 @@ and **committed** — MSW's worker version is baked in.
   Top-level await is fine (this file is loaded server-side as ESM).
   No-op on the browser side — the worker is started in
   `entry.client.tsx` instead.
-- [ ] In `src/root.tsx`, add a side-effect import: `import "./portal/api/msw/setup";`
+
+  _Implementation note (2026-04-28): the production build needs the
+  branch fully DCE'd or the dynamic `import("./server")` pulls
+  `msw/node` and the fixture loader into a `build/server/assets/*.js`
+  chunk. Vite's `import.meta.env.SSR` (false on client) and
+  `import.meta.env.DEV` (false on prod build) are both literal-replaced
+  at build time — combine them with the runtime
+  `process.env.API_MODE === "msw"` check to make the branch fully
+  dead in any non-dev SSR build._
+- [x] In `src/root.tsx`, add a side-effect import: `import "./portal/api/msw/setup";`
   near the top of the imports (above `tokens.css` is fine — the
   side effect runs at module load, before any loader does).
-- [ ] Create `src/entry.client.tsx`:
+- [x] Create `src/entry.client.tsx`:
   ```tsx
   import { startTransition, StrictMode } from "react";
   import { hydrateRoot } from "react-dom/client";
@@ -428,10 +437,10 @@ and **committed** — MSW's worker version is baked in.
     });
   });
   ```
-- [ ] Add `process.env.API_MODE` and `import.meta.env.VITE_API_MODE`
+- [x] Add `process.env.API_MODE` and `import.meta.env.VITE_API_MODE`
   to the type augmentation file (`src/env.d.ts` or whatever RR7
   generates) so `tsc --noEmit` doesn't whine about unknown env vars.
-- [ ] Confirm dev tree-shakes MSW out when the flag is unset:
+- [x] Confirm dev tree-shakes MSW out when the flag is unset:
   - `just build && grep -q "msw" build/server/index.js` → no match.
   - `just build && grep -rq "msw" build/client/assets/` → no match.
 
