@@ -116,10 +116,10 @@ something realistic to chew on.
 
 #### Tasks
 
-- [ ] Create `tests/examples/docs/` with one subdir per
+- [x] Create `tests/examples/docs/` with one subdir per
   `DocumentType.id`: `rfc/`, `adr/`, `design/`, `impl/`, `plan/`,
   `inv/`.
-- [ ] Author at least one fixture per type. Each file frontmatter:
+- [x] Author at least one fixture per type. Each file frontmatter:
   ```yaml
   ---
   id: RFC-0001
@@ -139,19 +139,21 @@ something realistic to chew on.
   ```
   Body is Markdown (intro paragraph + a fenced code block + a
   list — enough to exercise the renderer).
-- [ ] Add at least 2 RFCs and 2 ADRs so listDocs returns multiple
+- [x] Add at least 2 RFCs and 2 ADRs so listDocs returns multiple
   rows and **pagination has multiple pages to slice** (Phase 3
   pagination becomes meaningful here — set the per-page limit
   small enough that ≥ 2 pages exist with the current corpus, e.g.
-  `limit=3`).
-- [ ] One fixture in `proposed`, one in `accepted`, one in `draft`
-  status — drives the `<Badge>` variant rendering.
-- [ ] `tests/examples/docs/README.md`: short pointer (≤ 10 lines)
+  `limit=3`). 8 fixtures: 2 RFCs, 2 ADRs, 1 each of design/impl/plan/inv.
+- [x] One fixture in `proposed`, one in `accepted`, one in `draft`
+  status — drives the `<Badge>` variant rendering. Mix: 4 accepted,
+  2 draft, 2 proposed.
+- [x] `tests/examples/docs/README.md`: short pointer (≤ 10 lines)
   explaining "this is a fixture tree for `API_MODE=msw`, see
   PLAN-0001 / IMPL-0002. Don't import from app code outside
   `src/portal/api/msw/`."
-- [ ] Add `tests/examples/` to `.prettierignore` if Markdown
-  formatting drift becomes annoying — defer until it does.
+- [ ] ~~Add `tests/examples/` to `.prettierignore` if Markdown
+  formatting drift becomes annoying~~ — defer until it does.
+  Prettier left them alone in this commit.
 
 #### Success Criteria
 

@@ -152,6 +152,9 @@ tests/
   api/indexRouteRender.test.tsx      ← Phase 4 _index full render via createRoutesStub
   utils/msw.ts                       ← setupMswLifecycle() — shared MSW beforeAll/afterEach/afterAll
   utils/renderRoute.tsx              ← renderRoute() — createRoutesStub + RTL render in one call
+  examples/docs/                     ← IMPL-0002 Phase 1: hand-curated fixture tree for `API_MODE=msw`
+    rfc/  adr/  design/  impl/  plan/  inv/  ← one subdir per DocumentType
+    README.md                        ← pointer to PLAN-0001 / IMPL-0002
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build
