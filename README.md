@@ -57,6 +57,31 @@ This resolves dependencies including `@donaldgifford/design-system` from GitHub 
 | `bun run test` | vitest single run |
 | `bun run test:watch` | vitest in watch mode |
 | `bun run gen-api` | orval — regenerate the rfc-api TS client from `api/openapi.yaml` (Phase 3 — not yet wired) |
+| `bun run dev:msw` | Dev server backed by MSW handlers + checked-in fixtures — see [Local development without rfc-api](#local-development-without-rfc-api) |
+
+A `justfile` mirrors every script as a recipe (`just dev`, `just check`, `just dev-msw`, …); `just --list` shows the full menu. The composite `just check` runs `typecheck` → `lint` → `format-check` → `test` for CI parity.
+
+## Local development without rfc-api
+
+The default `bun run dev` flow expects [`rfc-api`](https://github.com/donaldgifford/rfc-api) running with Postgres + the GitHub-webhook ingest pipeline backing it. That stack is heavy when your change is a portal-side UI tweak. The `dev:msw` flow avoids it entirely:
+
+```sh
+just dev-msw       # or: bun run dev:msw
+```
+
+What this does:
+
+- Sets `API_MODE=msw` (server side) and `VITE_API_MODE=msw` (client side) so the boot modules in `src/portal/api/msw/setup.ts` (SSR) and `src/entry.client.tsx` (browser) start the MSW handlers before any loader resolves.
+- Routes every `GET /api/v1/...` request against the **shared fixture handlers** in `src/portal/api/msw/handlers.ts`, backed by the hand-curated fixture tree at [`tests/examples/docs/<type>/*.md`](tests/examples/docs/) (eight fixtures across `rfc/adr/design/impl/plan/inv` types, ID pattern `^[A-Z]+-[0-9]+$`).
+- Implements real RFC 5988 cursor pagination + RFC 7807 problem responses, so the route loaders exercise the same code paths they would against `rfc-api`.
+
+Trade-offs:
+
+- ✅ Zero external dependencies — boot the dev server, hit `http://localhost:5173/`, see real-shaped data.
+- ✅ Reproducible payloads (fixtures are checked in; `faker` is seeded deterministically for the few non-structural fields).
+- ❌ No live-API contract verification — the orval drift check still relies on the vendored `api/openapi.yaml`. Run `bun run dev` against a live `rfc-api` before merging anything that touches the API surface.
+
+The full design lives in [PLAN-0001](docs/plan/0001-add-apimodemsw-local-dev-mode-for-rfc-site.md) and [IMPL-0002](docs/impl/0002-wire-up-apimodemsw-local-dev-mode.md). The same handlers back the integration tests (`tests/api/*.test.ts(x)`), so a fixture tweak that breaks rendering shows up in CI.
 
 ## Architecture in one paragraph
 

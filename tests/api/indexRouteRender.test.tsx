@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
 import { screen, waitFor } from "@testing-library/react";
 import IndexRoute, { loader as indexLoader, HydrateFallback } from "../../src/routes/_index";
-import { fixtureDoc, mockListDocs } from "./server";
+import { server } from "./server";
 import { setupMswLifecycle } from "../utils/msw";
 import { renderRoute } from "../utils/renderRoute";
-import type { Document } from "../../src/portal/api/__generated__/model";
 
 setupMswLifecycle();
 
@@ -17,47 +17,65 @@ const indexFixture = {
 
 /**
  * Full-route integration test: mounts `_index` via `createRoutesStub`
- * (RR7's purpose-built test harness) so the loader runs against MSW
- * and the rendered component DOM is exercised end-to-end. Catches
- * regressions in the JSX wiring, Badge integration, DocCard linking,
- * and pagination link generation that loader-only tests miss.
+ * (RR7's purpose-built test harness) so the loader runs against the
+ * shared fixture-backed MSW handlers (IMPL-0002 Phase 4) and the
+ * rendered card grid is exercised end-to-end. Catches regressions in
+ * the JSX wiring, Badge integration, DocCard linking, and pagination
+ * link generation that loader-only tests miss.
  */
 describe("/ index route — full render", () => {
-  it("renders cards for each Document with id, title, and Badge", async () => {
-    const docs: Document[] = [
-      { ...fixtureDoc, id: "RFC-0001", title: "First doc", status: "Accepted" },
-      { ...fixtureDoc, id: "RFC-0002", title: "Second doc", status: "Draft", type: "rfc" },
-    ];
-    mockListDocs(docs);
-
+  it("renders a card per fixture with id, title, and humanised Badge", async () => {
     renderRoute(indexFixture, ["/"]);
 
     await waitFor(() => {
-      expect(screen.getByText("First doc")).toBeInTheDocument();
+      expect(screen.getByText("Use PostgreSQL for primary storage")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Second doc")).toBeInTheDocument();
+    // Spot-check several fixtures from across the type tree.
+    expect(screen.getByText("ADR-0001")).toBeInTheDocument();
     expect(screen.getByText("RFC-0001")).toBeInTheDocument();
-    expect(screen.getByText("RFC-0002")).toBeInTheDocument();
-    // Badges render with humanised labels:
-    expect(screen.getByText("Accepted")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.getByText("Adopt MSW-backed dev mode for the portal")).toBeInTheDocument();
+    // Badges humanise statuses: "accepted" → "Accepted", "proposed" → "Proposed", "draft" → "Draft".
+    expect(screen.getAllByText("Accepted").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Proposed").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Draft").length).toBeGreaterThanOrEqual(1);
     // Card links target /$type/$id:
-    expect(screen.getByRole("link", { name: "First doc" })).toHaveAttribute(
-      "href",
-      "/rfc/RFC-0001",
-    );
+    expect(
+      screen.getByRole("link", { name: "Use PostgreSQL for primary storage" }),
+    ).toHaveAttribute("href", "/adr/ADR-0001");
   });
 
   it("emits prev/next pagination links from the Link header cursors", async () => {
-    mockListDocs([fixtureDoc], {
-      link: '</api/v1/docs?cursor=NEXT&limit=24>; rel="next", </api/v1/docs?cursor=PREV&limit=24>; rel="prev"',
-    });
+    // The fixture handler only emits `rel="next"` — override so we
+    // exercise both cursor states in a single render.
+    server.use(
+      http.get("*/api/v1/docs", () =>
+        HttpResponse.json(
+          [
+            {
+              id: "RFC-0001",
+              type: "rfc",
+              title: "Pagination probe",
+              status: "accepted",
+              created_at: "2026-04-20T00:00:00Z",
+              updated_at: "2026-04-20T00:00:00Z",
+              source: { repo: "donaldgifford/rfc-site", path: "fixtures/rfc/0001.md" },
+            },
+          ],
+          {
+            status: 200,
+            headers: {
+              link: '</api/v1/docs?cursor=NEXT&limit=24>; rel="next", </api/v1/docs?cursor=PREV&limit=24>; rel="prev"',
+            },
+          },
+        ),
+      ),
+    );
 
     renderRoute(indexFixture, ["/"]);
 
     await waitFor(() => {
-      expect(screen.getByText("Adopt portal frontend stack")).toBeInTheDocument();
+      expect(screen.getByText("Pagination probe")).toBeInTheDocument();
     });
 
     expect(screen.getByRole("link", { name: /previous/i })).toHaveAttribute(
@@ -68,7 +86,7 @@ describe("/ index route — full render", () => {
   });
 
   it("renders the empty-state message when listDocs returns no docs", async () => {
-    mockListDocs([]);
+    server.use(http.get("*/api/v1/docs", () => HttpResponse.json([], { status: 200 })));
 
     renderRoute(indexFixture, ["/"]);
 

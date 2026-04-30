@@ -9,8 +9,8 @@ import { server } from "../api/server";
  * between tests, and tears down at the end — replacing the four-line
  * boilerplate every API test file used to repeat.
  *
- * Per-test handlers still go through the helpers in
- * `tests/api/server.ts` (`mockGetDoc`, `mockListDocs`, `mockProblem`).
+ * Per-test overrides go through `server.use(...)` directly, or through
+ * `mockProblem(urlPattern, status, body)` for 7807 error-path injection.
  */
 export function setupMswLifecycle(): void {
   beforeAll(() => {

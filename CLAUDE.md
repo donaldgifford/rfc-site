@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-All 6 phases of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. `<Badge>` was promoted to `@donaldgifford/design-system@0.2.0` in Phase 6 and is now consumed as a published primitive.
+All 6 phases of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. `<Badge>` was promoted to `@donaldgifford/design-system@0.2.0` in Phase 6 and is now consumed as a published primitive. Phases 1-7 of [IMPL-0002](docs/impl/0002-wire-up-apimodemsw-local-dev-mode.md) shipped: `just dev-msw` boots the portal against a hand-curated fixture corpus with no `rfc-api` / Postgres / GitHub-webhook dependency. `curl` smoke verified (`/` returns 200 with all 8 fixtures + `ds-badge` markup, `/rfc/RFC-0001` returns 200 with fixture title/body/authors, `/rfc/NOPE-9999` returns 404 with the portal not-found surface and a 7807 `request_id`). Production build is MSW-clean except the static worker file.
 
 What's wired:
 
@@ -15,8 +15,8 @@ What's wired:
 - Portal components: `<ThemeToggle>` (Phase 2), `<DocCard>` (Phase 4), `<RouteErrorBoundary>` (Phase 4), `<Skeleton>` (Phase 4 polish — shimmer placeholder backing the route-level `HydrateFallback` exports; honours `prefers-reduced-motion`). `<StatusPill>` was inline in Phase 4 and superseded by the Phase 5 `<Badge>` candidate (deleted from portal/).
 - `<Badge>` is now consumed from `@donaldgifford/design-system` (promoted in Phase 6, published as `0.2.0`). Import sites: `src/components/portal/DocCard/DocCard.tsx`, `src/routes/$type.$id.tsx`. The primitive's CSS is loaded via the `@donaldgifford/design-system/styles.css` sub-path import in `src/root.tsx` — one import covers all current and future primitives. Prefixed-global-class shape is documented in [INV-0001](docs/investigation/0001-ship-css-modules-from-design-system-tsup-build.md).
 - API client at `src/portal/api/`: `config.ts` (RFC_API_URL reader), `fetcher.ts` (custom orval mutator over `fetch`), `queryClient.ts` (TanStack defaults: 5min staleTime, no refetchOnWindowFocus, retry 1), `errors.ts` (`throwIfProblem` + `classifyProblem` for the 7807 envelope), `pagination.ts` (RFC 5988 `Link` header parser), `__generated__/` (orval output, gitignored).
-- vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires orval's generated handlers in `tests/api/`.
-- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths) + full-render via `createRoutesStub` (renders title/Badge/body/authors, 404 + 500 surfaces); `_index` loader (cursors, Link header, query forwarding) + full-render (cards, pagination links, empty state); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2). 17 tests across 7 files. (The 9-test `<Badge>` suite migrated to design-system at `tests/primitives/Badge.test.tsx` in Phase 6.)
+- vitest configured with `resolve.dedupe: ["react", "react-dom"]` and an RTL `cleanup` afterEach hook in `tests/setup.ts`. MSW (`msw/node`) wires the **shared fixture-backed handlers** from `src/portal/api/msw/handlers.ts` (IMPL-0002 Phase 3-4) — the same handlers that serve `API_MODE=msw` dev mode also back the integration tests. Per-test overrides go through `server.use(...)` directly, or `mockProblem(urlPattern, status, body)` for explicit error-path injection.
+- Tests: `getDoc` hook+MSW (Phase 3); `$type.$id` loader (200, 404, 500 paths) + full-render via `createRoutesStub` (renders title/Badge/body/authors, 404 + 500 surfaces); `_index` loader (cursors, Link header, query forwarding) + full-render (cards, pagination links, empty state); `<RouteErrorBoundary>` (404 + 500 rendering); `<ThemeToggle>` (Phase 2); fixture-loader cache + parsing (10 tests, IMPL-0002 Phase 2); MSW handlers (getDoc, listDocsByType, paginated /docs round-trip, search — 9 tests, IMPL-0002 Phase 3). **36 tests across 9 files.** (The 9-test `<Badge>` suite migrated to design-system at `tests/primitives/Badge.test.tsx` in Phase 6.)
 - CI: `.github/workflows/ci.yml` runs `bun install --frozen-lockfile` (using `secrets.GITHUB_TOKEN` for GitHub Packages), the orval drift check (`scripts/gen-api-check.sh`), and the full static-check + build pipeline.
 
 What's pending manual verification:
@@ -25,7 +25,17 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- _(none — IMPL-0001 is complete.)_
+- _(none — IMPL-0001 + IMPL-0002 engineering work is complete. Two non-code follow-ups are user-gated: refreshing the PR #2 description with the now-runnable smoke items, and merging `feat/api-mode-msw` → `feat/design-0001` no-ff. Both held until manual review.)_
+
+What IMPL-0002 added (`just dev-msw`):
+
+- Hand-curated fixture corpus at `tests/examples/docs/<type>/*.md` — 8 fixtures across `rfc/adr/design/impl/plan/inv` types, frontmatter validated against the `Document` schema (`^[A-Z]+-[0-9]+$` ID pattern enforced).
+- Async fixture loader at `src/portal/api/msw/fixtures.ts` — branches on `typeof window` so the SSR side reads via `await import("node:fs")` and the client side via `import.meta.glob<string>(...)?raw`. Cache is lazy + idempotent.
+- MSW handlers at `src/portal/api/msw/{handlers,browser,server}.ts` — real RFC 5988 cursor pagination (opaque base64-int offsets), RFC 7807 problem responses with seeded `faker` request IDs, and listing-vs-fetch route ordering that respects MSW's last-match-wins.
+- SSR boot at `src/portal/api/msw/setup.ts` — gated on `import.meta.env.SSR && import.meta.env.DEV && process.env.API_MODE === "msw"`. The two build-time-replaced flags let Vite DCE the entire branch from production artefacts; the runtime check decides per-process whether to start.
+- Client boot at `src/entry.client.tsx` — overrides RR7's auto-generated entry to start the MSW worker before `hydrateRoot` when `VITE_API_MODE=msw`. Production / non-MSW dev gets the dynamic import tree-shaken.
+- Operator surface: `bun run dev:msw`, `just dev-msw`, `.env.example` with the split-flags rationale, README §Local development without rfc-api, and a `CLAUDE.md §Task runner` pointer.
+- Test infra: `tests/api/server.ts` now mounts the same handlers as the dev-mode SSR boot, so the integration suite (36 tests across 9 files) exercises the exact paths the dev server runs. `mockProblem(urlPattern, status, body)` is the only remaining bespoke override helper, kept narrow for explicit error-path tests.
 
 ## Canonical specs (read these first)
 
@@ -59,7 +69,7 @@ GitHub Packages auth is required to install the design system. Commit `bunfig.to
 
 ## Task runner (`justfile`)
 
-A `justfile` mirrors `package.json` scripts as recipes. Prefer `just <recipe>` over `bun run x` for the loop. Composite: `just check` runs typecheck → lint → format-check → test (CI parity). Design-system local workflow: `just ds-build`, `just ds-link`, `just ds-unlink`. `just --list` for the full recipe list.
+A `justfile` mirrors `package.json` scripts as recipes. Prefer `just <recipe>` over `bun run x` for the loop. Composite: `just check` runs typecheck → lint → format-check → test (CI parity). Design-system local workflow: `just ds-build`, `just ds-link`, `just ds-unlink`. **MSW dev mode (no rfc-api / Postgres / webhook required):** `just dev-msw` — sets `API_MODE=msw` + `VITE_API_MODE=msw`, boots the dev server with the fixture-backed handlers (see IMPL-0002 + README §Local development without rfc-api). `just --list` for the full recipe list.
 
 ## Architecture: portal-first, primitives follow
 
@@ -152,6 +162,11 @@ tests/
   api/indexRouteRender.test.tsx      ← Phase 4 _index full render via createRoutesStub
   utils/msw.ts                       ← setupMswLifecycle() — shared MSW beforeAll/afterEach/afterAll
   utils/renderRoute.tsx              ← renderRoute() — createRoutesStub + RTL render in one call
+  examples/docs/                     ← IMPL-0002 Phase 1: hand-curated fixture tree for `API_MODE=msw`
+    rfc/  adr/  design/  impl/  plan/  inv/  ← one subdir per DocumentType
+    README.md                        ← pointer to PLAN-0001 / IMPL-0002
+  api/msw/fixtures.test.ts           ← IMPL-0002 Phase 2: loader unit tests (10 tests)
+  api/msw/handlers.test.ts           ← IMPL-0002 Phase 3: MSW handler tests incl. pagination round-trip (9 tests)
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build

@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { loader } from "../../src/routes/$type.$id";
-import { fixtureDoc, mockGetDoc, mockProblem } from "./server";
+import { mockProblem } from "./server";
 import { setupMswLifecycle } from "../utils/msw";
 
 setupMswLifecycle();
 
 describe("$type.$id loader", () => {
   it("returns the parsed Document on a 200 response", async () => {
-    mockGetDoc(fixtureDoc);
-
     const result = await loader({
       request: new Request("http://localhost/rfc/RFC-0001"),
       params: { type: "rfc", id: "RFC-0001" },
@@ -16,11 +14,11 @@ describe("$type.$id loader", () => {
     } as Parameters<typeof loader>[0]);
 
     expect(result.id).toBe("RFC-0001");
-    expect(result.title).toBe("Adopt portal frontend stack");
+    expect(result.title).toBe("Adopt MSW-backed dev mode for the portal");
   });
 
   it("throws a 404 Response with the problem+json payload for ErrNotFound", async () => {
-    mockProblem("getDoc", 404, {
+    mockProblem("*/api/v1/:type/:id", 404, {
       type: "/problems/not-found",
       title: "Resource not found",
       status: 404,
@@ -49,7 +47,7 @@ describe("$type.$id loader", () => {
   });
 
   it("throws a 500 Response with request_id surfaced for ErrInternal", async () => {
-    mockProblem("getDoc", 500, {
+    mockProblem("*/api/v1/:type/:id", 500, {
       type: "/problems/internal",
       title: "Internal server error",
       status: 500,

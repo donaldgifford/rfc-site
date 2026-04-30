@@ -17,6 +17,11 @@ install:
 dev:
     bun run dev
 
+# Vite dev server with MSW handlers backing the API surface.
+# No rfc-api / Postgres / GitHub webhook required. See IMPL-0002.
+dev-msw:
+    bun run dev:msw
+
 # Production build
 build:
     bun run build

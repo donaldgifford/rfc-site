@@ -5,7 +5,7 @@ import DocPage, {
   HydrateFallback,
   ErrorBoundary,
 } from "../../src/routes/$type.$id";
-import { fixtureDoc, mockGetDoc, mockProblem } from "./server";
+import { mockProblem } from "./server";
 import { setupMswLifecycle } from "../utils/msw";
 import { renderRoute } from "../utils/renderRoute";
 
@@ -21,43 +21,39 @@ const docPageFixture = {
 
 /**
  * Full-route integration test: mounts `$type.$id` via `createRoutesStub`
- * so the loader runs against MSW and the rendered component DOM is
- * exercised end-to-end. Pairs with `tests/api/docPage.test.ts` (loader-
- * only) — the loader test covers control flow + error throwing; this
- * one covers the actual rendered output.
+ * so the loader runs against the shared fixture-backed MSW handlers
+ * (IMPL-0002 Phase 4). The happy path asserts against the canonical
+ * RFC-0001 fixture (`tests/examples/docs/rfc/0001-adopt-msw-dev-mode.md`).
+ *
+ * Pairs with `tests/api/docPage.test.ts` (loader-only) — the loader
+ * test covers control flow + error throwing; this one covers the
+ * actual rendered output.
  */
 describe("/$type/$id route — full render", () => {
   it("renders title, Badge (md), id, body, and authors line", async () => {
-    mockGetDoc({
-      ...fixtureDoc,
-      id: "RFC-0042",
-      title: "Adopt new test harness",
-      status: "Proposed",
-      authors: [
-        { name: "Donald Gifford", handle: "donaldgifford" },
-        { name: "Test Bot", handle: "tb" },
-      ],
-      body: "## Decision\n\nUse createRoutesStub.",
-    });
-
-    renderRoute(docPageFixture, ["/rfc/RFC-0042"]);
+    renderRoute(docPageFixture, ["/rfc/RFC-0001"]);
 
     await waitFor(() => {
       expect(
-        screen.getByRole("heading", { level: 1, name: "Adopt new test harness" }),
+        screen.getByRole("heading", {
+          level: 1,
+          name: "Adopt MSW-backed dev mode for the portal",
+        }),
       ).toBeInTheDocument();
     });
 
+    // Status humanises "proposed" → "Proposed" in the Badge label.
     expect(screen.getByText("Proposed")).toBeInTheDocument();
-    // "RFC-0042" appears in both the breadcrumb and the dateline — assert ≥1.
-    expect(screen.getAllByText(/RFC-0042/).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(/Donald Gifford, Test Bot/)).toBeInTheDocument();
-    expect(screen.getByText(/Use createRoutesStub\./)).toBeInTheDocument();
+    // "RFC-0001" appears in both the breadcrumb and the dateline — assert ≥1.
+    expect(screen.getAllByText(/RFC-0001/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Sam Author, Riley Reviewer/)).toBeInTheDocument();
+    // A distinctive substring from the fixture body.
+    expect(screen.getByText(/Iterating on the portal currently/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /directory/i })).toHaveAttribute("href", "/");
   });
 
   it("renders the not-found surface when getDoc returns ErrNotFound", async () => {
-    mockProblem("getDoc", 404, {
+    mockProblem("*/api/v1/:type/:id", 404, {
       type: "/problems/not-found",
       title: "Resource not found",
       status: 404,
@@ -77,7 +73,7 @@ describe("/$type/$id route — full render", () => {
   });
 
   it("renders the generic error surface (with request_id) for non-404 problems", async () => {
-    mockProblem("getDoc", 500, {
+    mockProblem("*/api/v1/:type/:id", 500, {
       type: "/problems/internal",
       title: "Internal server error",
       status: 500,
