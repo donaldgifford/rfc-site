@@ -25,7 +25,7 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- _(none — IMPL-0001 + IMPL-0002 engineering work is complete. Two non-code follow-ups are user-gated: refreshing the PR #2 description with the now-runnable smoke items, and merging `feat/api-mode-msw` → `feat/design-0001` no-ff. Both held until manual review.)_
+- _(none — IMPL-0001 + IMPL-0002 engineering work is complete. `feat/api-mode-msw` is merged into `feat/design-0001` (merge commit `0cb9c60`). Two non-code follow-ups remain user-gated: pushing `feat/design-0001` (9 commits ahead of origin) so PR #2 picks up the IMPL-0002 work, and refreshing the PR #2 description with the now-runnable smoke items. Both held until the user authorises a push.)_
 
 What IMPL-0002 added (`just dev-msw`):
 

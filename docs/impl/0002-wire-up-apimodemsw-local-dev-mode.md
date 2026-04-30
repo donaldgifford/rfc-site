@@ -527,11 +527,14 @@ PR #2 test plan items now that they're runnable.
   design-system mockup HTML. _(Skipped — visual A/B is a manual
   step the loop can't perform; defer to PR review.)_
 - [ ] Refresh PR #2's body to check off the newly-runnable items.
-  _(Manual step — done in the PR UI.)_
-- [ ] Merge `feat/api-mode-msw` → `feat/design-0001` (no-ff so the
-  branch boundary stays in history). _(User-gated — held for review
-  per the destructive-actions guideline; loop is not authorised to
-  merge cross-branch.)_
+  _(User-gated — `gh pr edit` requires the merge to be pushed first
+  so the runnable items show up in scope. Push is held until the
+  user authorises it.)_
+- [x] Merge `feat/api-mode-msw` → `feat/design-0001` (no-ff so the
+  branch boundary stays in history). _(2026-04-28: merge commit
+  `0cb9c60` on `feat/design-0001`. `just check` 36/36 green on the
+  merged tip. Push is user-gated — feat/design-0001 is now 9 commits
+  ahead of origin; CI won't run until the user pushes.)_
 
 #### Success Criteria
 
