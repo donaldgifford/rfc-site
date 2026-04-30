@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repo state
 
-All 6 phases of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. `<Badge>` was promoted to `@donaldgifford/design-system@0.2.0` in Phase 6 and is now consumed as a published primitive.
+All 6 phases of [IMPL-0001](docs/impl/0001-bootstrap-portal-scaffold-per-design-0001.md) shipped. The portal SSR-renders a card-grid directory at `/` and a doc detail page at `/$type/$id`, both backed by the orval-generated rfc-api client through RR7 route loaders. Problem+JSON errors propagate through a shared `<RouteErrorBoundary>` that renders a not-found surface for `ErrNotFound` and a generic surface (with `request_id`) for everything else. `<Badge>` was promoted to `@donaldgifford/design-system@0.2.0` in Phase 6 and is now consumed as a published primitive. Phases 1-7 of [IMPL-0002](docs/impl/0002-wire-up-apimodemsw-local-dev-mode.md) shipped: `just dev-msw` boots the portal against a hand-curated fixture corpus with no `rfc-api` / Postgres / GitHub-webhook dependency. `curl` smoke verified (`/` returns 200 with all 8 fixtures + `ds-badge` markup, `/rfc/RFC-0001` returns 200 with fixture title/body/authors, `/rfc/NOPE-9999` returns 404 with the portal not-found surface and a 7807 `request_id`). Production build is MSW-clean except the static worker file.
 
 What's wired:
 
@@ -25,7 +25,17 @@ What's pending manual verification:
 
 What's not wired yet:
 
-- **IMPL-0002 (`API_MODE=msw` dev mode)** is mid-flight. Phases 1-6 shipped: hand-curated fixture tree at `tests/examples/docs/<type>/*.md` (8 fixtures), async fixture loader (`src/portal/api/msw/fixtures.ts`) with SSR/browser branching, MSW handlers + browser/server wrappers (`src/portal/api/msw/{handlers,browser,server}.ts`) implementing real RFC 5988 cursor pagination + RFC 7807 problem responses, the integration tests now consume the same handlers (no more bespoke per-test `mockGetDoc` / `mockListDocs` data), and the conditional MSW boot is wired: `src/portal/api/msw/setup.ts` (gated on `import.meta.env.SSR && import.meta.env.DEV && process.env.API_MODE === "msw"` so production builds DCE the dynamic import entirely), `src/entry.client.tsx` (custom RR7 client entry that starts the worker before hydration when `VITE_API_MODE=msw`), `public/mockServiceWorker.js` (committed; written by `bunx msw init`), and `src/env.d.ts` pinning the flag literal types. `just build` artefacts are MSW/faker-clean except for the static worker file. Phase 6 wired the operator surface: `bun run dev:msw` script, `just dev-msw` recipe, `.env.example` documenting the split flags, and README §Local development without rfc-api. Pending: Phase 7 (verification + PR-2 refresh).
+- _(none — IMPL-0001 + IMPL-0002 engineering work is complete. Two non-code follow-ups are user-gated: refreshing the PR #2 description with the now-runnable smoke items, and merging `feat/api-mode-msw` → `feat/design-0001` no-ff. Both held until manual review.)_
+
+What IMPL-0002 added (`just dev-msw`):
+
+- Hand-curated fixture corpus at `tests/examples/docs/<type>/*.md` — 8 fixtures across `rfc/adr/design/impl/plan/inv` types, frontmatter validated against the `Document` schema (`^[A-Z]+-[0-9]+$` ID pattern enforced).
+- Async fixture loader at `src/portal/api/msw/fixtures.ts` — branches on `typeof window` so the SSR side reads via `await import("node:fs")` and the client side via `import.meta.glob<string>(...)?raw`. Cache is lazy + idempotent.
+- MSW handlers at `src/portal/api/msw/{handlers,browser,server}.ts` — real RFC 5988 cursor pagination (opaque base64-int offsets), RFC 7807 problem responses with seeded `faker` request IDs, and listing-vs-fetch route ordering that respects MSW's last-match-wins.
+- SSR boot at `src/portal/api/msw/setup.ts` — gated on `import.meta.env.SSR && import.meta.env.DEV && process.env.API_MODE === "msw"`. The two build-time-replaced flags let Vite DCE the entire branch from production artefacts; the runtime check decides per-process whether to start.
+- Client boot at `src/entry.client.tsx` — overrides RR7's auto-generated entry to start the MSW worker before `hydrateRoot` when `VITE_API_MODE=msw`. Production / non-MSW dev gets the dynamic import tree-shaken.
+- Operator surface: `bun run dev:msw`, `just dev-msw`, `.env.example` with the split-flags rationale, README §Local development without rfc-api, and a `CLAUDE.md §Task runner` pointer.
+- Test infra: `tests/api/server.ts` now mounts the same handlers as the dev-mode SSR boot, so the integration suite (36 tests across 9 files) exercises the exact paths the dev server runs. `mockProblem(urlPattern, status, body)` is the only remaining bespoke override helper, kept narrow for explicit error-path tests.
 
 ## Canonical specs (read these first)
 

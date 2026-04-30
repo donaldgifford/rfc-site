@@ -501,22 +501,37 @@ PR #2 test plan items now that they're runnable.
 
 #### Tasks
 
-- [ ] Run the verification block from PLAN-0001 §Verification.
-- [ ] Walk PR #2's previously-unchecked manual smoke items via
+- [x] Run the verification block from PLAN-0001 §Verification.
+  _(2026-04-28: `just dev-msw` boots cleanly, `curl /` returns 200
+  with all 8 fixture cards + `ds-badge` markup, `curl /rfc/RFC-0001`
+  returns 200 with the fixture title/author/body, `curl /rfc/NOPE-9999`
+  returns 404 with the portal not-found surface and a 7807 `request_id`.
+  `curl /mockServiceWorker.js` returns the worker script. `just build`
+  artefacts contain no `msw` / `setupServer` / `setupWorker` / `faker`
+  references except the static `mockServiceWorker.js` worker file.)_
+- [x] Walk PR #2's previously-unchecked manual smoke items via
   `just dev-msw`:
   - `/` shows the directory grid; click a doc → renders title +
-    `<Badge>` + body.
+    `<Badge>` + body. _(curl-smoked above.)_
   - **Pagination works** — clicking next/prev advances cursor pages
     (now meaningful because Phase 3 implements real pagination).
+    _(`tests/api/msw/handlers.test.ts` round-trips every fixture
+    across pages with no duplicates or gaps.)_
   - `/rfc/NOPE-9999` (any unknown ID) → portal 404 surface.
+    _(curl-smoked above.)_
   - `<ThemeToggle>` flips `data-theme`; persists to
-    `localStorage["design-system:theme"]`.
+    `localStorage["design-system:theme"]` — covered by
+    `<ThemeToggle>` unit tests; unaffected by Phase 5 wiring.
 - [ ] Visual A/B vs. Phase-5 commit `18ebe99` (pre-promotion) — if
   cheap (worktree on a side port). If not, eyeball against the
-  design-system mockup HTML.
+  design-system mockup HTML. _(Skipped — visual A/B is a manual
+  step the loop can't perform; defer to PR review.)_
 - [ ] Refresh PR #2's body to check off the newly-runnable items.
+  _(Manual step — done in the PR UI.)_
 - [ ] Merge `feat/api-mode-msw` → `feat/design-0001` (no-ff so the
-  branch boundary stays in history).
+  branch boundary stays in history). _(User-gated — held for review
+  per the destructive-actions guideline; loop is not authorised to
+  merge cross-branch.)_
 
 #### Success Criteria
 
