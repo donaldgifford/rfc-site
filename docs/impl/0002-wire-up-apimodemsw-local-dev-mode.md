@@ -267,41 +267,42 @@ Page size: a `limit` query param (already in
 
 #### Tasks
 
-- [ ] Create `src/portal/api/msw/handlers.ts` — exports
-  `handlers: RequestHandler[]`, built from the orval `*MockHandler`
-  factories with custom response functions.
-- [ ] Implement `paginate<T>(items: T[], cursor?: string, limit = 3): { page: T[]; nextCursor?: string }` helper.
-  Pure, unit-testable, used by both list handlers.
-- [ ] Set the `Link` header from each list handler's
-  `HttpResponse.json(payload, { headers: { Link: ... } })` when
-  `nextCursor` is set. Use the same path as the inbound URL for
-  the link target (avoid hard-coded `/api/v1/...` strings).
-- [ ] Wire the `ErrNotFound` 7807 envelope: when `findById` returns
-  `undefined`, the handler returns
-  `HttpResponse.json(problem, { status: 404 })` where `problem`
-  matches `ProblemNotFoundResponse`'s shape. Reuse the generated
-  type in `__generated__/model/`.
-- [ ] Create `src/portal/api/msw/server.ts`:
+- [x] Create `src/portal/api/msw/handlers.ts` — exports
+  `handlers: RequestHandler[]`. Uses `http.get` directly (not the
+  orval `*MockHandler` factories) because the factories don't
+  expose response-header control — needed for the `Link`
+  pagination header.
+- [x] Implement `paginate<T>(items, searchParams): { page, nextCursor? }`
+  helper. Reads `limit` (default 3, max 200) + `cursor` (opaque
+  base64-encoded integer offset) from URLSearchParams.
+- [x] Set the `Link` header from each list handler when `nextCursor`
+  is set. Target path is taken from the inbound URL — no hard-coded
+  `/api/v1/...` strings.
+- [x] Wire the `ErrNotFound` 7807 envelope (`notFound(detail)`
+  helper). Returns a 404 with `Content-Type: application/problem+json`
+  and a faker-generated `request_id`.
+- [x] Create `src/portal/api/msw/server.ts`:
   - `import { setupServer } from "msw/node"`.
   - Top-level `if (typeof window !== "undefined") throw new Error(...)`.
   - Export `server = setupServer(...handlers)`.
-- [ ] Create `src/portal/api/msw/browser.ts`:
+- [x] Create `src/portal/api/msw/browser.ts`:
   - `import { setupWorker } from "msw/browser"`.
   - Top-level `if (typeof window === "undefined") throw new Error(...)`.
   - Export `worker = setupWorker(...handlers)`.
-- [ ] Faker seeding: at the top of `handlers.ts`, call
-  `faker.seed(0xDEC1A55)` once. Faker is only used for non-structural
-  filler (e.g., a random `request_id` on errors, default author
-  name when frontmatter omits it).
-- [ ] Add a unit test at `tests/api/msw/handlers.test.ts`:
-  - Spin up `setupServer(...handlers)`.
-  - Hit each URL pattern with a `fetch`; assert payload shape and
-    fixture round-trip (`getDoc("rfc", "RFC-0001")` returns the
-    same fixture as `findById`).
-  - **Pagination round-trip**: hit `/api/v1/docs?limit=3`; parse
-    the response `Link` header; follow `rel="next"`; assert no
-    duplicate IDs across pages and the union covers all fixtures.
-  - 404 path: `/api/v1/rfc/NOPE-9999` returns 7807 envelope.
+- [x] Faker seeding: `faker.seed(0xdec1a55)` at the top of
+  `handlers.ts`. Faker is only used for non-structural filler
+  (currently just `request_id` on errors).
+- [x] Unit tests at `tests/api/msw/handlers.test.ts` (9 tests):
+  - getDoc fixture round-trip.
+  - getDoc 7807 ErrNotFound for unknown ids.
+  - listDocsByType returns sorted fixtures.
+  - listDocsByType 7807 for unknown types.
+  - **Pagination round-trip**: traverse 8 fixtures across 3 pages
+    via `Link: rel="next"` cursors, no duplicates, no gaps.
+  - No `Link` header when result fits in one page.
+  - `Link` target path is relative (no hard-coded host).
+  - searchDocs substring filter (title / body / id).
+  - searchDocs returns full corpus when `q` omitted.
 
 #### Success Criteria
 
