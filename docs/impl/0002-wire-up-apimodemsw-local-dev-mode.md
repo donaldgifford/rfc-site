@@ -186,26 +186,35 @@ well-maintained, MIT). Add to `dependencies`.
 
 #### Tasks
 
-- [ ] Add `yaml` to `dependencies` (`bun add yaml`).
-- [ ] Create `src/portal/api/msw/fixtures.ts`:
-  - `loadFixtures(): Document[]` — caches result in a module
-    variable; only loads on first call.
-  - `findById(type: string, id: string): Document | undefined` —
-    O(1) lookup against an internal `Map<string, Document>` keyed
-    by `${type}/${id}`.
-  - `byType(type: string): Document[]` — pre-bucketed for
-    `listDocsByType`. Stable order (sorted by `id` ascending).
-- [ ] Internal helpers (not exported): `parseFrontmatter(raw)`,
-  `validateDocument(parsed)` (zod-ish guard by hand — we avoid
-  pulling zod for one validator).
-- [ ] Unit-test the loader at `tests/api/msw/fixtures.test.ts`:
+- [x] Add `yaml` to `dependencies` (`bun add yaml`) — landed at `^2.8.3`.
+- [x] Create `src/portal/api/msw/fixtures.ts`:
+  - `loadFixtures(): Promise<Document[]>` — caches the FixtureCache
+    *promise* in a module variable. Async because the SSR branch
+    `await import("node:fs")`s dynamically (keeps `node:*`
+    builtins out of the client bundle).
+  - `findById(type, id): Promise<Document | undefined>` — O(1)
+    lookup against an internal `Map<string, Document>` keyed by
+    `${type}/${id}`.
+  - `byType(type): Promise<Document[]>` — pre-bucketed and sorted
+    by `id` ascending.
+- [x] Internal helpers (not exported): `parseFixture`,
+  `validateDocument`, `requireString`, `requireSource` — hand-rolled
+  guards, no zod.
+- [x] Unit-test the loader at `tests/api/msw/fixtures.test.ts`
+  (10 tests):
   - Loads ≥ 6 docs.
   - `findById("rfc", "RFC-0001")` returns the seeded fixture.
-  - `byType("rfc")` count matches the number of `tests/examples/docs/rfc/*.md` files.
-  - Returns `undefined` for missing IDs.
-  - Cached on second call (assert via spy on `fs.readdirSync` or
-    similar — single I/O across N calls).
-- [ ] Type the return shapes against `Document` from
+  - `findById` returns undefined for missing (type, id).
+  - `byType("rfc")` returns 2 fixtures sorted by id.
+  - `byType("adr")` returns 2 fixtures sorted by id.
+  - `byType("nonexistent")` returns `[]`.
+  - `body` field is populated with the markdown after frontmatter.
+  - Required `Document` fields parse from frontmatter.
+  - **Cache identity**: repeated `loadFixtures()` calls return the
+    same array reference (couldn't spy on `node:fs` ESM bindings
+    so identity assertion replaces the call-count check).
+  - `_resetCacheForTests()` rebuilds.
+- [x] Type the return shapes against `Document` from
   `__generated__/model/document.ts`.
 
 #### Success Criteria
@@ -231,10 +240,17 @@ URL surface from `__generated__/docs/docs.msw.ts`:
 
 | orval factory | URL pattern | Fixture-driven response |
 |---|---|---|
-| `getListDocsMockHandler` | `*/api/v1/docs` | paginated `loadFixtures()` slice + `Link` header |
-| `getListDocsByTypeMockHandler` | `*/api/v1/:type` | paginated `byType(params.type)` slice + `Link` header |
-| `getGetDocMockHandler` | `*/api/v1/:type/:id` | `findById(params.type, params.id)` or 7807 ErrNotFound |
-| `getSearchDocsMockHandler` | `*/api/v1/search` | paginated substring filter over `loadFixtures()` |
+| `getListDocsMockHandler` | `*/api/v1/docs` | paginated `await loadFixtures()` slice + `Link` header |
+| `getListDocsByTypeMockHandler` | `*/api/v1/:type` | paginated `await byType(params.type)` slice + `Link` header |
+| `getGetDocMockHandler` | `*/api/v1/:type/:id` | `await findById(params.type, params.id)` or 7807 ErrNotFound |
+| `getSearchDocsMockHandler` | `*/api/v1/search` | paginated substring filter over `await loadFixtures()` |
+
+> **Note on Phase 2's async API.** The fixture loader ended up
+> async (`Promise<Document[]>`) so the SSR branch can `await
+> import("node:fs")` without dragging `node:*` builtins into the
+> client bundle. MSW handler functions are already async (return
+> `HttpResponse`), so the cascade is mechanical — every fixture
+> access in Phase 3 awaits.
 
 **Cursor format.** The simplest stable cursor is a base64-encoded
 opaque integer offset: `cursor = btoa(String(offsetIntoArray))`.

@@ -155,6 +155,7 @@ tests/
   examples/docs/                     ← IMPL-0002 Phase 1: hand-curated fixture tree for `API_MODE=msw`
     rfc/  adr/  design/  impl/  plan/  inv/  ← one subdir per DocumentType
     README.md                        ← pointer to PLAN-0001 / IMPL-0002
+  api/msw/fixtures.test.ts           ← IMPL-0002 Phase 2: loader unit tests (10 tests)
 scripts/
   gen-api-check.sh                   ← orval drift check (CI + local)
 .github/workflows/ci.yml             ← CI: install + drift check + static checks + build
