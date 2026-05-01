@@ -526,15 +526,16 @@ PR #2 test plan items now that they're runnable.
   cheap (worktree on a side port). If not, eyeball against the
   design-system mockup HTML. _(Skipped — visual A/B is a manual
   step the loop can't perform; defer to PR review.)_
-- [ ] Refresh PR #2's body to check off the newly-runnable items.
-  _(User-gated — `gh pr edit` requires the merge to be pushed first
-  so the runnable items show up in scope. Push is held until the
-  user authorises it.)_
+- [x] Refresh PR #2's body to check off the newly-runnable items.
+  _(2026-04-30: PR #2 title updated to cover both IMPL-0001 +
+  IMPL-0002, body rewritten to walk through the IMPL-0002 phases
+  and check off the dev:msw-runnable smoke items. The live-rfc-api
+  smokes and visual A/B remain unchecked — they require the live
+  stack.)_
 - [x] Merge `feat/api-mode-msw` → `feat/design-0001` (no-ff so the
-  branch boundary stays in history). _(2026-04-28: merge commit
-  `0cb9c60` on `feat/design-0001`. `just check` 36/36 green on the
-  merged tip. Push is user-gated — feat/design-0001 is now 9 commits
-  ahead of origin; CI won't run until the user pushes.)_
+  branch boundary stays in history). _(2026-04-30: merge commit
+  `0cb9c60` on `feat/design-0001`; pushed via HTTPS once the user
+  authorised it. `just check` 36/36 green on the merged tip.)_
 
 #### Success Criteria
 
