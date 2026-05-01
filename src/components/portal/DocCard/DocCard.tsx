@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import type { Document } from "../../../portal/api/__generated__/model";
+import { urlIdFromCanonical } from "../../../portal/api/docId";
 import { Badge } from "@donaldgifford/design-system";
 import styles from "./DocCard.module.css";
 
@@ -17,7 +18,11 @@ export function DocCard({ doc }: { doc: Document }) {
   const authors = (doc.authors ?? []).map((a) => a.name).join(", ");
 
   return (
-    <Link to={`/${doc.type}/${doc.id}`} className={styles.card} aria-label={doc.title}>
+    <Link
+      to={`/${doc.type}/${urlIdFromCanonical(doc.id)}`}
+      className={styles.card}
+      aria-label={doc.title}
+    >
       <div className={styles.head}>
         <span className={styles.id}>{doc.id}</span>
         <Badge status={doc.status} />

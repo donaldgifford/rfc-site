@@ -7,9 +7,12 @@ setupMswLifecycle();
 
 describe("$type.$id loader", () => {
   it("returns the parsed Document on a 200 response", async () => {
+    // Per the OpenAPI contract, `:id` is the bare numeric form. The
+    // canonical id ("RFC-0001") is reconstructed server-side and
+    // surfaces in the response payload.
     const result = await loader({
-      request: new Request("http://localhost/rfc/RFC-0001"),
-      params: { type: "rfc", id: "RFC-0001" },
+      request: new Request("http://localhost/rfc/0001"),
+      params: { type: "rfc", id: "0001" },
       context: {},
     } as Parameters<typeof loader>[0]);
 
@@ -30,8 +33,8 @@ describe("$type.$id loader", () => {
     let thrown: unknown;
     try {
       await loader({
-        request: new Request("http://localhost/rfc/RFC-9999"),
-        params: { type: "rfc", id: "RFC-9999" },
+        request: new Request("http://localhost/rfc/9999"),
+        params: { type: "rfc", id: "9999" },
         context: {},
       } as Parameters<typeof loader>[0]);
     } catch (e) {
@@ -57,8 +60,8 @@ describe("$type.$id loader", () => {
     let thrown: unknown;
     try {
       await loader({
-        request: new Request("http://localhost/rfc/RFC-0001"),
-        params: { type: "rfc", id: "RFC-0001" },
+        request: new Request("http://localhost/rfc/0001"),
+        params: { type: "rfc", id: "0001" },
         context: {},
       } as Parameters<typeof loader>[0]);
     } catch (e) {

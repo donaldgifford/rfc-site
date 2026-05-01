@@ -21,8 +21,10 @@ afterAll(() => {
 });
 
 describe("MSW handlers — getDoc", () => {
-  it("returns a fixture by (type, id)", async () => {
-    const response = await fetch(`${BASE_URL}/api/v1/rfc/RFC-0001`);
+  it("returns a fixture by (type, urlId) per the OpenAPI contract", async () => {
+    // URL `:id` is the bare numeric form ("0001"); the handler
+    // reconstructs the canonical id ("RFC-0001") server-side.
+    const response = await fetch(`${BASE_URL}/api/v1/rfc/0001`);
     expect(response.status).toBe(200);
     const doc = (await response.json()) as { id: string; type: string };
     expect(doc.id).toBe("RFC-0001");
@@ -30,7 +32,7 @@ describe("MSW handlers — getDoc", () => {
   });
 
   it("returns a 7807 ErrNotFound for unknown ids", async () => {
-    const response = await fetch(`${BASE_URL}/api/v1/rfc/RFC-9999`);
+    const response = await fetch(`${BASE_URL}/api/v1/rfc/9999`);
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toMatch(/application\/problem\+json/);
     const problem = (await response.json()) as {
@@ -42,6 +44,7 @@ describe("MSW handlers — getDoc", () => {
     };
     expect(problem.status).toBe(404);
     expect(problem.title).toBe("Not Found");
+    // Detail surfaces the canonical id (constructed from type + urlId).
     expect(problem.detail).toContain("rfc/RFC-9999");
     expect(problem.request_id).toMatch(/^[A-Za-z0-9]+$/);
   });

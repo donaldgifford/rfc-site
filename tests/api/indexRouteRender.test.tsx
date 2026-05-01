@@ -40,9 +40,11 @@ describe("/ index route — full render", () => {
     expect(screen.getAllByText("Proposed").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Draft").length).toBeGreaterThanOrEqual(1);
     // Card links target /$type/$id:
+    // Card link target uses the URL-form id (`/adr/0001`), not the
+    // canonical id, per the OpenAPI contract — see `src/portal/api/docId.ts`.
     expect(
       screen.getByRole("link", { name: "Use PostgreSQL for primary storage" }),
-    ).toHaveAttribute("href", "/adr/ADR-0001");
+    ).toHaveAttribute("href", "/adr/0001");
   });
 
   it("emits prev/next pagination links from the Link header cursors", async () => {

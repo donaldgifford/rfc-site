@@ -23,6 +23,7 @@
 import { faker } from "@faker-js/faker";
 import { http, HttpResponse } from "msw";
 import type { Document } from "../__generated__/model";
+import { canonicalFromUrl } from "../docId";
 import { byType, findById, loadFixtures } from "./fixtures";
 
 faker.seed(0xdec1a55);
@@ -63,14 +64,18 @@ export const handlers = [
 
   http.get("*/api/v1/:type/:id", async ({ params }) => {
     const type = expectString(params.type);
-    const id = expectString(params.id);
+    const urlId = expectString(params.id);
+    // Mirror rfc-api: the URL :id is the bare numeric form (e.g. "0001")
+    // and the canonical fixture id (e.g. "RFC-0001") is reconstructed
+    // from (type, urlId). See `src/portal/api/docId.ts`.
+    const canonicalId = canonicalFromUrl(type, urlId);
 
-    const doc = await findById(type, id);
+    const doc = await findById(type, canonicalId);
     if (doc !== undefined) {
       return HttpResponse.json(doc, { status: 200 });
     }
 
-    return notFound(`No document at ${type}/${id}`);
+    return notFound(`No document at ${type}/${canonicalId}`);
   }),
 
   // The `:type` listing handler must come AFTER `:type/:id` so MSW's

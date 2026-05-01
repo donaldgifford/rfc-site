@@ -31,7 +31,7 @@ const docPageFixture = {
  */
 describe("/$type/$id route — full render", () => {
   it("renders title, Badge (md), id, body, and authors line", async () => {
-    renderRoute(docPageFixture, ["/rfc/RFC-0001"]);
+    renderRoute(docPageFixture, ["/rfc/0001"]);
 
     await waitFor(() => {
       expect(
@@ -61,7 +61,7 @@ describe("/$type/$id route — full render", () => {
       request_id: "01HTZ-INTEGRATION",
     });
 
-    renderRoute(docPageFixture, ["/rfc/RFC-9999"]);
+    renderRoute(docPageFixture, ["/rfc/9999"]);
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /document not found/i })).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe("/$type/$id route — full render", () => {
       request_id: "01HTZ-INTEGRATION-500",
     });
 
-    renderRoute(docPageFixture, ["/rfc/RFC-0001"]);
+    renderRoute(docPageFixture, ["/rfc/0001"]);
 
     await waitFor(() => {
       expect(

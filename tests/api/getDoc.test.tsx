@@ -59,7 +59,7 @@ describe("orval-generated useGetDoc hook + MSW fixture handlers", () => {
     const queryClient = createQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <GetDocProbe docType="rfc" id="RFC-0001" />
+        <GetDocProbe docType="rfc" id="0001" />
       </QueryClientProvider>,
     );
 
