@@ -25,11 +25,17 @@ What's pending manual verification:
 
 What's in flight:
 
-- [IMPL-0003](docs/impl/0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) Phase 1 (deps + scaffold) shipped on `feat/design-0002`. Runtime deps: `react-markdown@10`, `remark-gfm@4`, `rehype-slug@6`, `rehype-autolink-headings@7`, `@shikijs/rehype@4`, `rehype-sanitize@6`, `mermaid@11`. Dev deps: `unified@11`, `unist-util-visit@5`, `@types/hast`, `@types/mdast`. Module tree under `src/portal/markdown/` (`pipeline.ts`, `DocumentView.tsx`, `Snippet.tsx`, `components/{Anchor,Code,MermaidBlock}.tsx`, `plugins/{strip-docz-boilerplate,mermaid-marker}.ts`, `index.ts`, `README.md`) — all stubs; Phase 2 wires the pipeline. Bundle size unchanged (stubs tree-shaken); MSW-clean preserved.
+- [IMPL-0003](docs/impl/0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) Phases 1-2 shipped on `feat/design-0002`. Phase 1 landed runtime deps (`react-markdown@10`, `remark-gfm@4`, `rehype-slug@6`, `rehype-autolink-headings@7`, `@shikijs/rehype@4`, `rehype-sanitize@6`, `mermaid@11`) + dev deps (`unified@11`, `unist-util-visit@5`, `@types/hast`, `@types/mdast`, plus `rehype-parse` / `remark-parse` / `remark-rehype` / `rehype-stringify` for tests) and the module-tree scaffold under `src/portal/markdown/`. Phase 2 wired the unified plugin chain (`pipeline.ts`: remark-gfm → rehype-slug → rehype-autolink-headings → @shikijs/rehype → normalize-hast-properties → rehype-sanitize), the dual-theme Shiki config (`github-light` / `github-dark` with the design-system `--color-code-*` palette wrapping the chrome), `<DocumentView>` (uses `MarkdownHooks` + Suspense for async Shiki, exposes `useDocumentLinks()` for Phase 4), and `styles.css` for prose styling (tokens only). 22 new tests (10 pipeline + 12 sanitize). **58 tests across 11 files.** The doc body still ships as a raw `<pre>` placeholder until Phase 5 swaps it for `<DocumentView>`.
+
+Phase 2 gotchas worth remembering:
+
+- `@shikijs/rehype` v4 emits raw HTML attribute names (`class`, `tabindex`) instead of hast camelCase (`className`, `tabIndex`). `rehype-sanitize` looks up by property name, so the raw forms get silently stripped. Fix: `src/portal/markdown/plugins/normalize-hast-properties.ts` runs between Shiki and sanitize to bridge the convention gap.
+- `hast-util-sanitize`'s `findDefinition` returns the **first** allowlist entry matching an attribute name. The defaultSchema's `<a>` already has `["className", "data-footnote-backref"]`, so a second `["className", /^heading-anchor$/]` entry is ignored. Fix: merge into a single definition (`["className", "data-footnote-backref", /^heading-anchor$/]`).
+- `id` is removed from the sanitize `clobber` array so heading IDs render verbatim — they must match `SearchResult.section_slug` references coming from `rfc-api`. The default `clobberPrefix: "user-content-"` is otherwise a footgun for cross-document anchor links.
 
 What's not wired yet:
 
-- IMPL-0003 Phase 2 (unified plugin chain) onwards. The doc body still ships as a raw `<pre>` — the placeholder from IMPL-0001 Phase 4. Phase 5 swaps to `<DocumentView>`.
+- IMPL-0003 Phase 3 (custom remark/rehype plugins: `strip-docz-boilerplate`, `mermaid-marker`) onwards.
 
 What IMPL-0002 added (`just dev-msw`):
 

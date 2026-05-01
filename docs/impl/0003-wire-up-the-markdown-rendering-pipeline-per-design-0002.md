@@ -114,13 +114,14 @@ Wire the first-party plugin chain end-to-end with no custom plugins yet. This pr
 - [x] Configure `rehype-sanitize` starting from the GFM-extended `defaultSchema`, plus the DESIGN-0002 allowlist additions: `data-mermaid-*` attrs, `class` on `<pre>` / `<code>` / `<span>` (Shiki output), `id` on headings, `class="heading-anchor"` on anchor links, `<mark>` (snippet rendering — even though Phase 6 hasn't shipped yet, the schema is shared). _Exported as `sanitizeSchema` for tests + Phase 6 reuse._
 - [x] Implement `<DocumentView document={document} />` in `src/portal/markdown/DocumentView.tsx`: takes a `Document`, runs `document.body` through the processor, returns a React tree. Provide `links` via a React context provider so Phase 4's `<Anchor>` can consume it without prop drilling. _Exposes `useDocumentLinks()` for downstream component consumption._
 - [x] Add `src/portal/markdown/styles.css` (or a CSS module — TBD per repo convention) for prose styling: heading hierarchy, paragraph spacing, list styles, code-block frame, blockquote, tables. **Tokens only**, no raw colors. _Plain `styles.css` (not module) since `.markdown-body` is a single shared scope; imported once from `<DocumentView>`._
-- [ ] Unit tests in `tests/portal/markdown/pipeline.test.ts`:
-  - GFM features: tables, task lists, autolinks, strikethrough.
-  - Heading IDs are stable kebab-case slugs.
-  - Heading anchors are prepended with the right class.
-  - Shiki-highlighted code blocks render `<pre><code class="language-..."><span style="...">` shape.
-  - Sanitization passes through allowlisted attrs, drops everything else.
-- [ ] Adversarial sanitization tests in `tests/portal/markdown/sanitize.test.ts`: feed `<script>`, `<iframe>`, `<object>`, `<form>`, `style="..."`, `on*` handlers, `javascript:` href — assert each is stripped or escaped.
+- [x] Unit tests in `tests/portal/markdown/pipeline.test.tsx` _(.tsx because the pipeline is exercised through `<DocumentView>` + RTL)_:
+  - GFM features: tables, task lists, autolinks, strikethrough. _(4 tests)_
+  - Heading IDs are stable kebab-case slugs. _(1 test)_
+  - Heading anchors are prepended with the right class + `aria-label`. _(1 test)_
+  - Shiki-highlighted code blocks render `<pre class="shiki ..."><code><span class="line"><span style="...">` shape, plus inline-code carve-out. _(2 tests)_
+  - Sanitization passes through allowlisted attrs (Shiki inline styles, heading-anchor className). _(2 tests)_
+- [x] Adversarial sanitization tests in `tests/portal/markdown/sanitize.test.ts`: feed `<script>`, `<iframe>`, `<object>` / `<embed>`, `<form>` / `<input>`, `on*` handlers, `javascript:` href, `data:` href, `style="..."` on disallowed tags, `srcset`, `target="_blank"` — each stripped. Plus positive checks that allowlisted GFM markup + `<mark>` survive. _(12 tests)_
+- [x] **Bonus** — discovered + fixed during testing that `@shikijs/rehype` v4 emits raw HTML attribute names (`class`, `tabindex`) instead of hast camelCase (`className`, `tabIndex`), causing `rehype-sanitize` to silently strip them. Added `src/portal/markdown/plugins/normalize-hast-properties.ts` between Shiki and sanitize to bridge the convention gap. Also dropped `id` from `clobber` (so heading IDs render verbatim — must match `SearchResult.section_slug`) and merged `<a>` className allowlist into a single definition (sanitizer only honours the first matching entry per attribute name).
 
 #### Success Criteria
 

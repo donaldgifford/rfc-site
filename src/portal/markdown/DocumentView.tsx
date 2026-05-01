@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import { createContext, Suspense, useContext, useMemo } from "react";
+import { MarkdownHooks } from "react-markdown";
 
 import type { Document } from "../api/__generated__/model";
 import type { Link as DocLink } from "../api/__generated__/model";
@@ -25,12 +25,17 @@ interface DocumentViewProps {
 export function DocumentView({ document }: DocumentViewProps) {
   const links = useMemo(() => document.links ?? [], [document.links]);
 
+  // `@shikijs/rehype` does async work (theme/lang loading), so we use
+  // `MarkdownHooks` (React 19 `use()`-backed) and wrap in Suspense so SSR
+  // streams the rendered HTML once the highlighter has resolved.
   return (
     <LinksContext.Provider value={links}>
       <article className="markdown-body">
-        <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins}>
-          {document.body ?? ""}
-        </ReactMarkdown>
+        <Suspense fallback={null}>
+          <MarkdownHooks remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins}>
+            {document.body ?? ""}
+          </MarkdownHooks>
+        </Suspense>
       </article>
     </LinksContext.Provider>
   );

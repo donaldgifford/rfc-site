@@ -7,34 +7,52 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSanitize, { defaultSchema, type Options as SanitizeOptions } from "rehype-sanitize";
 
+import normalizeHastProperties from "./plugins/normalize-hast-properties";
+
 const defaultAttrs = defaultSchema.attributes ?? {};
 const defaultStarAttrs = defaultAttrs["*"] ?? [];
 const defaultATagAttrs = defaultAttrs.a ?? [];
 const defaultCodeAttrs = defaultAttrs.code ?? [];
-const defaultPreAttrs = defaultAttrs.pre ?? [];
-const defaultSpanAttrs = defaultAttrs.span ?? [];
 const defaultTagNames = defaultSchema.tagNames ?? [];
+
+// `<a>`'s defaultSchema entry has `["className", "data-footnote-backref"]`.
+// Because `findDefinition` picks the FIRST entry by attribute name, a second
+// `["className", ...]` entry is ignored — we have to merge into one definition
+// to allow both the GFM footnote class and our heading-anchor class.
+type PropertyDefinition = NonNullable<SanitizeOptions["attributes"]>[string][number];
+const A_CLASSNAME_DEF: PropertyDefinition = [
+  "className",
+  "data-footnote-backref",
+  /^heading-anchor$/,
+];
+const aAttrsMergedClassName: PropertyDefinition[] = defaultATagAttrs.map((entry) =>
+  Array.isArray(entry) && entry[0] === "className" ? A_CLASSNAME_DEF : entry,
+);
 
 // Sanitize allowlist that extends rehype-sanitize's GFM-extended defaults
 // to permit:
 //   - Shiki's inline `style` attributes on <pre>/<code>/<span>
-//   - Shiki's `tabIndex`, `dataLanguage` on <pre>
+//   - Shiki's `tabIndex`, `class="shiki ..."`, `class="line"` on its output
 //   - heading anchor classes on <a> (prepended by rehype-autolink-headings)
 //   - `dataMermaidSource` on <pre> (set by Phase 3's mermaid-marker plugin)
 //   - <mark> for search-snippet rendering (Phase 6)
+//
+// `id` is removed from `clobber` so heading IDs render verbatim — they need
+// to match `SearchResult.section_slug` references coming from `rfc-api`.
 //
 // The sanitizer is the LAST line of defence — even though `rfc-api` validates
 // markdown at ingest, we must assume the body could be hostile.
 export const sanitizeSchema: SanitizeOptions = {
   ...defaultSchema,
+  clobber: ["ariaDescribedBy", "ariaLabelledBy", "name"],
   tagNames: [...defaultTagNames, "mark"],
   attributes: {
     ...defaultAttrs,
     "*": [...defaultStarAttrs, "className", "id"],
-    a: [...defaultATagAttrs, "ariaHidden", ["className", /^heading-anchor$/]],
-    code: [...defaultCodeAttrs, "style", "dataLanguage"],
-    pre: [...defaultPreAttrs, "tabIndex", "style", "dataLanguage", "dataMermaidSource"],
-    span: [...defaultSpanAttrs, "style", "className"],
+    a: [...aAttrsMergedClassName, "ariaHidden"],
+    code: [...defaultCodeAttrs, "style", "dataLanguage", "tabIndex"],
+    pre: ["className", "tabIndex", "style", "dataLanguage", "dataMermaidSource"],
+    span: ["className", "style"],
   },
 };
 
@@ -78,5 +96,8 @@ export const rehypePlugins: PluggableList = [
       themes: { light: "github-light", dark: "github-dark" },
     },
   ],
+  // `@shikijs/rehype` emits `class` / `tabindex` raw attr names — normalise
+  // back to hast property names so `rehype-sanitize` recognises them.
+  normalizeHastProperties,
   [rehypeSanitize, sanitizeSchema],
 ];
