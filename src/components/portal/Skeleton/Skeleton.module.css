@@ -1,0 +1,36 @@
+.skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 0%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+.skeleton[data-variant="text"] {
+  border-radius: var(--radius-sm);
+}
+
+.skeleton[data-variant="block"] {
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: -100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--color-bg-elevated);
+  }
+}

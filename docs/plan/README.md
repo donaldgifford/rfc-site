@@ -10,6 +10,7 @@ the execution approach needs to be worked out before writing tasks.
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
+| PLAN-0001 | Add API_MODE=msw local dev mode for rfc-site | Draft | 2026-04-30 | Donald Gifford | [0001-add-apimodemsw-local-dev-mode-for-rfc-site.md](0001-add-apimodemsw-local-dev-mode-for-rfc-site.md) |
 <!-- END DOCZ AUTO-GENERATED -->
 <!-- BEGIN DOCZ AUTO-GENERATED -->
 <!-- END DOCZ AUTO-GENERATED -->

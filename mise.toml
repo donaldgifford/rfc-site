@@ -1,20 +1,31 @@
-# mise — tool version + task management for @donaldgifford/design-system.
+# mise — tool version + task management for rfc-site.
 #
 # Install:  https://mise.jdx.dev/getting-started.html
 # Activate: `mise install` (one-time per checkout) — or `mise trust` first
 #           if mise warns about an untrusted config.
 #
 # Versions here are the source of truth for local development. CI pins the
-# same versions in `.github/workflows/{ci,release}.yml`; if you bump a
-# version here, bump it there too (and vice versa).
+# same versions in `.github/workflows/`; if you bump a version here, bump
+# it there too (and vice versa).
+#
+# Stack reference: ADR-0002 (React 19 + RR7 + TanStack Query + orval, with
+# Bun as runtime + package manager and Vite as bundler).
+
+[env]
+# Auto-load project-local environment variables from `.env.local` when
+# `cd`'ing into this directory. `.env.local` is gitignored — keep
+# secrets (e.g. `NPM_TOKEN` for the GitHub Packages registry) here,
+# never in `mise.toml`. See `.env.example` for the canonical list of
+# variables this project reads.
+_.file = ".env.local"
 
 [tools]
-# Matches `node-version: "22"` in CI.
+# Bun is the runtime + package manager per ADR-0002.
+bun = "latest"
+# Node kept for tool compat (some eslint plugins / vitest plugins still
+# expect node on PATH). Drop once everything is confirmed Bun-native.
+# See IMPL-0001 §Open Questions §Phase 1.
 node = "22"
-# Matches `packageManager: "pnpm@10.33.2"` in package.json. Corepack also
-# resolves this from package.json — having it here means `pnpm` is on PATH
-# without needing `corepack enable` first.
-pnpm = "10.33.2"
 
 # Repo utilities
 # Formatters and linters
@@ -30,3 +41,4 @@ git-cliff = "latest"
 yq = "4.48.1"
 jq = "latest"
 "github:donaldgifford/docz" = "latest"
+just = "latest"

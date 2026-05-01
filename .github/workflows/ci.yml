@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+        with:
+          experimental: true
+
+      - name: Install dependencies
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun install --frozen-lockfile
+
+      # Drift check per ADR-0001 — see scripts/gen-api-check.sh.
+      - name: API client drift check
+        run: bun run gen-api:check
+
+      - name: Static checks (typecheck + lint + format-check + test)
+        run: bun run typecheck && bun run lint && bun run format:check && bun run test
+
+      - name: Production build
+        run: bun run build
