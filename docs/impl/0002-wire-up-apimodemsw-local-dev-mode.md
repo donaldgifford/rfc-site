@@ -503,7 +503,7 @@ PR #2 test plan items now that they're runnable.
 
 - [x] Run the verification block from PLAN-0001 §Verification.
   _(2026-04-28: `just dev-msw` boots cleanly, `curl /` returns 200
-  with all 8 fixture cards + `ds-badge` markup, `curl /rfc/RFC-0001`
+  with all 8 fixture cards + `ds-badge` markup, `curl /rfc/0001`
   returns 200 with the fixture title/author/body, `curl /rfc/NOPE-9999`
   returns 404 with the portal not-found surface and a 7807 `request_id`.
   `curl /mockServiceWorker.js` returns the worker script. `just build`
