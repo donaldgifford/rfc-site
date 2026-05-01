@@ -108,12 +108,12 @@ Wire the first-party plugin chain end-to-end with no custom plugins yet. This pr
 
 #### Tasks
 
-- [ ] In `src/portal/markdown/pipeline.ts`, define the unified processor factory: `remark-parse` → `remark-gfm` → `remark-rehype` → `rehype-slug` → `rehype-autolink-headings` → `@shikijs/rehype` → `rehype-sanitize`. Cache as a **module-level singleton** to avoid re-instantiating per render (Resolved §6).
-- [ ] Configure `@shikijs/rehype` with the dual-theme option (`themes: { light, dark }`) per DESIGN-0002 Resolved Q1. Use the `--color-bg-code` / `--color-fg-code` design-system tokens once they ship in `@donaldgifford/design-system@0.3.0` (Resolved §2 — that bump is a hard prerequisite for Phase 2).
-- [ ] Configure `rehype-autolink-headings` with `behavior: 'prepend'`, `class: 'heading-anchor'`, and an `ariaLabel` of `"Permalink to <heading text>"` per DESIGN-0002 Resolved Q4 + Resolved §5.
-- [ ] Configure `rehype-sanitize` starting from the GFM-extended `defaultSchema`, plus the DESIGN-0002 allowlist additions: `data-mermaid-*` attrs, `class` on `<pre>` / `<code>` / `<span>` (Shiki output), `id` on headings, `class="heading-anchor"` on anchor links, `<mark>` (snippet rendering — even though Phase 6 hasn't shipped yet, the schema is shared).
-- [ ] Implement `<DocumentView document={document} />` in `src/portal/markdown/DocumentView.tsx`: takes a `Document`, runs `document.body` through the processor, returns a React tree. Provide `links` via a React context provider so Phase 4's `<Anchor>` can consume it without prop drilling.
-- [ ] Add `src/portal/markdown/styles.css` (or a CSS module — TBD per repo convention) for prose styling: heading hierarchy, paragraph spacing, list styles, code-block frame, blockquote, tables. **Tokens only**, no raw colors.
+- [x] In `src/portal/markdown/pipeline.ts`, define the unified processor factory: `remark-parse` → `remark-gfm` → `remark-rehype` → `rehype-slug` → `rehype-autolink-headings` → `@shikijs/rehype` → `rehype-sanitize`. Cache as a **module-level singleton** to avoid re-instantiating per render (Resolved §6). _react-markdown owns `remark-parse` / `remark-rehype` itself; `pipeline.ts` exports module-level `remarkPlugins` + `rehypePlugins` arrays consumed via react-markdown's plugin props._
+- [x] Configure `@shikijs/rehype` with the dual-theme option (`themes: { light: 'github-light', dark: 'github-dark' }`) per DESIGN-0002 Resolved Q1. Wrap the `<pre>` surface (chrome only) in `--color-code-bg` / `--color-code-border` from design-system `0.2.0` (Resolved §2 — tokens verified to already ship). Per-token alignment to `--color-code-{keyword,function,string,...}` is a follow-up.
+- [x] Configure `rehype-autolink-headings` with `behavior: 'prepend'`, `class: 'heading-anchor'`, and an `ariaLabel` of `"Permalink to <heading text>"` per DESIGN-0002 Resolved Q4 + Resolved §5. _aria-label is computed dynamically via the `properties: (node) => …` callback + a small hast-text walker._
+- [x] Configure `rehype-sanitize` starting from the GFM-extended `defaultSchema`, plus the DESIGN-0002 allowlist additions: `data-mermaid-*` attrs, `class` on `<pre>` / `<code>` / `<span>` (Shiki output), `id` on headings, `class="heading-anchor"` on anchor links, `<mark>` (snippet rendering — even though Phase 6 hasn't shipped yet, the schema is shared). _Exported as `sanitizeSchema` for tests + Phase 6 reuse._
+- [x] Implement `<DocumentView document={document} />` in `src/portal/markdown/DocumentView.tsx`: takes a `Document`, runs `document.body` through the processor, returns a React tree. Provide `links` via a React context provider so Phase 4's `<Anchor>` can consume it without prop drilling. _Exposes `useDocumentLinks()` for downstream component consumption._
+- [x] Add `src/portal/markdown/styles.css` (or a CSS module — TBD per repo convention) for prose styling: heading hierarchy, paragraph spacing, list styles, code-block frame, blockquote, tables. **Tokens only**, no raw colors. _Plain `styles.css` (not module) since `.markdown-body` is a single shared scope; imported once from `<DocumentView>`._
 - [ ] Unit tests in `tests/portal/markdown/pipeline.test.ts`:
   - GFM features: tables, task lists, autolinks, strikethrough.
   - Heading IDs are stable kebab-case slugs.
@@ -304,7 +304,6 @@ Wire `<Snippet>` into a real caller so the component's API gets exercised end-to
 | `tests/api/docPageRender.test.tsx` | Modify | Phase 5: assertion shape change (HTML not `<pre>`). |
 | `tests/api/searchRoute.test.ts` | Create | Phase 7: search loader unit tests. |
 | `tests/api/searchRouteRender.test.tsx` | Create | Phase 7: search full-render via `createRoutesStub`. |
-| `package.json` (design-system bump) | Modify | Phase 2 prerequisite: bump to `@donaldgifford/design-system@0.3.0` once code tokens ship. |
 | `CLAUDE.md` | Modify | Per-phase repo-state updates as IMPL-0003 progresses. |
 
 ## Testing Plan
@@ -322,7 +321,7 @@ All new tests use the existing test infrastructure: vitest + jsdom + RTL + the s
 ## Dependencies
 
 - **Hard:** `react-markdown@^9`, `remark-gfm@^4`, `rehype-slug@^6`, `rehype-autolink-headings@^7`, `@shikijs/rehype@^1`, `rehype-sanitize@^6`, `mermaid@^11`, plus `unified` and `unist-util-visit` for the custom plugins. _(Versions to verify against React 19 + Vite 8 compat during Phase 1.)_
-- **Hard (cross-repo):** `@donaldgifford/design-system@0.3.0` shipping `--color-bg-code` / `--color-fg-code` tokens is a Phase 2 prerequisite (Resolved §2). If the tokens aren't available yet, ship the bump in the design-system repo first (changeset + release workflow per CLAUDE.md §When iterating on the design system in parallel).
+- **Cross-repo (resolved):** ~~`@donaldgifford/design-system@0.3.0` shipping code tokens~~ — verified during Phase 1 that `0.2.0` already ships the full `--color-code-*` palette (bg, fg, border, comment, keyword, function, string, number, key, value, punct, type) in both light + dark variants. No bump required.
 - **Soft (Phase 7):** the orval-generated `searchDocs` hook must already exist in `src/portal/api/__generated__/`. It does (verified during IMPL-0001). No spec drift expected.
 - **Upstream:** [donaldgifford/rfc-api#20](https://github.com/donaldgifford/rfc-api/issues/20) (slug-parity contract test) is parallel work, not a blocker.
 
@@ -331,7 +330,7 @@ All new tests use the existing test infrastructure: vitest + jsdom + RTL + the s
 Decisions made before Phase 1 starts. All seven open questions resolved 2026-05-01; Phase 7 added in response to §3.
 
 1. **`apiHrefToPortalRoute` placement.** Lives in `src/portal/api/docId.ts` alongside `urlIdFromCanonical` / `canonicalFromUrl`. Symmetry with the existing helpers wins over keeping it private to `<Anchor>`.
-2. **Shiki theme tokens.** Add `--color-bg-code` / `--color-fg-code` (and any companion code-syntax tokens needed for dual-theme alignment) to `@donaldgifford/design-system@0.3.0` before Phase 2. The "no theme branching, missing piece is a token" rule in CLAUDE.md applies.
+2. **Shiki theme tokens.** _Verified during Phase 1_: design-system `0.2.0` already ships a full code-syntax token palette in both light and dark variants — `--color-code-{bg,fg,border,comment,keyword,function,string,number,key,value,punct,type}`. No 0.3.0 bump is required. Phase 2's Shiki configuration uses `github-light` / `github-dark` built-in themes for the syntax-color palette and wraps the `<pre>` surface in `--color-code-bg` / `--color-code-border` for the chrome. Aligning every Shiki token scope to the per-token design-system variables is a follow-up tightening (would require a custom Shiki theme JSON; tracked as future work).
 3. **`<Snippet>` consumer.** Phase 7 ships a deliberately minimal `/search` page so `<Snippet>` gets exercised end-to-end against the IMPL-0002 fixture corpus + shared MSW handlers. Sort/filter/facet UI is a follow-up IMPL.
 4. **`<Anchor>` link match precedence.** Match `links[].target` first (canonical id — the stable identifier; relative paths get rewritten by `rfc-api`'s ingest), then fall back to `links[].href` (API URL).
 5. **Heading anchor `aria-label`.** `Permalink to <heading text>`.
