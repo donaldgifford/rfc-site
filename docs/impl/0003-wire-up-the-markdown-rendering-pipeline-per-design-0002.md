@@ -235,13 +235,16 @@ Smaller, narrower pipeline for `SearchResult.snippet` HTML. Phase 7 wires it int
 
 #### Tasks
 
-- [ ] Implement `<Snippet html={...} />` in `src/portal/markdown/Snippet.tsx` per DESIGN-0002 §Search-snippet rendering:
-  - Pipeline: `rehype-parse` → `rehype-sanitize` (allowlist: `<em>`, `<mark>`, `<strong>`, `<code>` only — strict) → `rehype-react`.
-  - Falls back to a plain-text rendering of `matched_terms` when HTML rendering isn't appropriate (a11y tooling, RSS, etc.).
-- [ ] Tests in `tests/portal/markdown/Snippet.test.tsx`:
+- [x] Implement `<Snippet html={...} fallbackTerms={...} />` in `src/portal/markdown/Snippet.tsx` per DESIGN-0002 §Search-snippet rendering:
+  - Pipeline: `rehype-parse` → `rehype-sanitize` (allowlist: `<em>`, `<mark>`, `<strong>`, `<code>` only — strict, no attributes whatsoever) → `hast-util-to-jsx-runtime` (lighter than `rehype-react`; we already ship this as a transitive dep of `react-markdown`).
+  - Falls back to a plain-text rendering of `fallbackTerms` (joined with `, `) when `html` is unset or empty.
+  - Synchronous render — no Suspense gymnastics needed, since the snippet pipeline has no async plugins.
+- [x] Tests in `tests/portal/markdown/Snippet.test.tsx` _(6 tests)_:
   - Allowlisted tags (`<em>`, `<mark>`, `<strong>`, `<code>`) survive the sanitize pass.
-  - Disallowed tags (`<script>`, `<a>`, `<img>`, anything else) are stripped.
-  - Plain-text fallback renders the matched-terms array when the `html` prop is unset.
+  - Disallowed tags (`<a>`, `<img>`, `<script>`, `<p>`) are stripped (inner text preserved for everything except `<script>`, whose contents are dropped entirely).
+  - Disallowed attributes (`onclick`, `data-foo`) are stripped from allowlisted tags.
+  - Plain-text fallback renders when `html` is unset OR empty.
+  - Returns `null` when neither `html` nor `fallbackTerms` are provided.
 
 #### Success Criteria
 
