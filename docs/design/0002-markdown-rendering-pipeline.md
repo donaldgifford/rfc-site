@@ -139,7 +139,7 @@ function Anchor({ href, children, ...rest }: AnchorProps) {
     [href, links],
   );
   if (resolved) {
-    return <Link to={resolved.href}>{children}</Link>;
+    return <Link to={apiHrefToPortalRoute(resolved.href)}>{children}</Link>;
   }
   if (isExternalUrl(href)) {
     return <a href={href} rel="noopener noreferrer" target="_blank" {...rest}>{children}</a>;
@@ -148,6 +148,16 @@ function Anchor({ href, children, ...rest }: AnchorProps) {
   return <span data-broken-link>{children}</span>;
 }
 ```
+
+**`Link.href` shape.** Per the [integration reference example](../integration/rfc-api-reference.md#document-payload-shape), `Link.href` is API-shaped — e.g. `"/api/v1/adr/1"`, not `"/adr/1"`. The portal must translate to a route path before handing it to `<Link>`. `apiHrefToPortalRoute` strips the `/api/v1` prefix:
+
+```ts
+function apiHrefToPortalRoute(apiHref: string): string {
+  return apiHref.replace(/^\/api\/v1/, "");
+}
+```
+
+The bare-numeric URL `:id` segment in `Link.href` (`/api/v1/adr/1`) is preserved through this translation — the result `/adr/1` is exactly what the route loader at `$type.$id.tsx` expects per the OpenAPI `DocID` contract (`^[0-9]+$`). Sending the canonical id (`/adr/ADR-0001`) would 404 server-side, the same trap commit `f8883c7` fixed for directory-card links. See the **CLAUDE.md §Hard rules** entry on the URL form of `Document.id`, and `src/portal/api/docId.ts` for the `urlIdFromCanonical` / `canonicalFromUrl` helpers used elsewhere in the portal.
 
 The `links` array is provided via React context from the page-level `<DocumentView document={...} />` component. Candidate primitives in `ds-candidates/` never see `links` and never know about cross-document resolution — that logic lives in `portal/` per DESIGN-0001.
 
@@ -253,7 +263,7 @@ Heading IDs are derived deterministically by `rehype-slug` from heading text —
 - **Unit tests** (vitest) for each custom plugin:
   - `strip-docz-boilerplate`: fixtures for "comment only", "TOC only", "both", "neither", malformed pairs, nested unrelated comments.
   - `mermaid-marker`: fixtures for code fences (mermaid, non-mermaid, no language hint).
-- **Integration tests** for the full pipeline: feed realistic `Document.body` strings (drawn from the docz corpora in `donaldgifford/rfc-api` and this repo) and assert the rendered HTML matches a stable snapshot.
+- **Integration tests** for the full pipeline: feed realistic `Document.body` strings and assert the rendered HTML matches a stable snapshot. The fixture corpus at [`tests/examples/docs/<type>/*.md`](../../tests/examples/docs/) (8 hand-curated docz-shaped fixtures shipped in [IMPL-0002](../impl/0002-wire-up-apimodemsw-local-dev-mode.md) Phase 1) is the canonical source — same content the dev-mode MSW handlers serve, and `Document.body` strings come out of the loader in `src/portal/api/msw/fixtures.ts` already trimmed of frontmatter. Route-level renders go through the shared MSW handlers in `tests/api/server.ts` + `setupMswLifecycle()` (per IMPL-0002 Phase 4) so the full SSR path — loader → fetcher → MSW → `<DocumentView>` — is exercised end-to-end.
 - **Sanitization tests**: feed adversarial Markdown — `<script>`, `<iframe>`, `javascript:` href, `style="..."`, `on*` handlers — and assert each is stripped or escaped.
 - **Slug parity test** (future, requires a live `rfc-api` or fixture): for a representative set of heading texts, assert `rehype-slug`'s output equals `rfc-api`'s `section_slug`.
 - **`<Anchor>` tests**: links[] hit, links[] miss + external URL, links[] miss + internal-looking URL (broken link).
@@ -267,7 +277,7 @@ This is greenfield rendering — there's nothing to migrate from. The rollout is
 2. **Build the plugin chain.** `pipeline.ts` first, with no custom plugins — just GFM + slug + autolink + shiki + sanitize. Render a hand-written Markdown sample.
 3. **Add the custom plugins.** `strip-docz-boilerplate` and `mermaid-marker`. Test against real docz corpus content.
 4. **Add the React component overrides.** `<Anchor>` with `links[]` resolution; `<Code>` with mermaid swap; `<MermaidBlock>` with client hydration.
-5. **Wire `<DocumentView>` into the first SSR page** that fetches a `Document` from `rfc-api` (the per-doc page). Cycle on real content until rendering is correct.
+5. **Replace the `<pre>` body placeholder in `src/routes/$type.$id.tsx`** with `<DocumentView document={loaderData} />`. (IMPL-0001 Phase 4 shipped a placeholder rendering — `<pre className={styles.body}>{doc.body ?? ""}</pre>` — explicitly so this design could land as a focused swap rather than greenfield wiring.) Cycle on real content until rendering is correct against both the live `rfc-api` and `just dev-msw`.
 6. **Add `<Snippet>`** when wiring the search-results page.
 
 Each step is independent enough to merge as its own PR.
@@ -292,10 +302,12 @@ Each step is independent enough to merge as its own PR.
 In this repo:
 
 - [DESIGN-0001 — Portal architecture and ds-candidates promotion model](./0001-portal-architecture-and-ds-candidates-promotion-model.md) — establishes that the renderer lives under `portal/`, never `ds-candidates/`, and the cross-document-link rule.
-- [ADR-0001 — Consume rfc-api via its published OpenAPI contract](../adr/0001-consume-rfc-api-via-its-published-openapi-contract.md) — the data contract this pipeline reads from.
+- [ADR-0001 — Consume rfc-api via its published OpenAPI contract](../adr/0001-consume-rfc-api-via-its-published-openapi-contract.md) — the data contract this pipeline reads from. Note the **"Document id in URLs"** row — this design's `<Anchor>` translates `Link.href` accordingly.
 - [ADR-0002 — Adopt the portal frontend stack](../adr/0002-adopt-portal-frontend-stack.md) — React 19 + RR7 + TanStack Query + orval; this design slots into that stack.
+- [IMPL-0002 — Wire up `API_MODE=msw` local dev mode](../impl/0002-wire-up-apimodemsw-local-dev-mode.md) — established the fixture corpus and shared MSW handlers this design's tests build on.
 - [Integration reference §Markdown contract](../integration/rfc-api-reference.md#markdown-contract) — what the body actually contains and the soft recommendations this design formalizes.
 - [Vendored OpenAPI spec — `api/openapi.yaml`](../../api/openapi.yaml) — `Document.body`, `Document.links[]`, `SearchResult.snippet` shapes.
+- **`CLAUDE.md` §Hard rules** — load-bearing rules for portal code, including the `Document.id` URL form (bare numeric, not canonical) that `<Anchor>` must respect.
 
 External:
 
