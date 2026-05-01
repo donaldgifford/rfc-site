@@ -47,7 +47,12 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     <main className={styles.main}>
       <header className={styles.header}>
         <h1 className={styles.heading}>Directory</h1>
-        <ThemeToggle />
+        <div className={styles.headerActions}>
+          <Link to="/search" className={styles.searchLink}>
+            Search
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       {docs.length === 0 ? (

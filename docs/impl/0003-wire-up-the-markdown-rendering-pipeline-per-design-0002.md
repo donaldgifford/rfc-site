@@ -261,19 +261,21 @@ Wire `<Snippet>` into a real caller so the component's API gets exercised end-to
 
 #### Tasks
 
-- [ ] Add `src/routes/search.tsx` (RR7 flat-routes convention). Define a `loader` that reads `?q=` from the URL, calls the orval-generated `searchDocs` hook against `rfc-api`, and returns `{ q, results }`. Empty `q` returns `{ q: "", results: [] }` (no API call) so the page renders a stable empty state.
-- [ ] Implement the route component:
-  - Search input bound to the `q` query param (controlled via `useSearchParams`).
-  - Result list: each item shows `result.type` + `result.id` + title (linked to `/${type}/${urlIdFromCanonical(id)}`), `<Snippet html={result.snippet} fallbackTerms={result.matched_terms} />`, and the score (raw — visualisation is a follow-up).
-  - Empty `q` state: prompt copy ("Search across all documents…").
-  - No-results state: explicit "no results for `<q>`" message.
-- [ ] Export `loader`, `default` component, `HydrateFallback`, and `ErrorBoundary` (the shared `<RouteErrorBoundary>` per IMPL-0001 Phase 4). Reuse the `<Skeleton>` pattern for the hydrate fallback.
-- [ ] Add `src/routes/search.module.css` for the page-specific layout (input, result-card grid). Tokens only.
-- [ ] Add a navigation entry to `src/routes/_index.tsx` or the layout chrome so users can reach `/search` (a simple `<Link to="/search">` in the directory page header is sufficient — full nav redesign out of scope).
-- [ ] Tests:
-  - `tests/api/searchRoute.test.ts` — loader unit: empty `q` short-circuits, populated `q` calls `searchDocs` with the right params, problem responses propagate to `<RouteErrorBoundary>`.
-  - `tests/api/searchRouteRender.test.tsx` — full render via `createRoutesStub` against the shared MSW handlers: empty state, populated results render `<Snippet>` content, doc-link `href` uses the URL form (`/rfc/0001`, not `/RFC-0001`).
-- [ ] Smoke against `just dev-msw`: visit `/search?q=postgres`, confirm the ADR-0001 fixture surfaces with snippet HTML rendered.
+- [x] Add `src/routes/search.tsx` (RR7 flat-routes convention). Define a `loader` that reads `?q=` from the URL, calls the orval-generated `searchDocs` hook against `rfc-api`, and returns `{ q, results }`. Empty `q` returns `{ q: "", results: [] }` (no API call) so the page renders a stable empty state.
+- [x] Implement the route component:
+  - Search input bound to the `q` query param (controlled via `useSearchParams` for the input's `defaultValue`).
+  - Result list: each item shows `document.id` + title (linked to `/${type}/${urlIdFromCanonical(id)}`), `<Snippet html={result.snippet} fallbackTerms={result.matched_terms} />`, and the score.
+  - Empty `q` state: prompt copy ("Enter a query to search…").
+  - No-results state: explicit "No results for `<q>`" message.
+  - Section-aware: when a hit has `section_heading` / `section_slug`, the link target appends `#<section_slug>` and the heading renders the section name as a dim suffix.
+- [x] Export `loader`, `default` component, `HydrateFallback`, and `ErrorBoundary` (the shared `<RouteErrorBoundary>` per IMPL-0001 Phase 4). Reuse the `<Skeleton>` pattern for the hydrate fallback.
+- [x] Add `src/routes/search.module.css` for the page-specific layout (input, result-card grid). Tokens only.
+- [x] Add a navigation entry to `src/routes/_index.tsx` so users can reach `/search` from the directory header. _Wired as a small `Search` button in the header next to `<ThemeToggle>`._
+- [x] **Bonus** — fixed an IMPL-0002 contract bug discovered while wiring this phase: `/api/v1/search` MSW handler was returning `Document[]` instead of the OpenAPI-spec `SearchResult[]` envelope. Fixed in `src/portal/api/msw/handlers.ts` to wrap each fixture in a SearchResult with a synthesised `<em>q</em>` snippet + `matched_terms` + a placeholder score (0.75). Existing handlers test updated to assert the new shape.
+- [x] Tests:
+  - `tests/api/searchRoute.test.ts` _(4 tests)_: empty-q short-circuits without API hit, populated `q` forwards to searchDocs, fixture corpus matches against `q=postgres`, problem responses propagate to `<RouteErrorBoundary>`.
+  - `tests/api/searchRouteRender.test.tsx` _(4 tests)_: empty-q prompt state, populated results render `<Snippet>` content, doc-link `href` uses the URL form (`/adr/0001`, not `/ADR-0001`), no-results state.
+- [ ] Smoke against `just dev-msw`: visit `/search?q=postgres`, confirm the ADR-0001 fixture surfaces with snippet HTML rendered. _**Manual verification** — covered functionally by the route render tests against the shared MSW handlers._
 
 #### Success Criteria
 
