@@ -82,16 +82,16 @@ Foundation phase. Lands the new dependencies and the directory scaffold so subse
 
 - [x] `bun add` the runtime deps: `react-markdown`, `remark-gfm`, `rehype-slug`, `rehype-autolink-headings`, `@shikijs/rehype`, `rehype-sanitize`, `mermaid`. Confirm each pins to a major version compatible with React 19 + ESM-first Vite 8. _Resolved versions: `react-markdown@10.1.0`, `remark-gfm@4.0.1`, `rehype-slug@6.0.0`, `rehype-autolink-headings@7.1.0`, `@shikijs/rehype@4.0.2`, `rehype-sanitize@6.0.0`, `mermaid@11.14.0`._
 - [x] `bun add -d` the dev-only deps: `unified`, `unist-util-visit` (for the custom plugins' AST traversal), `@types/hast`, `@types/mdast` (TypeScript helpers). _Resolved: `unified@11.0.5`, `unist-util-visit@5.1.0`, `@types/hast@3.0.4`, `@types/mdast@4.0.4`._
-- [ ] Create the `src/portal/markdown/` directory with empty stubs per DESIGN-0002 §Where it lives:
-  - `src/portal/markdown/index.ts` (public exports — empty for now)
-  - `src/portal/markdown/pipeline.ts` (plugin chain — empty stub)
-  - `src/portal/markdown/DocumentView.tsx` (page-level renderer — empty stub returning `null`)
-  - `src/portal/markdown/Snippet.tsx` (search snippet — empty stub)
-  - `src/portal/markdown/components/{Anchor,Code,MermaidBlock}.tsx` (empty stubs)
-  - `src/portal/markdown/plugins/{strip-docz-boilerplate,mermaid-marker}.ts` (empty stubs)
-  - `src/portal/markdown/README.md` (one-paragraph pointer to DESIGN-0002 + IMPL-0003)
-- [ ] Run `just check` — typecheck, lint, format, tests should all stay green with the new deps installed and stubs in place.
-- [ ] Run `just build` — confirm the new deps don't break the production build. Note any chunk-size changes.
+- [x] Create the `src/portal/markdown/` directory with empty stubs per DESIGN-0002 §Where it lives:
+  - `src/portal/markdown/index.ts` (public exports — re-exports `<DocumentView>` + `<Snippet>`)
+  - `src/portal/markdown/pipeline.ts` (plugin chain — empty `export {}` stub)
+  - `src/portal/markdown/DocumentView.tsx` (page-level renderer — typed prop interface, returns `null`)
+  - `src/portal/markdown/Snippet.tsx` (search snippet — typed prop interface, returns `null`)
+  - `src/portal/markdown/components/{Anchor,Code,MermaidBlock}.tsx` (empty stubs with TODO comments tying back to Phase 4)
+  - `src/portal/markdown/plugins/{strip-docz-boilerplate,mermaid-marker}.ts` (empty stubs with TODO comments tying back to Phase 3)
+  - `src/portal/markdown/README.md` (pointer to DESIGN-0002 + IMPL-0003 with the public-API and internal-layout sections)
+- [x] Run `just check` — typecheck, lint, format, tests should all stay green with the new deps installed and stubs in place. _36/36 tests green._
+- [x] Run `just build` — confirm the new deps don't break the production build. Note any chunk-size changes. _Bundle sizes unchanged from pre-IMPL-0003 baseline (pipeline.ts is `export {}`, so the new deps are tree-shaken). Build remains MSW-clean._
 
 #### Success Criteria
 

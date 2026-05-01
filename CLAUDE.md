@@ -23,9 +23,13 @@ What's pending manual verification:
 
 - The "live rfc-api" Phase 4 success criteria — running `rfc-api` locally and confirming `bun run dev` shows real data, the 404 path renders for `/rfc/9999`, etc. The loop's environment doesn't have rfc-api running; MSW-backed tests cover the contract against a fixture surface.
 
+What's in flight:
+
+- [IMPL-0003](docs/impl/0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) Phase 1 (deps + scaffold) shipped on `feat/design-0002`. Runtime deps: `react-markdown@10`, `remark-gfm@4`, `rehype-slug@6`, `rehype-autolink-headings@7`, `@shikijs/rehype@4`, `rehype-sanitize@6`, `mermaid@11`. Dev deps: `unified@11`, `unist-util-visit@5`, `@types/hast`, `@types/mdast`. Module tree under `src/portal/markdown/` (`pipeline.ts`, `DocumentView.tsx`, `Snippet.tsx`, `components/{Anchor,Code,MermaidBlock}.tsx`, `plugins/{strip-docz-boilerplate,mermaid-marker}.ts`, `index.ts`, `README.md`) — all stubs; Phase 2 wires the pipeline. Bundle size unchanged (stubs tree-shaken); MSW-clean preserved.
+
 What's not wired yet:
 
-- _(none — IMPL-0001 + IMPL-0002 are complete. `feat/api-mode-msw` merged into `feat/design-0001` (`0cb9c60`); `feat/design-0001` pushed to origin and PR #2's body refreshed to cover both IMPLs and check off the now-runnable MSW smoke items. Awaiting CI + review.)_
+- IMPL-0003 Phase 2 (unified plugin chain) onwards. The doc body still ships as a raw `<pre>` — the placeholder from IMPL-0001 Phase 4. Phase 5 swaps to `<DocumentView>`.
 
 What IMPL-0002 added (`just dev-msw`):
 
