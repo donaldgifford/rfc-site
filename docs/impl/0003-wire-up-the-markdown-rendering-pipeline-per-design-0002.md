@@ -80,8 +80,8 @@ Foundation phase. Lands the new dependencies and the directory scaffold so subse
 
 #### Tasks
 
-- [ ] `bun add` the runtime deps: `react-markdown`, `remark-gfm`, `rehype-slug`, `rehype-autolink-headings`, `@shikijs/rehype`, `rehype-sanitize`, `mermaid`. Confirm each pins to a major version compatible with React 19 + ESM-first Vite 8.
-- [ ] `bun add -d` the dev-only deps: `unified`, `unist-util-visit` (for the custom plugins' AST traversal), `@types/hast`, `@types/mdast` (TypeScript helpers).
+- [x] `bun add` the runtime deps: `react-markdown`, `remark-gfm`, `rehype-slug`, `rehype-autolink-headings`, `@shikijs/rehype`, `rehype-sanitize`, `mermaid`. Confirm each pins to a major version compatible with React 19 + ESM-first Vite 8. _Resolved versions: `react-markdown@10.1.0`, `remark-gfm@4.0.1`, `rehype-slug@6.0.0`, `rehype-autolink-headings@7.1.0`, `@shikijs/rehype@4.0.2`, `rehype-sanitize@6.0.0`, `mermaid@11.14.0`._
+- [x] `bun add -d` the dev-only deps: `unified`, `unist-util-visit` (for the custom plugins' AST traversal), `@types/hast`, `@types/mdast` (TypeScript helpers). _Resolved: `unified@11.0.5`, `unist-util-visit@5.1.0`, `@types/hast@3.0.4`, `@types/mdast@4.0.4`._
 - [ ] Create the `src/portal/markdown/` directory with empty stubs per DESIGN-0002 §Where it lives:
   - `src/portal/markdown/index.ts` (public exports — empty for now)
   - `src/portal/markdown/pipeline.ts` (plugin chain — empty stub)
