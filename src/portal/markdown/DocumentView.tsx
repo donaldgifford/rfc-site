@@ -1,8 +1,10 @@
 import { createContext, Suspense, useContext, useMemo } from "react";
-import { MarkdownHooks } from "react-markdown";
+import { MarkdownHooks, type Components } from "react-markdown";
 
 import type { Document } from "../api/__generated__/model";
 import type { Link as DocLink } from "../api/__generated__/model";
+import { Anchor } from "./components/Anchor";
+import { Pre } from "./components/Code";
 import { remarkPlugins, rehypePlugins } from "./pipeline";
 
 import "./styles.css";
@@ -10,13 +12,18 @@ import "./styles.css";
 const LinksContext = createContext<readonly DocLink[]>([]);
 
 /**
- * Phase 4 will read this in `<Anchor>` to resolve markdown anchor `href`s
- * against the document's `links[]` array (per DESIGN-0002 §Cross-document
- * link resolution and CLAUDE.md §Hard rules).
+ * Used by `<Anchor>` to resolve markdown anchor `href`s against the
+ * document's `links[]` array (per DESIGN-0002 §Cross-document link
+ * resolution and CLAUDE.md §Hard rules).
  */
 export function useDocumentLinks(): readonly DocLink[] {
   return useContext(LinksContext);
 }
+
+const components: Components = {
+  a: Anchor,
+  pre: Pre,
+};
 
 interface DocumentViewProps {
   document: Document;
@@ -32,7 +39,11 @@ export function DocumentView({ document }: DocumentViewProps) {
     <LinksContext.Provider value={links}>
       <article className="markdown-body">
         <Suspense fallback={null}>
-          <MarkdownHooks remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins}>
+          <MarkdownHooks
+            remarkPlugins={remarkPlugins}
+            rehypePlugins={rehypePlugins}
+            components={components}
+          >
             {document.body ?? ""}
           </MarkdownHooks>
         </Suspense>

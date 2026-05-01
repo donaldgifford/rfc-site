@@ -176,25 +176,26 @@ Add the page-aware components that consume the rendered tree: link resolution, c
 
 #### Tasks
 
-- [ ] Implement `<Anchor>` in `src/portal/markdown/components/Anchor.tsx` per DESIGN-0002 §Cross-document link resolution:
+- [x] Implement `<Anchor>` in `src/portal/markdown/components/Anchor.tsx` per DESIGN-0002 §Cross-document link resolution:
   - Consume `links` via context.
   - Match the `href` against `links[].target` first, then fall back to `links[].href` (Resolved §4).
   - Translate API-shaped `href` to portal route via `apiHrefToPortalRoute` in `src/portal/api/docId.ts` (Resolved §1 — colocated with `urlIdFromCanonical` / `canonicalFromUrl`).
-  - Render `<Link>` (RR7) for resolved internal links, `<a target="_blank" rel="noopener noreferrer">` for external URLs, `<span data-broken-link>` for unmatched internal hrefs.
-- [ ] Implement `<Code>` in `src/portal/markdown/components/Code.tsx`:
+  - Render `<Link>` (RR7) for resolved internal links, `<a target="_blank" rel="noopener noreferrer">` for external URLs, `<span data-broken-link>` for unmatched internal hrefs. Hash anchors (`#section`) pass through to a plain `<a>` for in-page navigation.
+- [x] Implement `<Code>` in `src/portal/markdown/components/Code.tsx` (exported as `Pre`):
   - Pass through to a `<pre>` wrapper that owns the styling surface.
   - Detect `data-mermaid-source` and route to `<MermaidBlock>` when present.
   - Leave the `<pre>` shape ready for a future copy button (DESIGN-0002 Resolved Q3).
-- [ ] Implement `<MermaidBlock>` in `src/portal/markdown/components/MermaidBlock.tsx`:
-  - SSR safety: render the source in a placeholder `<pre>` until hydration so search engines + no-JS clients see the diagram source.
-  - On client mount (`useEffect`): import the `mermaid` package dynamically via `await import("mermaid")` so non-mermaid pages don't pay the ~700KB JS cost (Resolved §7), then call `mermaid.run({ nodes: [el] })`.
-  - Read the current theme via `useTheme()` from `@donaldgifford/design-system/theme`; pass `'default'` (light) or `'dark'` to `mermaid.initialize`. Re-render diagrams when the theme flips.
-  - Skeleton placeholder `<pre>` with a CSS `min-height` to avoid layout shift on hydration.
-- [ ] Wire all three components into `react-markdown`'s `components` prop inside `<DocumentView>`.
-- [ ] Tests in `tests/portal/markdown/components/`:
-  - `Anchor.test.tsx`: links[] hit (resolves to portal `<Link>`), links[] miss + external URL (renders `<a>` with rel/target), links[] miss + internal-looking URL (renders broken-link `<span>`), API-href translation produces the right portal route.
-  - `Code.test.tsx`: passes through plain code blocks; routes to `<MermaidBlock>` when `data-mermaid-source` is present.
-  - `MermaidBlock.test.tsx`: jsdom-friendly assertion that the placeholder `<pre>` is rendered SSR-side; mock `mermaid` so the test doesn't need the actual library.
+  - _Internal `extractText()` recovers the diagram source from the React tree of children (since react-markdown passes the rendered hast → React subtree, not the original mdast text)._
+- [x] Implement `<MermaidBlock>` in `src/portal/markdown/components/MermaidBlock.tsx`:
+  - SSR safety: render the source in a placeholder `<pre data-mermaid-source-fallback>` until hydration so search engines + no-JS clients see the diagram source.
+  - On client mount (`useEffect`): import the `mermaid` package dynamically via `await import("mermaid")` so non-mermaid pages don't pay the ~700KB JS cost (Resolved §7), then call `mermaid.render(id, source)` and inject the SVG.
+  - Read the current theme via `useTheme()` from `@donaldgifford/design-system/theme`; pass `'default'` (light) or `'dark'` to `mermaid.initialize`. Re-render diagrams when the theme flips (effect dep on `theme`).
+  - Skeleton placeholder `<pre>` with a CSS `min-height` to avoid layout shift on hydration. _(Phase 5 wires the css class.)_
+- [x] Wire all three components into `react-markdown`'s `components` prop inside `<DocumentView>` (`a → Anchor`, `pre → Pre`).
+- [x] Tests in `tests/portal/markdown/components/`:
+  - `Anchor.test.tsx` _(5 tests)_: hit on `links[].target` (canonical id), hit on `links[].href` (API URL), unmatched http(s) → external `<a target=_blank rel=noopener>`, unmatched internal-looking → `<span data-broken-link>`, hash-only anchors pass through. Uses `createRoutesStub` so RR7 `<Link>` resolves the portal route correctly.
+  - `Code.test.tsx` _(5 tests)_: plain code blocks pass through to `<pre.shiki>` unchanged, mermaid blocks route to `<MermaidBlock>` and replace with rendered SVG, mermaid.render is called with the recovered source text, SSR fallback pre is shown until hydration, fallback removed after hydration. Mocks `mermaid` so jsdom never loads the real library.
+- [x] **`apiHrefToPortalRoute` added to `src/portal/api/docId.ts`** (Resolved §1) alongside `urlIdFromCanonical` / `canonicalFromUrl`. Returns `null` for non-API URLs so `<Anchor>`'s match-against-`links[].href` path still produces a clean negative.
 
 #### Success Criteria
 
