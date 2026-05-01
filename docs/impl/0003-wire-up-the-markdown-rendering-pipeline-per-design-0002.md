@@ -213,11 +213,11 @@ The user-visible swap. Removes the `<pre className={styles.body}>{doc.body ?? ""
 
 #### Tasks
 
-- [ ] In `src/routes/$type.$id.tsx`, replace the `<pre>` element with `<DocumentView document={doc} />`. Keep the page chrome (breadcrumb, title, dateline, `<Badge>`, authors line) unchanged.
-- [ ] Update or remove `$type.$id.module.css`'s `.body` class — the `<pre>` is gone; the prose styling now lives in `src/portal/markdown/styles.css`.
-- [ ] Add a `tests/api/docPageRender.test.tsx` assertion that the rendered output contains GFM-rendered HTML elements (e.g., `<h2>` from a `## Motivation` source) — not raw Markdown text in a `<pre>`. The existing assertion `expect(screen.getByText(/Iterating on the portal currently/)).toBeInTheDocument()` should still work because the prose text is preserved; the assertion can be tightened to `screen.getByRole("heading", { level: 2, name: "Motivation" })`.
-- [ ] Smoke against `just dev-msw` and `just dev` (with a seeded `rfc-api` row): visit a doc page, confirm the body renders as proper headings / lists / code blocks / mermaid diagrams (where present in fixtures).
-- [ ] Verify `<RouteErrorBoundary>` still surfaces the 7807 not-found path correctly — the error boundary contract is upstream of `<DocumentView>` and shouldn't be affected, but worth confirming end-to-end.
+- [x] In `src/routes/$type.$id.tsx`, replace the `<pre>` element with `<DocumentView document={doc} />`. Keep the page chrome (breadcrumb, title, dateline, `<Badge>`, authors line) unchanged.
+- [x] Update or remove `$type.$id.module.css`'s `.body` class — the `<pre>` is gone; the prose styling now lives in `src/portal/markdown/styles.css`. _(`.body` removed; `.bodySkeleton` retained for the route-level HydrateFallback shimmer.)_
+- [x] Add a `tests/api/docPageRender.test.tsx` assertion that the rendered output contains GFM-rendered HTML elements (e.g., `<h2>` from a `## Motivation` source) — not raw Markdown text in a `<pre>`. _Tightened to `screen.getByRole("heading", { level: 2, name: /Motivation/i })`. The accessible-name regex accommodates the prepended heading-anchor's "Permalink to Motivation" aria-label being concatenated into the heading's a11y name. Body substring still asserted via `container.textContent.includes(...)`._
+- [ ] Smoke against `just dev-msw` and `just dev` (with a seeded `rfc-api` row): visit a doc page, confirm the body renders as proper headings / lists / code blocks / mermaid diagrams (where present in fixtures). _**Manual verification** — the loop's environment doesn't have rfc-api running. MSW-backed tests cover the contract end-to-end._
+- [x] Verify `<RouteErrorBoundary>` still surfaces the 7807 not-found path correctly — the error boundary contract is upstream of `<DocumentView>` and shouldn't be affected, but worth confirming end-to-end. _The two existing 404/500 tests in `docPageRender.test.tsx` still pass — error path doesn't render `<DocumentView>` at all, so no regression._
 
 #### Success Criteria
 

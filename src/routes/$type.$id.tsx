@@ -6,6 +6,7 @@ import { throwIfProblem } from "../portal/api/errors";
 import { Badge } from "@donaldgifford/design-system";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import { Skeleton } from "../components/portal/Skeleton";
+import { DocumentView } from "../portal/markdown";
 import styles from "./$type.$id.module.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -56,7 +57,7 @@ export default function DocPage({ loaderData }: Route.ComponentProps) {
         ) : null}
       </header>
 
-      <pre className={styles.body}>{doc.body ?? ""}</pre>
+      <DocumentView document={doc} />
     </main>
   );
 }

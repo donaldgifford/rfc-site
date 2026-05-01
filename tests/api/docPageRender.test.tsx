@@ -31,7 +31,7 @@ const docPageFixture = {
  */
 describe("/$type/$id route — full render", () => {
   it("renders title, Badge (md), id, body, and authors line", async () => {
-    renderRoute(docPageFixture, ["/rfc/0001"]);
+    const { container } = renderRoute(docPageFixture, ["/rfc/0001"]);
 
     await waitFor(() => {
       expect(
@@ -47,8 +47,17 @@ describe("/$type/$id route — full render", () => {
     // "RFC-0001" appears in both the breadcrumb and the dateline — assert ≥1.
     expect(screen.getAllByText(/RFC-0001/).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/Sam Author, Riley Reviewer/)).toBeInTheDocument();
-    // A distinctive substring from the fixture body.
-    expect(screen.getByText(/Iterating on the portal currently/)).toBeInTheDocument();
+    // The body now renders as proper Markdown HTML — heading from fixture
+    // + a distinctive substring from the body. The Phase 5 swap means
+    // the body lives across multiple text nodes (per react-markdown
+    // tokenisation) so use a textContent substring assertion.
+    await waitFor(() => {
+      // The heading's accessible name combines the prepended anchor's
+      // aria-label ("Permalink to Motivation") with the heading text
+      // ("Motivation"). Match either via a regex.
+      expect(screen.getByRole("heading", { level: 2, name: /Motivation/i })).toBeInTheDocument();
+    });
+    expect(container.textContent).toContain("Iterating on the portal currently");
     expect(screen.getByRole("link", { name: /directory/i })).toHaveAttribute("href", "/");
   });
 
