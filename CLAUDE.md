@@ -25,7 +25,7 @@ What's pending manual verification:
 
 What's in flight:
 
-- [IMPL-0003](docs/impl/0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) Phases 1-2 shipped on `feat/design-0002`. Phase 1 landed runtime deps (`react-markdown@10`, `remark-gfm@4`, `rehype-slug@6`, `rehype-autolink-headings@7`, `@shikijs/rehype@4`, `rehype-sanitize@6`, `mermaid@11`) + dev deps (`unified@11`, `unist-util-visit@5`, `@types/hast`, `@types/mdast`, plus `rehype-parse` / `remark-parse` / `remark-rehype` / `rehype-stringify` for tests) and the module-tree scaffold under `src/portal/markdown/`. Phase 2 wired the unified plugin chain (`pipeline.ts`: remark-gfm → rehype-slug → rehype-autolink-headings → @shikijs/rehype → normalize-hast-properties → rehype-sanitize), the dual-theme Shiki config (`github-light` / `github-dark` with the design-system `--color-code-*` palette wrapping the chrome), `<DocumentView>` (uses `MarkdownHooks` + Suspense for async Shiki, exposes `useDocumentLinks()` for Phase 4), and `styles.css` for prose styling (tokens only). 22 new tests (10 pipeline + 12 sanitize). **58 tests across 11 files.** The doc body still ships as a raw `<pre>` placeholder until Phase 5 swaps it for `<DocumentView>`.
+- [IMPL-0003](docs/impl/0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) Phases 1-3 shipped on `feat/design-0002`. Phase 1 landed runtime deps (`react-markdown@10`, `remark-gfm@4`, `rehype-slug@6`, `rehype-autolink-headings@7`, `@shikijs/rehype@4`, `rehype-sanitize@6`, `mermaid@11`) + dev deps (`unified@11`, `unist-util-visit@5`, `@types/hast`, `@types/mdast`, plus `rehype-parse` / `remark-parse` / `remark-rehype` / `rehype-stringify` for tests) and the module-tree scaffold under `src/portal/markdown/`. Phase 2 wired the unified plugin chain (`pipeline.ts`: remark-gfm → rehype-slug → rehype-autolink-headings → @shikijs/rehype → normalize-hast-properties → rehype-sanitize), the dual-theme Shiki config (`github-light` / `github-dark` with the design-system `--color-code-*` palette wrapping the chrome), `<DocumentView>` (uses `MarkdownHooks` + Suspense for async Shiki, exposes `useDocumentLinks()` for Phase 4), and `styles.css` for prose styling (tokens only). 22 new tests (10 pipeline + 12 sanitize). Phase 3 added the two custom plugins per DESIGN-0002 (`strip-docz-boilerplate.ts` removes markdownlint comments + TOC blocks from mdast; `mermaid-marker.ts` tags `language-mermaid` blocks with `dataMermaidSource` and strips the language class so Shiki skips them) plus 11 new tests (7 strip-docz + 4 mermaid-marker). **69 tests across 13 files.** The doc body still ships as a raw `<pre>` placeholder until Phase 5 swaps it for `<DocumentView>`.
 
 Phase 2 gotchas worth remembering:
 
@@ -35,7 +35,7 @@ Phase 2 gotchas worth remembering:
 
 What's not wired yet:
 
-- IMPL-0003 Phase 3 (custom remark/rehype plugins: `strip-docz-boilerplate`, `mermaid-marker`) onwards.
+- IMPL-0003 Phase 4 (React component overrides: `<Anchor>` for links[] resolution, `<Code>` for the pre/code wrapper, `<MermaidBlock>` for client-side mermaid hydration) onwards.
 
 What IMPL-0002 added (`just dev-msw`):
 

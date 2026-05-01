@@ -140,24 +140,27 @@ Land the two custom plugins that handle docz-specific concerns and mermaid hando
 
 #### Tasks
 
-- [ ] Implement `src/portal/markdown/plugins/strip-docz-boilerplate.ts` per DESIGN-0002 §Stripping docz boilerplate. Walk the mdast and remove:
+- [x] Implement `src/portal/markdown/plugins/strip-docz-boilerplate.ts` per DESIGN-0002 §Stripping docz boilerplate. Walk the mdast and remove:
   - Any `html` node whose value matches `/^<!--\s*markdownlint-/`.
   - Any subtree between an `html` node matching `/^<!--\s*toc:start\s*-->/` and the next `html` node matching `/^<!--\s*toc:end\s*-->/`, inclusive.
-- [ ] Implement `src/portal/markdown/plugins/mermaid-marker.ts`: walk the hast, find `<pre><code class="language-mermaid">` (after `remark-rehype`, before `@shikijs/rehype` so shiki doesn't try to highlight the diagram source). Replace with a `<pre data-mermaid-source="<source>">` element so Phase 4's `<MermaidBlock>` picks it up.
-- [ ] Insert both plugins into `pipeline.ts` at the correct stages (`strip-docz-boilerplate` between `remark-gfm` and `remark-rehype`; `mermaid-marker` between `remark-rehype` and `@shikijs/rehype`).
-- [ ] Update the sanitize allowlist to permit `data-mermaid-source` on `<pre>`.
-- [ ] Unit tests in `tests/portal/markdown/plugins/strip-docz-boilerplate.test.ts` per DESIGN-0002 §Testing Strategy:
+  - _Defensive orphan handling_: an unmatched `toc:start` strips just the marker (preserving following content); an unmatched `toc:end` strips just itself.
+- [x] Implement `src/portal/markdown/plugins/mermaid-marker.ts`: walk the hast, find `<pre><code class="language-mermaid">` (after `remark-rehype`, before `@shikijs/rehype` so shiki doesn't try to highlight the diagram source). _Tags the `<pre>` with `dataMermaidSource: ""` and removes `language-mermaid` from the inner `<code>` so Shiki ignores it. Source text is preserved as the `<pre>`'s child for SSR / no-JS fallback._
+- [x] Insert both plugins into `pipeline.ts` at the correct stages (`strip-docz-boilerplate` in `remarkPlugins` after `remark-gfm`; `mermaid-marker` in `rehypePlugins` between the autolink chain and `@shikijs/rehype`).
+- [x] Update the sanitize allowlist to permit `dataMermaidSource` on `<pre>`. _Already done in Phase 2 (`pre: [..., "dataMermaidSource"]`)._
+- [x] Unit tests in `tests/portal/markdown/plugins/strip-docz-boilerplate.test.ts` per DESIGN-0002 §Testing Strategy:
   - Comment-only fixture.
   - TOC-only fixture (start + end markers + nested list).
   - Both comment and TOC.
   - Neither (no-op).
-  - Malformed pairs (start without end, end without start).
+  - Malformed pairs (start without end → preserves following content; end without start → no-op).
   - Nested unrelated comments (e.g., a literal `<!-- not-a-toc -->` should pass through).
-- [ ] Unit tests in `tests/portal/markdown/plugins/mermaid-marker.test.ts`:
+  - _(7 tests)_
+- [x] Unit tests in `tests/portal/markdown/plugins/mermaid-marker.test.ts`:
   - `mermaid` fence — replaced with `data-mermaid-source` `<pre>`.
-  - Non-mermaid fence (`go`, `sh`) — untouched.
+  - Non-mermaid fence (`ts`) — untouched.
   - No-language fence — untouched.
   - Multiple mermaid blocks in one doc — each replaced independently.
+  - _(4 tests)_
 
 #### Success Criteria
 

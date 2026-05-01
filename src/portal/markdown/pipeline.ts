@@ -7,7 +7,9 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSanitize, { defaultSchema, type Options as SanitizeOptions } from "rehype-sanitize";
 
+import mermaidMarker from "./plugins/mermaid-marker";
 import normalizeHastProperties from "./plugins/normalize-hast-properties";
+import stripDoczBoilerplate from "./plugins/strip-docz-boilerplate";
 
 const defaultAttrs = defaultSchema.attributes ?? {};
 const defaultStarAttrs = defaultAttrs["*"] ?? [];
@@ -70,14 +72,19 @@ function elementText(node: Element): string {
 
 // Plugins consumed by `react-markdown`'s `remarkPlugins` prop.
 // `remark-parse` / `remark-rehype` are owned by react-markdown itself.
-// Phase 3 will splice in `strip-docz-boilerplate` before `remark-rehype`.
-export const remarkPlugins: PluggableList = [remarkGfm];
+// `strip-docz-boilerplate` runs before `remark-rehype` (it operates on mdast)
+// to drop tooling artefacts (markdownlint comments + auto-TOC blocks).
+export const remarkPlugins: PluggableList = [remarkGfm, stripDoczBoilerplate];
 
 // Plugins consumed by `react-markdown`'s `rehypePlugins` prop.
-// Order is load-bearing: slug → autolink (so the anchor sees the id) →
-// shiki (syntax highlighting) → sanitize (last). Phase 3 splices
-// `mermaid-marker` between `slug` chain and `shiki` so mermaid blocks
-// bypass syntax highlighting.
+// Order is load-bearing:
+//   slug → autolink (so the anchor sees the id)
+//   → mermaid-marker (tags `language-mermaid` blocks before Shiki, so Shiki
+//     doesn't touch them)
+//   → shiki (syntax highlighting for everything else)
+//   → normalize-hast-properties (Shiki emits raw HTML attr names; convert
+//     back to hast camelCase so `rehype-sanitize` recognises them)
+//   → sanitize (last line of defence).
 export const rehypePlugins: PluggableList = [
   rehypeSlug,
   [
@@ -90,14 +97,13 @@ export const rehypePlugins: PluggableList = [
       }),
     },
   ],
+  mermaidMarker,
   [
     rehypeShiki,
     {
       themes: { light: "github-light", dark: "github-dark" },
     },
   ],
-  // `@shikijs/rehype` emits `class` / `tabindex` raw attr names — normalise
-  // back to hast property names so `rehype-sanitize` recognises them.
   normalizeHastProperties,
   [rehypeSanitize, sanitizeSchema],
 ];
