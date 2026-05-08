@@ -216,7 +216,7 @@ The user-visible swap. Removes the `<pre className={styles.body}>{doc.body ?? ""
 - [x] In `src/routes/$type.$id.tsx`, replace the `<pre>` element with `<DocumentView document={doc} />`. Keep the page chrome (breadcrumb, title, dateline, `<Badge>`, authors line) unchanged.
 - [x] Update or remove `$type.$id.module.css`'s `.body` class — the `<pre>` is gone; the prose styling now lives in `src/portal/markdown/styles.css`. _(`.body` removed; `.bodySkeleton` retained for the route-level HydrateFallback shimmer.)_
 - [x] Add a `tests/api/docPageRender.test.tsx` assertion that the rendered output contains GFM-rendered HTML elements (e.g., `<h2>` from a `## Motivation` source) — not raw Markdown text in a `<pre>`. _Tightened to `screen.getByRole("heading", { level: 2, name: /Motivation/i })`. The accessible-name regex accommodates the prepended heading-anchor's "Permalink to Motivation" aria-label being concatenated into the heading's a11y name. Body substring still asserted via `container.textContent.includes(...)`._
-- [ ] Smoke against `just dev-msw` and `just dev` (with a seeded `rfc-api` row): visit a doc page, confirm the body renders as proper headings / lists / code blocks / mermaid diagrams (where present in fixtures). _**Manual verification** — the loop's environment doesn't have rfc-api running. MSW-backed tests cover the contract end-to-end._
+- [x] Smoke against `just dev-msw` and `just dev` (with a seeded `rfc-api` row): visit a doc page, confirm the body renders as proper headings / lists / code blocks / mermaid diagrams (where present in fixtures). _Verified manually with `rfc-api` running locally — doc pages render rendered Markdown end-to-end as expected._
 - [x] Verify `<RouteErrorBoundary>` still surfaces the 7807 not-found path correctly — the error boundary contract is upstream of `<DocumentView>` and shouldn't be affected, but worth confirming end-to-end. _The two existing 404/500 tests in `docPageRender.test.tsx` still pass — error path doesn't render `<DocumentView>` at all, so no regression._
 
 #### Success Criteria
@@ -275,7 +275,7 @@ Wire `<Snippet>` into a real caller so the component's API gets exercised end-to
 - [x] Tests:
   - `tests/api/searchRoute.test.ts` _(4 tests)_: empty-q short-circuits without API hit, populated `q` forwards to searchDocs, fixture corpus matches against `q=postgres`, problem responses propagate to `<RouteErrorBoundary>`.
   - `tests/api/searchRouteRender.test.tsx` _(4 tests)_: empty-q prompt state, populated results render `<Snippet>` content, doc-link `href` uses the URL form (`/adr/0001`, not `/ADR-0001`), no-results state.
-- [ ] Smoke against `just dev-msw`: visit `/search?q=postgres`, confirm the ADR-0001 fixture surfaces with snippet HTML rendered. _**Manual verification** — covered functionally by the route render tests against the shared MSW handlers._
+- [x] Smoke against `just dev-msw`: visit `/search?q=postgres`, confirm the ADR-0001 fixture surfaces with snippet HTML rendered. _Verified manually — the route surfaces seeded fixtures with rendered snippet HTML as expected._
 
 #### Success Criteria
 
