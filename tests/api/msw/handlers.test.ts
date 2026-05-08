@@ -114,17 +114,28 @@ describe("MSW handlers — listDocs (pagination round-trip)", () => {
 });
 
 describe("MSW handlers — searchDocs", () => {
-  it("filters fixtures by substring against title / body / id", async () => {
+  it("filters fixtures by substring against title / body / id and wraps in SearchResult envelopes", async () => {
     const response = await fetch(`${BASE_URL}/api/v1/search?q=postgres&limit=10`);
     expect(response.status).toBe(200);
-    const docs = (await response.json()) as { id: string }[];
-    expect(docs.length).toBeGreaterThanOrEqual(1);
-    expect(docs.some((d) => d.id === "ADR-0001")).toBe(true);
+    const results = (await response.json()) as {
+      document: { id: string };
+      snippet?: string;
+      matched_terms?: string[];
+      score?: number;
+    }[];
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results.some((r) => r.document.id === "ADR-0001")).toBe(true);
+    // Per the OpenAPI contract, /search returns SearchResult[].
+    const hit = results.find((r) => r.document.id === "ADR-0001");
+    expect(hit?.snippet).toContain("postgres");
+    expect(hit?.matched_terms).toContain("postgres");
+    expect(typeof hit?.score).toBe("number");
   });
 
-  it("returns the full corpus when q is omitted", async () => {
+  it("returns the full corpus (still wrapped) when q is omitted", async () => {
     const response = await fetch(`${BASE_URL}/api/v1/search?limit=100`);
-    const docs = (await response.json()) as unknown[];
-    expect(docs.length).toBe(8);
+    const results = (await response.json()) as { document: { id: string } }[];
+    expect(results.length).toBe(8);
+    expect(results[0]?.document.id).toMatch(/^[A-Z]+-[0-9]+$/);
   });
 });

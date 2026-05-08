@@ -35,3 +35,25 @@ export function urlIdFromCanonical(canonicalId: string): string {
 export function canonicalFromUrl(type: string, urlId: string): string {
   return `${type.toUpperCase()}-${urlId}`;
 }
+
+/**
+ * Translate an `rfc-api` getDoc URL (`Link.href` shape, e.g.
+ * `/api/v1/rfc/0001`) to its portal route counterpart (`/rfc/0001`).
+ *
+ * Returns `null` when the input doesn't match the expected
+ * `/api/v1/<type>/<urlId>` pattern. The portal's `<Anchor>` component
+ * (DESIGN-0002 §Cross-document link resolution, IMPL-0003 Phase 4)
+ * uses this to resolve anchor `href`s that come from `Document.links[]`
+ * into RR7 `<Link to={...}>` targets.
+ *
+ * Pairs symmetrically with `urlIdFromCanonical` / `canonicalFromUrl`
+ * — see the module docstring for the contract rationale.
+ */
+export function apiHrefToPortalRoute(apiHref: string): string | null {
+  const match = /^\/api\/v1\/([^/?#]+)\/([^/?#]+)(?:[/?#]|$)/.exec(apiHref);
+  if (!match) return null;
+  const type = match[1];
+  const urlId = match[2];
+  if (type === undefined || urlId === undefined) return null;
+  return `/${type}/${urlId}`;
+}

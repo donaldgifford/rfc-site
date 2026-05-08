@@ -22,7 +22,7 @@
 
 import { faker } from "@faker-js/faker";
 import { http, HttpResponse } from "msw";
-import type { Document } from "../__generated__/model";
+import type { Document, SearchResult } from "../__generated__/model";
 import { canonicalFromUrl } from "../docId";
 import { byType, findById, loadFixtures } from "./fixtures";
 
@@ -59,7 +59,20 @@ export const handlers = [
     const all = await loadFixtures();
     const filtered = query ? all.filter((d) => matchesQuery(d, query)) : all;
     const slice = paginate(filtered, url.searchParams);
-    return jsonWithLinkHeader(slice, url);
+    // OpenAPI: /search returns SearchResult[] (each wraps a Document).
+    // For dev-mode realism we synthesise a minimal snippet (the matched
+    // term wrapped in <em>) and a placeholder score.
+    const results: SearchResult[] = slice.page.map((doc) => ({
+      document: doc,
+      score: 0.75,
+      ...(query
+        ? {
+            snippet: `<em>${query}</em> matched in ${doc.title}`,
+            matched_terms: [query],
+          }
+        : {}),
+    }));
+    return jsonWithLinkHeader({ page: results, nextCursor: slice.nextCursor }, url);
   }),
 
   http.get("*/api/v1/:type/:id", async ({ params }) => {
