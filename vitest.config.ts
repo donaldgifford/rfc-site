@@ -22,6 +22,13 @@ export default defineConfig({
     globals: false,
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
+    // Shiki's first invocation in any worker loads its WASM regex
+    // engine + onig grammars from disk, which on the GitHub Actions
+    // runner can exceed the 5s vitest default. Tests that hit the
+    // markdown pipeline (pipeline.test.tsx, $type.$id full-render,
+    // <Anchor>, <Pre>) all paid this cost. 15s leaves headroom for
+    // the cold-start case without papering over a real regression.
+    testTimeout: 15000,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
