@@ -209,38 +209,38 @@ Three primitives that author independently. Each is small enough to be a single-
 
 #### Tasks — `<Card>`
 
-- [ ] Create `src/components/ds-candidates/Card/`:
+- [x] Create `src/components/ds-candidates/Card/`:
   - `Card.tsx`, `Card.module.css`, `index.ts`, `Card.test.tsx`.
-- [ ] **Props:**
+- [x] **Props:**
   - `variant: "flat" | "elevated"` (default `"flat"`; `"elevated"` uses `--shadow-sm`).
   - `padding: "sm" | "md" | "lg"` (default `"md"`).
   - Native `<div>` prop pass-through.
   - `asChild` slot for composing with `<section>` / `<article>` / `<Link>` (Resolved §2 — uses `@radix-ui/react-slot`, same as `<Button>`).
-- [ ] **Composable sub-components** `<Card.Header>` / `<Card.Body>` / `<Card.Footer>` (Resolved §4 — sub-components over loose CSS classes for the explicit DX).
-- [ ] Tests: variant + padding combos, sub-component composition, refs + className merge.
+- [x] **Composable sub-components** `<Card.Header>` / `<Card.Body>` / `<Card.Footer>` (Resolved §4 — sub-components over loose CSS classes for the explicit DX). Implemented with the `Object.assign(CardRoot, { Header, Body, Footer })` pattern so dot-notation surfaces on the TypeScript type without post-export mutation.
+- [x] Tests: variant + padding combos, sub-component composition, refs + className merge. 7 tests in `Card.test.tsx`.
 
 #### Tasks — `<Tabs>`
 
-- [ ] Create `src/components/ds-candidates/Tabs/`:
+- [x] Create `src/components/ds-candidates/Tabs/`:
   - `Tabs.tsx`, `Tabs.module.css`, `index.ts`, `Tabs.test.tsx`.
-- [ ] **API shape:** uncontrolled root with `defaultValue`, controlled via `value` + `onValueChange`. Sub-components `<Tabs.List>`, `<Tabs.Trigger value="…">`, `<Tabs.Content value="…">` — Radix-style composition without pulling Radix Tabs in (we have one sanctioned Radix dep, `@radix-ui/react-slot`, per CLAUDE.md Hard rules).
-- [ ] **Keyboard:** arrow-key navigation between triggers per WAI-ARIA Tabs pattern.
-- [ ] **URL state:** opt-in via a `urlParam?: string` prop (Resolved §5). When set, tab state syncs to `?<urlParam>=<value>` via RR7's `useSearchParams`; when omitted, state is local. Callers like the API examples page opt in for shareable links.
-- [ ] Tests: switching tabs via click + keyboard, active state attr, content visibility, refs forward.
+- [x] **API shape:** uncontrolled root with `defaultValue`, controlled via `value` + `onValueChange`. Sub-components `<Tabs.List>`, `<Tabs.Trigger value="…">`, `<Tabs.Content value="…">` — Radix-style composition without pulling Radix Tabs in (we have one sanctioned Radix dep, `@radix-ui/react-slot`, per CLAUDE.md Hard rules). Same `Object.assign(TabsRoot, { List, Trigger, Content })` pattern as `<Card>`.
+- [x] **Keyboard:** arrow-key navigation between triggers per WAI-ARIA Tabs pattern (ArrowLeft / ArrowRight wrap; Home / End jump to first / last). Triggers register themselves via a context-provided `registerTrigger(value, node)`; `focusByDirection(from, direction)` walks the registry.
+- [x] **URL state:** opt-in via a `urlParam?: string` prop (Resolved §5). When set, tab state syncs to `?<urlParam>=<value>` via RR7's `useSearchParams`; when omitted, state is local. Callers like the API examples page opt in for shareable links.
+- [x] Tests: switching tabs via click + keyboard, active state attr, content visibility, refs forward. 6 tests in `Tabs.test.tsx`.
 
 #### Tasks — `<CodeBlock>`
 
-- [ ] Create `src/components/ds-candidates/CodeBlock/`:
+- [x] Create `src/components/ds-candidates/CodeBlock/`:
   - `CodeBlock.tsx`, `CodeBlock.module.css`, `index.ts`, `CodeBlock.test.tsx`.
-- [ ] **Props:**
+- [x] **Props:**
   - `code: string` (required).
   - `language?: string` (defaults to `"text"`).
   - `showCopy?: boolean` (default `true`).
   - `label?: string` (display label, e.g., `"curl"`).
-- [ ] **Highlighting:** uses `@shikijs/rehype`'s peer `shiki` directly (already a transitive dep via `@shikijs/rehype`) — synchronous `codeToHtml` since this is standalone usage, no async-Shiki / `<MarkdownHooks>` wrapper needed. Match the dual-theme config from `src/portal/markdown/pipeline.ts` (`github-light` / `github-dark` with the design-system `--color-code-*` chrome).
-- [ ] **Distinct from `src/portal/markdown/components/Code.tsx`** — that one is page-bound to `<DocumentView>` and consumes hast from the unified pipeline. This one is the standalone primitive for non-Markdown contexts (API examples, MCP setup snippets).
-- [ ] **Copy button:** uses Phase 1's `<Button variant="ghost" size="sm">`. Calls `navigator.clipboard.writeText(code)`; flashes a "Copied" state for ~1.5s.
-- [ ] Tests: renders highlighted output, copy button triggers `navigator.clipboard.writeText`, language label rendering, hides copy button when `showCopy={false}`.
+- [x] **Highlighting:** uses `@shikijs/rehype`'s peer `shiki` directly (already a transitive dep via `@shikijs/rehype`). Async dynamic-import singleton (`highlighterPromise ??= import("shiki")`) so the cost is paid once across multiple `<CodeBlock>` instances. Renders `<MarkdownHooks>`-style: SSR `<pre><code>` fallback, then `useEffect` resolves Shiki and swaps to highlighted HTML via `dangerouslySetInnerHTML`. Dual-theme config (`github-light` / `github-dark`) matches `src/portal/markdown/pipeline.ts`.
+- [x] **Distinct from `src/portal/markdown/components/Code.tsx`** — that one is page-bound to `<DocumentView>` and consumes hast from the unified pipeline. This one is the standalone primitive for non-Markdown contexts (API examples, MCP setup snippets).
+- [x] **Copy button:** uses Phase 1's `<Button variant="ghost" size="sm">`. Calls `navigator.clipboard.writeText(code)`; flashes a "Copied" state for ~1.5s via a `setTimeout` with cleanup in `useEffect`.
+- [x] Tests: renders highlighted output, copy button triggers `navigator.clipboard.writeText`, language label rendering, hides copy button when `showCopy={false}`. 5 tests in `CodeBlock.test.tsx` (Shiki mocked via `vi.mock("shiki", …)` so jsdom doesn't load the real WASM regex engine).
 
 #### Success Criteria
 
