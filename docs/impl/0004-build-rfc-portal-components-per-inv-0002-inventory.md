@@ -100,7 +100,7 @@ Foundation phase. Lands the first candidate (`<Button>`) and the authoring conve
 
 #### Tasks
 
-- [ ] Add a `src/components/ds-candidates/README.md` refresher (or update the existing one) with the **authoring checklist**: folder shape, exports, ref-forwarding, prop pass-through, tokens-only CSS, no `portal/` imports, colocated test. Reference DESIGN-0001 §The `ds-candidates/` contract for the why.
+- [x] Add a `src/components/ds-candidates/README.md` refresher (or update the existing one) with the **authoring checklist**: folder shape, exports, ref-forwarding, prop pass-through, tokens-only CSS, no `portal/` imports, colocated test. Reference DESIGN-0001 §The `ds-candidates/` contract for the why.
 - [ ] Create `src/components/ds-candidates/Button/`:
   - `Button.tsx` — `forwardRef`, native `<button>` prop pass-through, `clsx` className merge.
   - `Button.module.css` — tokens only.
