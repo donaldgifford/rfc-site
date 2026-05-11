@@ -1,0 +1,108 @@
+/* Input candidate — wraps a native <input> in a styled <span> shell so
+ * prefix / suffix slots can sit inline with the field.
+ *
+ * The outer span is the visual element (border, background, focus
+ * indicator); the inner <input> is borderless and inherits color +
+ * typography. Focus state is driven by :focus-within on the shell so
+ * clicking a slot still feels right.
+ */
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0 var(--space-3);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  color: var(--color-fg-primary);
+  font-family: var(--font-sans);
+  transition:
+    border-color var(--duration-sm) var(--ease-standard),
+    box-shadow var(--duration-sm) var(--ease-standard),
+    background-color var(--duration-sm) var(--ease-standard);
+}
+
+.root:hover:not([data-disabled]) {
+  border-color: var(--color-border-strong);
+}
+
+.root:focus-within {
+  border-color: var(--color-accent-default);
+  outline: 2px solid var(--color-accent-default);
+  outline-offset: -1px;
+  box-shadow: var(--shadow-sm);
+}
+
+.root[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── size matrix ─────────────────────────────────────────────────── */
+
+.root[data-size="sm"] {
+  height: var(--space-7);
+  font-size: var(--font-size-12);
+  letter-spacing: var(--tracking-snug);
+}
+
+.root[data-size="md"] {
+  height: var(--space-8);
+  font-size: var(--font-size-13);
+  letter-spacing: var(--tracking-snug);
+}
+
+/* ── inner <input> ───────────────────────────────────────────────── */
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  appearance: none;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-fg-muted);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* Clear-search browser button — Safari draws its own; suppress in
+ * favour of the trailing slot. */
+.input[type="search"]::-webkit-search-decoration,
+.input[type="search"]::-webkit-search-cancel-button,
+.input[type="search"]::-webkit-search-results-button,
+.input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+}
+
+/* ── slot wrappers (prefix / suffix) ─────────────────────────────── */
+
+.slot {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--color-fg-tertiary);
+  line-height: 1;
+}
+
+.slot svg {
+  width: 1em;
+  height: 1em;
+}
+
+.slot[data-slot="suffix"] {
+  pointer-events: auto;
+}

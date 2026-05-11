@@ -141,26 +141,26 @@ Two small companion primitives. Both gate Phase 3's `<Topbar>` (which uses `<Inp
 
 #### Tasks
 
-- [ ] Create `src/components/ds-candidates/Input/`:
+- [x] Create `src/components/ds-candidates/Input/`:
   - `Input.tsx` — `forwardRef<HTMLInputElement>`, native `<input>` prop pass-through.
   - `Input.module.css` — tokens only.
   - `index.ts`, `Input.test.tsx`.
-- [ ] **`<Input>` props:**
+- [x] **`<Input>` props:**
   - All standard `<input>` props (`type`, `value`, `defaultValue`, `placeholder`, `disabled`, `aria-*`, …).
   - `size: "sm" | "md"` (default `"md"`).
   - `prefix?: React.ReactNode` — slot for a leading icon (rendered before the input).
   - `suffix?: React.ReactNode` — slot for a trailing `<Kbd>` hint (rendered after the input).
-- [ ] **Visual treatment:** match the mockup's search input — slim border, subtle background, focus-visible ring matching `<Button>`'s.
-- [ ] Create `src/components/ds-candidates/Kbd/`:
+- [x] **Visual treatment:** match the mockup's search input — slim border, subtle background, focus-visible ring matching `<Button>`'s.
+- [x] Create `src/components/ds-candidates/Kbd/`:
   - `Kbd.tsx` — renders a `<kbd>` with `forwardRef<HTMLElement>`.
   - `Kbd.module.css` — tokens only; use `--tracking-wider` (v0.3.0) for the uppercase mono feel.
   - `index.ts`, `Kbd.test.tsx`.
-- [ ] **`<Kbd>` props:**
+- [x] **`<Kbd>` props:**
   - All standard HTML element props.
   - `size: "sm" | "md"` (default `"sm"`; the topbar hint is small).
-- [ ] **Tests** for both: forwarding, className merge, variant/size attrs, prefix/suffix slot rendering for `<Input>`.
-- [ ] Wire `<Kbd>` into Phase 3's `<Topbar>` (deferred to Phase 3) and into the **existing `/search` route's submit-button kbd hint** if appropriate.
-- [ ] `just check` 100% green.
+- [x] **Tests** for both: forwarding, className merge, variant/size attrs, prefix/suffix slot rendering for `<Input>`. 8 tests for `<Input>`, 5 for `<Kbd>`.
+- [x] Wire `<Kbd>` into Phase 3's `<Topbar>` (deferred to Phase 3) and into the **existing `/search` route's submit-button kbd hint** if appropriate. _Wiring deferred to Phase 3 per IMPL plan — `<Input>` powers the Topbar's search trigger and `<Kbd>` powers the `⌘K` hint there._
+- [x] `just check` 100% green.
 
 #### Success Criteria
 
