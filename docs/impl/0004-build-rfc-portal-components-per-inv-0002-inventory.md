@@ -259,11 +259,11 @@ Last primitive wave. `<Breadcrumb>` is straightforward; the filter-pill + severi
 
 #### Tasks — `<Breadcrumb>`
 
-- [ ] Create `src/components/ds-candidates/Breadcrumb/`:
+- [x] Create `src/components/ds-candidates/Breadcrumb/`:
   - `Breadcrumb.tsx`, `Breadcrumb.module.css`, `index.ts`, `Breadcrumb.test.tsx`.
-- [ ] **API shape:** root `<Breadcrumb>` + sub-component `<Breadcrumb.Item href?="…" param?: boolean>`. Renders an ordered list with `aria-label="Breadcrumb"`.
-- [ ] **Path-param styling:** `<Breadcrumb.Item param>` sets `data-param="true"`; CSS targets the data attribute for the mockup's monospace + accent treatment on `{type}` / `{id}` segments (Resolved §6 — attribute prop over a separate sub-component, simpler API).
-- [ ] Tests: link items render as `<a>`; last item is plain text (no link); `param` items render with the `data-param` attribute + styling.
+- [x] **API shape:** root `<Breadcrumb>` + sub-component `<Breadcrumb.Item href?="…" param?: boolean>`. Renders an ordered list with `aria-label="Breadcrumb"`. Items without `href` (or with `current={true}`) render as a plain `<span>` per the WAI-ARIA Authoring Practices breadcrumb pattern. Same `Object.assign(BreadcrumbRoot, { Item })` pattern as `<Card>` / `<Tabs>`.
+- [x] **Path-param styling:** `<Breadcrumb.Item param>` sets `data-param="true"` on the `<li>` wrapper; CSS targets the data attribute for the mockup's monospace + accent treatment on `{type}` / `{id}` segments (Resolved §6 — attribute prop over a separate sub-component, simpler API).
+- [x] Tests: link items render as `<a>`; last item is plain text (no link); `param` items render with the `data-param` attribute + styling; `aria-current="page"` set when `current={true}`; `asChild` composes with RR7 `<Link>`-style wrappers; className merges on both link + plain-text branches. 6 tests in `Breadcrumb.test.tsx`.
 
 #### Tasks — `<Badge>` extension (in `../design-system`)
 
