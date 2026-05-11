@@ -1,0 +1,61 @@
+/* Card candidate — container surface with optional shadow + structured
+ * Header / Body / Footer sub-components.
+ *
+ * `data-variant` / `data-padding` attrs drive the visual matrix.
+ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  color: var(--color-fg-primary);
+}
+
+.root[data-variant="elevated"] {
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── padding matrix ──────────────────────────────────────────────── */
+
+.root[data-padding="sm"] {
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.root[data-padding="md"] {
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+
+.root[data-padding="lg"] {
+  padding: var(--space-6);
+  gap: var(--space-4);
+}
+
+/* ── sub-components ──────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border-hairline);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-hairline);
+}
