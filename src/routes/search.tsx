@@ -8,7 +8,6 @@ import { urlIdFromCanonical } from "../portal/api/docId";
 import { Snippet } from "../portal/markdown";
 import { Button } from "../components/ds-candidates/Button";
 import { Skeleton } from "../components/portal/Skeleton";
-import { ThemeToggle } from "../components/portal/ThemeToggle";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./search.module.css";
 
@@ -59,7 +58,6 @@ export default function Search({ loaderData }: Route.ComponentProps) {
           <span aria-hidden="true">/</span>
           <span>Search</span>
         </nav>
-        <ThemeToggle />
       </header>
 
       <Form method="get" role="search" className={styles.form}>

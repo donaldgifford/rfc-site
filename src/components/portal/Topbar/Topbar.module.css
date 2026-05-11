@@ -1,0 +1,108 @@
+/* Topbar layout — sticky 3-col grid spanning the viewport width.
+ *
+ * Brand left, centered search trigger middle, nav + theme-toggle right.
+ * Tokens only; uses v0.3.0 --shadow-sm + --z-sticky.
+ */
+
+.root {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 520px) 1fr;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-bg-base);
+  border-bottom: 1px solid var(--color-border-hairline);
+  box-shadow: var(--shadow-sm);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-600);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--color-fg-primary);
+  text-decoration: none;
+}
+
+.brandLink:hover {
+  color: var(--color-accent-default);
+}
+
+.brandLink:focus-visible {
+  outline: 2px solid var(--color-accent-default);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.search {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* The trigger is a <Link> wrapping a read-only <Input>. The link is
+ * the focus surface; the inner input is decorative until Phase 9 turns
+ * this into a real modal trigger. */
+.searchTrigger {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+
+.searchTrigger:focus-visible {
+  outline: 2px solid var(--color-accent-default);
+  outline-offset: 2px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.navPlaceholder {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-500);
+  letter-spacing: var(--tracking-snug);
+  color: var(--color-fg-muted);
+  cursor: not-allowed;
+  user-select: none;
+}
+
+/* Compact responsive treatment: collapse the centre column on narrow
+ * viewports so the brand + nav don't crowd. Phase 9's modal trigger
+ * will handle a real responsive shape later. */
+@media (max-width: 720px) {
+  .root {
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .search {
+    /* Hide the centre trigger on narrow screens — the ⌘K shortcut
+     * still works and Phase 9 will add a mobile-friendly affordance. */
+    display: none;
+  }
+
+  .nav {
+    gap: var(--space-2);
+  }
+
+  .navPlaceholder {
+    display: none;
+  }
+}

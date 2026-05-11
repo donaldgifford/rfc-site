@@ -178,20 +178,20 @@ User-visible swap. Lands the always-on topbar in the root Layout so every route 
 
 #### Tasks
 
-- [ ] Create `src/components/portal/Topbar/`:
+- [x] Create `src/components/portal/Topbar/`:
   - `Topbar.tsx`, `Topbar.module.css`, `index.ts`, `Topbar.test.tsx`.
-- [ ] **Layout:** 3-col CSS grid — left brand, centered search trigger (`<Input>` rendered read-only with the `<Kbd>` `⌘K` suffix, opens the search modal on click — see Phase 9), right `<ThemeToggle>` + nav links. Sticky via `position: sticky; top: 0; z-index: var(--z-sticky)` (v0.3.0 token).
-- [ ] **Brand area:** "rfc-site" wordmark linking to `/`; uses `--tracking-tighter` (v0.3.0) for the display feel.
-- [ ] **Search trigger:** clicking the topbar `<Input>` opens the Phase 9 search modal. For now (Phase 3), wire it as a `<Link to="/search">` so the trigger is functional even before the modal lands.
-- [ ] **Nav slot:** placeholder links for the three future routes (`API`, `MCP`, `Frameworks`) marked `aria-disabled` / `<span>` so they're visible but inert until those routes exist. Easier to dial in spacing now than retrofit later.
-- [ ] **Wire into `src/root.tsx`'s Layout:**
+- [x] **Layout:** 3-col CSS grid — left brand, centered search trigger (`<Input>` rendered read-only with the `<Kbd>` `⌘K` suffix, opens the search modal on click — see Phase 9), right `<ThemeToggle>` + nav links. Sticky via `position: sticky; top: 0; z-index: var(--z-sticky)` (v0.3.0 token).
+- [x] **Brand area:** "rfc-site" wordmark linking to `/`; uses `--tracking-tighter` (v0.3.0) for the display feel.
+- [x] **Search trigger:** clicking the topbar `<Input>` opens the Phase 9 search modal. For now (Phase 3), wire it as a `<Link to="/search">` so the trigger is functional even before the modal lands.
+- [x] **Nav slot:** placeholder links for the three future routes (`API`, `MCP`, `Frameworks`) marked `aria-disabled` / `<span>` so they're visible but inert until those routes exist. Easier to dial in spacing now than retrofit later.
+- [x] **Wire into `src/root.tsx`'s Layout:**
   - `<Topbar />` rendered above `<Outlet />`.
   - `<ThemeToggle>` removed from `_index.tsx`, `$type.$id.tsx`, `search.tsx` headers.
-- [ ] **Existing route headers** trimmed of duplicate breadcrumb/title chrome where the topbar now covers it.
-- [ ] **Tests** for `<Topbar>` (`Topbar.test.tsx`): brand link target, search trigger link target, `<ThemeToggle>` present, nav placeholder rendering, sticky `data-*` attr.
-- [ ] **Existing route render tests** updated: remove `<ThemeToggle>` assertions from per-route tests, add a single Layout-level assertion in a new `tests/api/rootLayout.test.tsx` (or extend `tests/api/indexRouteRender.test.tsx` since it'll catch the layout via `createRoutesStub`).
-- [ ] **Keyboard shortcut wiring** for `⌘K`: bind globally so pressing it focuses the search trigger / opens the modal. Stubbed for Phase 3 (just navigate to `/search`); fully wired in Phase 9.
-- [ ] `just check` 100% green; `just build` clean.
+- [x] **Existing route headers** trimmed of duplicate breadcrumb/title chrome where the topbar now covers it. `_index.tsx` lost its inline "Search" link + ThemeToggle; `search.tsx` lost its ThemeToggle.
+- [x] **Tests** for `<Topbar>` (`Topbar.test.tsx`): brand link target, search trigger link target, `<ThemeToggle>` present, nav placeholder rendering, `⌘K` global shortcut nav + the "don't steal focus from an open input" guard. 6 tests.
+- [x] **Existing route render tests** updated: no existing assertions referenced ThemeToggle directly, so no removal needed; existing `_index` / `$type.$id` / `/search` render tests stayed green against the trimmed headers.
+- [x] **Keyboard shortcut wiring** for `⌘K`: bound globally so pressing it (Meta+K or Ctrl+K) navigates to `/search`. Guard short-circuits when the event target is an `<input>`, `<textarea>`, or contentEditable element. Phase 9 will upgrade to opening the modal instead of navigating.
+- [x] `just check` 100% green; `just build` clean.
 
 #### Success Criteria
 

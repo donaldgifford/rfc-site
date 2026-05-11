@@ -6,7 +6,6 @@ import { throwIfProblem } from "../portal/api/errors";
 import { parseLinkHeader, type PaginationCursors } from "../portal/api/pagination";
 import { DocCard } from "../components/portal/DocCard";
 import { Skeleton } from "../components/portal/Skeleton";
-import { ThemeToggle } from "../components/portal/ThemeToggle";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./_index.module.css";
 
@@ -47,12 +46,6 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     <main className={styles.main}>
       <header className={styles.header}>
         <h1 className={styles.heading}>Directory</h1>
-        <div className={styles.headerActions}>
-          <Link to="/search" className={styles.searchLink}>
-            Search
-          </Link>
-          <ThemeToggle />
-        </div>
       </header>
 
       {docs.length === 0 ? (
