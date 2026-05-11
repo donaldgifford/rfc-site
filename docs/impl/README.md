@@ -35,4 +35,5 @@ docz create impl "Your Implementation Title"
 | IMPL-0001 | Bootstrap portal scaffold per DESIGN-0001 | Draft | 2026-04-27 | Donald Gifford | [0001-bootstrap-portal-scaffold-per-design-0001.md](0001-bootstrap-portal-scaffold-per-design-0001.md) |
 | IMPL-0002 | Wire up API_MODE=msw local dev mode | Draft | 2026-04-30 | Donald Gifford | [0002-wire-up-apimodemsw-local-dev-mode.md](0002-wire-up-apimodemsw-local-dev-mode.md) |
 | IMPL-0003 | Wire up the Markdown rendering pipeline per DESIGN-0002 | Draft | 2026-04-30 | Donald Gifford | [0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md](0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) |
+| IMPL-0004 | Build rfc-portal components per INV-0002 inventory | Draft | 2026-05-11 | Donald Gifford | [0004-build-rfc-portal-components-per-inv-0002-inventory.md](0004-build-rfc-portal-components-per-inv-0002-inventory.md) |
 <!-- END DOCZ AUTO-GENERATED -->

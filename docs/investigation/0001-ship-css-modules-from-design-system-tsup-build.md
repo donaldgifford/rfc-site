@@ -21,8 +21,12 @@ for `<Badge>`, ship prefixed global classes via side-effect CSS import).
 - [Approach](#approach)
 - [Environment](#environment)
 - [Findings](#findings)
+  - [Observation 1 — DTS build needs an ambient declaration](#observation-1--dts-build-needs-an-ambient-declaration)
+  - [Observation 2 — tsup emits CSS but not the JS class map](#observation-2--tsup-emits-css-but-not-the-js-class-map)
+  - [Observation 3 — loader: { ".module.css": "local-css" } doesn't take effect](#observation-3--loader--modulecss-local-css--doesnt-take-effect)
 - [Conclusion](#conclusion)
 - [Recommendation](#recommendation)
+- [Decision (2026-04-28)](#decision-2026-04-28)
 - [References](#references)
 <!--toc:end-->
 

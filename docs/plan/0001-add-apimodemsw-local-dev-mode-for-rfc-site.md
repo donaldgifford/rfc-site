@@ -24,6 +24,7 @@ created: 2026-04-30
 - [File Changes](#file-changes)
 - [Verification](#verification)
 - [Dependencies](#dependencies)
+- [Resolved](#resolved)
 - [Open Questions](#open-questions)
 - [References](#references)
 <!--toc:end-->
