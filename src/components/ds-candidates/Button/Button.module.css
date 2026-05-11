@@ -1,0 +1,157 @@
+/* Button candidate styles — tokens only, no raw colors or magic numbers.
+ *
+ * `data-variant` and `data-size` attrs drive the matrix so consumers can
+ * target them in their own stylesheets if needed.
+ *
+ * Promotion (IMPL-0004 §Phase 6): rename to `Button.css`, swap
+ * `styles.root` for a prefixed global class (`.ds-button`), per INV-0001.
+ */
+
+.root {
+  /* layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  /* type */
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-500);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  /* chrome */
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  appearance: none;
+  background: transparent;
+  color: var(--color-fg-primary);
+
+  /* motion */
+  transition:
+    background-color var(--duration-sm) var(--ease-standard),
+    color var(--duration-sm) var(--ease-standard),
+    border-color var(--duration-sm) var(--ease-standard),
+    box-shadow var(--duration-sm) var(--ease-standard);
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--color-accent-default);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-sm);
+}
+
+.root:disabled,
+.root[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── size matrix ─────────────────────────────────────────────────── */
+
+.root[data-size="sm"] {
+  height: var(--space-7);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-12);
+  letter-spacing: var(--tracking-snug);
+}
+
+.root[data-size="md"] {
+  height: var(--space-8);
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-13);
+  letter-spacing: var(--tracking-snug);
+}
+
+.root[data-size="lg"] {
+  height: var(--space-10);
+  padding: 0 var(--space-5);
+  font-size: var(--font-size-15);
+  letter-spacing: var(--tracking-snug);
+}
+
+/* Icon-only buttons are square — width matches height per size. */
+.root[data-variant="icon"][data-size="sm"] {
+  width: var(--space-7);
+  padding: 0;
+}
+
+.root[data-variant="icon"][data-size="md"] {
+  width: var(--space-8);
+  padding: 0;
+}
+
+.root[data-variant="icon"][data-size="lg"] {
+  width: var(--space-10);
+  padding: 0;
+}
+
+/* ── variant matrix ──────────────────────────────────────────────── */
+
+/* Primary — filled accent, used for the dominant CTA in a context. */
+.root[data-variant="primary"] {
+  background: var(--color-accent-default);
+  color: var(--color-bg-base);
+  border-color: var(--color-accent-default);
+}
+
+.root[data-variant="primary"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent-dim);
+}
+
+.root[data-variant="primary"]:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-accent-dim);
+  transform: translateY(1px);
+}
+
+/* Secondary — outlined, neutral. Default variant. */
+.root[data-variant="secondary"] {
+  background: var(--color-bg-raised);
+  color: var(--color-fg-primary);
+  border-color: var(--color-border-default);
+}
+
+.root[data-variant="secondary"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.root[data-variant="secondary"]:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-active);
+}
+
+/* Ghost — no chrome until hover. Used in toolbars and inline actions. */
+.root[data-variant="ghost"] {
+  background: transparent;
+  color: var(--color-fg-secondary);
+  border-color: transparent;
+}
+
+.root[data-variant="ghost"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-hover);
+  color: var(--color-fg-primary);
+}
+
+.root[data-variant="ghost"]:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-active);
+}
+
+/* Icon — square, ghost-like base. Padding-only target. */
+.root[data-variant="icon"] {
+  background: transparent;
+  color: var(--color-fg-secondary);
+  border-color: transparent;
+}
+
+.root[data-variant="icon"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-hover);
+  color: var(--color-fg-primary);
+}
+
+.root[data-variant="icon"]:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--color-bg-active);
+}

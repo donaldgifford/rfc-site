@@ -101,20 +101,20 @@ Foundation phase. Lands the first candidate (`<Button>`) and the authoring conve
 #### Tasks
 
 - [x] Add a `src/components/ds-candidates/README.md` refresher (or update the existing one) with the **authoring checklist**: folder shape, exports, ref-forwarding, prop pass-through, tokens-only CSS, no `portal/` imports, colocated test. Reference DESIGN-0001 §The `ds-candidates/` contract for the why.
-- [ ] Create `src/components/ds-candidates/Button/`:
+- [x] Create `src/components/ds-candidates/Button/`:
   - `Button.tsx` — `forwardRef`, native `<button>` prop pass-through, `clsx` className merge.
   - `Button.module.css` — tokens only.
   - `index.ts` — named export.
   - `Button.test.tsx` — colocated.
-- [ ] **Props shape:**
+- [x] **Props shape:**
   - `variant: "primary" | "secondary" | "ghost" | "icon"` (string union per DESIGN-0001 §API shape; default `"secondary"`).
   - `size: "sm" | "md" | "lg"` (default `"md"`).
   - `asChild?: boolean` for Radix Slot composition with RR7 `<Link>` (Resolved §2). Imports `@radix-ui/react-slot` — the single sanctioned Radix dep per CLAUDE.md Hard rules.
   - All standard `<button>` props (`type`, `disabled`, `aria-*`, `onClick`, …).
-- [ ] **Visual treatment:** match the mockup's button styles (primary = filled accent; secondary = outlined; ghost = no chrome until hover; icon = square, padding-only). Use `--shadow-sm` from v0.3.0 on the primary variant's focus ring.
-- [ ] **Disabled state** styled per the mockup's disabled-button treatment.
-- [ ] **Focus-visible ring** using the design-system's `--color-accent` token; passes WCAG 2.1 AA contrast against `--color-bg`.
-- [ ] **Tests** (colocated `Button.test.tsx`):
+- [x] **Visual treatment:** match the mockup's button styles (primary = filled accent; secondary = outlined; ghost = no chrome until hover; icon = square, padding-only). Use `--shadow-sm` from v0.3.0 on the primary variant's focus ring.
+- [x] **Disabled state** styled per the mockup's disabled-button treatment.
+- [x] **Focus-visible ring** using the design-system's `--color-accent` token; passes WCAG 2.1 AA contrast against `--color-bg`.
+- [x] **Tests** (colocated `Button.test.tsx`):
   - Renders each variant + size combo with the right `data-variant` / `data-size` attrs.
   - Forwards refs (`forwardRef` smoke test).
   - Forwards arbitrary props (`data-testid`, `aria-label`).
@@ -122,8 +122,8 @@ Foundation phase. Lands the first candidate (`<Button>`) and the authoring conve
   - Click handler fires on `userEvent.click`.
   - Disabled state blocks click + applies `aria-disabled`.
   - `asChild` composes with `<Link>` and the rendered element is an `<a>` with the button's classes (Resolved §2).
-- [ ] Wire `<Button>` into **one existing usage site** to validate the API in flight — e.g., replace the inline `<button>` in `src/routes/search.tsx`'s submit form, or add it to `<ThemeToggle>`'s trigger. Minimum two usages required before Phase 6 promotion.
-- [ ] `just check` 100% green; no eslint or typecheck regressions.
+- [x] Wire `<Button>` into **one existing usage site** to validate the API in flight — `src/routes/search.tsx` submit button now uses `<Button variant="primary">`; the bespoke `.submit` styles in `search.module.css` were trimmed to layout-only. _One usage site so far; minimum two required before Phase 6 promotion — Phase 3's `<Topbar>` will be the second._
+- [x] `just check` 100% green; no eslint or typecheck regressions.
 
 #### Success Criteria
 

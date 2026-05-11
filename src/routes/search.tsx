@@ -6,6 +6,7 @@ import type { SearchResult } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { urlIdFromCanonical } from "../portal/api/docId";
 import { Snippet } from "../portal/markdown";
+import { Button } from "../components/ds-candidates/Button";
 import { Skeleton } from "../components/portal/Skeleton";
 import { ThemeToggle } from "../components/portal/ThemeToggle";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
@@ -74,9 +75,9 @@ export default function Search({ loaderData }: Route.ComponentProps) {
           className={styles.input}
           autoComplete="off"
         />
-        <button type="submit" className={styles.submit}>
+        <Button type="submit" variant="primary" className={styles.submit}>
           Search
-        </button>
+        </Button>
       </Form>
 
       {q.length === 0 ? (

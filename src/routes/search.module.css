@@ -63,22 +63,11 @@
   outline-offset: 1px;
 }
 
+/* Submit-button visuals now live in the <Button variant="primary"> candidate
+ * at src/components/ds-candidates/Button/. The class here just pins the
+ * button's position in the form layout — no chrome. */
 .submit {
   align-self: flex-start;
-  font: inherit;
-  font-size: var(--font-size-14);
-  font-weight: var(--font-weight-600);
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-accent-default);
-  border-radius: var(--radius-md);
-  background: var(--color-accent-default);
-  color: var(--color-bg-base);
-  cursor: pointer;
-}
-
-.submit:hover {
-  background: var(--color-accent-dim);
-  border-color: var(--color-accent-dim);
 }
 
 .empty {
