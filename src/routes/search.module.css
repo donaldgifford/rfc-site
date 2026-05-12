@@ -63,8 +63,8 @@
   outline-offset: 1px;
 }
 
-/* Submit-button visuals now live in the <Button variant="primary"> candidate
- * at src/components/ds-candidates/Button/. The class here just pins the
+/* Submit-button visuals live in the <Button variant="primary"> primitive
+ * (@donaldgifford/design-system). The class here just pins the
  * button's position in the form layout — no chrome. */
 .submit {
   align-self: flex-start;

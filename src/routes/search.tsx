@@ -6,7 +6,7 @@ import type { SearchResult } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { urlIdFromCanonical } from "../portal/api/docId";
 import { Snippet } from "../portal/markdown";
-import { Button } from "../components/ds-candidates/Button";
+import { Button } from "@donaldgifford/design-system";
 import { Skeleton } from "../components/portal/Skeleton";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./search.module.css";

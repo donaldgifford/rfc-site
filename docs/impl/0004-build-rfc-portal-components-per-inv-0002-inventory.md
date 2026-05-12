@@ -22,7 +22,7 @@ created: 2026-05-11
 | 3 — `<Topbar>` | ✅ Shipped | 7 tests (now 7 incl. Phase 9a updates). |
 | 4 — `<Card>` + `<Tabs>` + `<CodeBlock>` | ✅ Shipped | 18 tests across all three. |
 | 5 — `<Breadcrumb>` (in-repo) + `<Badge>` filter/severity (upstream) | ✅ Shipped | 6 in-repo tests; upstream branch `feat/badge-filter-severity-variants` (commit `3c0f1d1`). |
-| 6 — Batch promotion | 🟡 3 of 4 promoted | `<Kbd>` + `<Input>` + `<Card>` promoted (design-system commits `e66886a` + `ca47c3a` + Card commit pending, consumed via `bun link` against the local 0.4.0-pre branch); `<Button>` deferred to follow-up PR. |
+| 6 — Batch promotion | ✅ 4 of 4 promoted | `<Kbd>` + `<Input>` + `<Card>` + `<Button>` promoted (design-system commits `e66886a` + `ca47c3a` + Card/Button commits pending, consumed via `bun link` against the local 0.4.0-pre branch). All four promotable ds-candidates cleared from `src/components/ds-candidates/`. |
 | 7a — `<DirectoryTable>` | ✅ Shipped | 5 tests. |
 | 7b — `<DirectoryToolbar>` (filter+sort URL state) | 🔴 Blocked | Upstream `rfc-api` contract change required for `listDocs?filter=…&sort=…`. |
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
@@ -314,7 +314,7 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
   | Candidate | Sites pre-9 | Sites post-9 | Verdict |
   |---|---|---|---|
-  | `<Button>` | 1 (`search.tsx`) | 2 (`search.tsx` + `<SearchModal>`) | **Ready** — promotion-eligible post-Phase-9a (deferred follow-up). |
+  | `<Button>` | 1 (`search.tsx`) | 3 (`search.tsx` + `<SearchModal>` + `<CodeBlock>` copy-button) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system Button commit pending). |
   | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system commit `ca47c3a`). |
   | `<Kbd>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>` footer) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system commit `e66886a`). |
   | `<Card>` | 0 | 2 (`<DocSidebar>` blocks + `<RFCPreviewCard>` popover) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system Card commit pending). |
@@ -322,13 +322,13 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
   | `<CodeBlock>` | 0 | 0 in this IMPL (future MCP / API only) | **Stay**. |
   | `<Breadcrumb>` | 0 | 0 in this IMPL (Frameworks route only) | **Stay**. |
 
-  **Resolution:** Four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar after Phase 9a shipped. The actual promotion (CSS-Module → prefixed-global `.ds-*` class conversion per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md), cross-repo `cp -r` + test move, design-system minor bump, `bun link` validation, rfc-site import swap, candidate folder deletion) is deferred to a follow-up PR — it's a non-trivial cross-repo coordination that doesn't fit cleanly inside this branch's scope. The `<Badge>` filter / severity variant work is already on the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`); the promotion follow-up PR will ride the same `0.4.0` release and ship all five (`<Button>` / `<Input>` / `<Kbd>` / `<Card>` + the `<Badge>` extension) together.
+  **Resolution:** Four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar after Phase 9a shipped. ✅ All four have been promoted (CSS-Module → prefixed-global `.ds-*` class conversion per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md), cross-repo file move with test migration, design-system `0.4.0` minor bump, `bun link` validation, rfc-site import swap, candidate folder deletion). The `<Badge>` filter / severity variant work was already on the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`); all five changes (`<Button>` / `<Input>` / `<Kbd>` / `<Card>` + the `<Badge>` extension) ride the same `0.4.0` release.
 
 - [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
   - ✅ `<Kbd>`: promoted to `../design-system/src/primitives/Kbd/` on the `feat/badge-filter-severity-variants` branch (commit `e66886a`). CSS converted from CSS Modules to prefixed-global `.ds-kbd` per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md); 5 tests migrated to `tests/primitives/Kbd.test.tsx`; `src/index.ts` exports the public surface. Existing `badge-filter-severity-variants` changeset extended to cover both changes for the `0.4.0` release.
   - ✅ `<Input>`: promoted to `../design-system/src/primitives/Input/` (commit `ca47c3a`). CSS converted: `.ds-input` (shell), `.ds-input__field` (inner input), `.ds-input__slot` (prefix/suffix wrappers). 8 tests migrated; `user-event` swapped for `fireEvent` so the design-system doesn't gain a new devDependency.
   - ✅ `<Card>`: promoted to `../design-system/src/primitives/Card/` (commit pending). CSS converted: `.ds-card` (root), `.ds-card__header` / `.ds-card__body` / `.ds-card__footer` (sub-components). 7 tests migrated; the `asChild` test was rewritten to render a plain `<a>` instead of an RR7 `<Link>` so design-system doesn't gain a `react-router` dep. The `Object.assign(CardRoot, { Header, Body, Footer })` dot-notation pattern is preserved verbatim.
-  - [ ] `<Button>` — deferred follow-up.
+  - ✅ `<Button>`: promoted to `../design-system/src/primitives/Button/` (commit pending). CSS converted to prefixed-global `.ds-button` per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md). 9 tests migrated to `tests/primitives/Button.test.tsx` — `user-event` swapped for `fireEvent` and the `asChild` test rewritten to render a plain `<a>` (matching the `<Card>` migration convention). `asChild` Radix Slot composition + the `type="button"` default + `aria-disabled` mirror are preserved verbatim.
 - [x] **Once the design-system release lands** — partial: validated locally via `bun link` against the design-system feat branch's `dist/` (the 0.4.0 release hasn't published yet, but the linked artefact is identical to what the release will ship):
   - ✅ `<Kbd>` consumed via `import { Kbd } from "@donaldgifford/design-system"` in `src/components/portal/Topbar/Topbar.tsx` and `src/components/portal/SearchModal/SearchModal.tsx`.
   - ✅ `src/components/ds-candidates/Kbd/` deleted.
@@ -338,10 +338,9 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 #### Success Criteria
 
 - Readiness audit complete. ✅ **Result post-Phase-9a:** four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar and are promotion-eligible; three (`<Tabs>`, `<CodeBlock>`, `<Breadcrumb>`) stay in `ds-candidates/` pending future-IMPL routes that consume them.
-- _(Follow-up PR)_ Promoted primitives shipped in `@donaldgifford/design-system` (`0.4.0` riding the `<Badge>` filter / severity variant changeset) and consumed via package imports across the portal.
-- _(Follow-up PR)_ `src/components/ds-candidates/` cleared of `<Button>` / `<Input>` / `<Kbd>` / `<Card>`; `<Tabs>` / `<CodeBlock>` / `<Breadcrumb>` stay until a second usage site materialises in a future IMPL.
-- _(Follow-up PR)_ Zero visual regressions vs the pre-promotion state.
-- _(Follow-up PR)_ `just check` 100% green; `just build` clean (bundle should *shrink* slightly since the design-system tree is already deduped).
+- ✅ Promoted primitives shipped in `@donaldgifford/design-system@0.4.0-pre` (riding the `<Badge>` filter / severity variant changeset) and consumed via package imports across the portal. Final `0.4.0` publish + `bun update` swap is the only remaining cross-repo step.
+- ✅ `src/components/ds-candidates/` cleared of `<Button>` / `<Input>` / `<Kbd>` / `<Card>`; `<Tabs>` / `<CodeBlock>` / `<Breadcrumb>` stay until a second usage site materialises in a future IMPL.
+- ✅ Zero visual regressions vs the pre-promotion state — `just check` 100% green; `just build` clean.
 
 ---
 

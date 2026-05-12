@@ -25,7 +25,7 @@ import {
 } from "react";
 import clsx from "clsx";
 
-import { Button } from "../Button";
+import { Button } from "@donaldgifford/design-system";
 import styles from "./CodeBlock.module.css";
 
 export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"pre">, "children"> {
