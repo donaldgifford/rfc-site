@@ -27,24 +27,27 @@
   letter-spacing: -0.02em;
 }
 
-.grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-4);
-}
-
-.skeletonCard {
+.skeletonTable {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-4);
   background: var(--color-bg-raised);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  min-height: 124px;
+  border-radius: var(--radius-md);
+}
+
+.skeletonRow {
+  display: grid;
+  grid-template-columns: 12% 38% 12% 22% 16%;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-hairline);
+}
+
+.skeletonRow:last-child {
+  border-bottom: none;
 }
 
 .empty {

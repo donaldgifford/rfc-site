@@ -330,29 +330,43 @@ Replaces the current card grid in `_index.tsx` with the mockup's table shape: nu
 
 #### Tasks
 
-- [ ] **Update `_index.tsx`:** loader stays the same (`listDocs` + `Link`-header pagination); the rendering swaps from `<DocCard>` grid to a `<table>` element. `<DocCard>` stays in `src/components/portal/` for now; may be deleted in a follow-up if nothing else uses it.
-- [ ] **Add `src/components/portal/DirectoryTable/`** as a portal composite:
-  - `DirectoryTable.tsx` — accepts `documents: Document[]` + `meta: { count, hasNext }` props. Renders the table.
-  - `DirectoryToolbar.tsx` — accepts `filters`, `sort`, `onFilterChange`, `onSortChange` props. Uses `<Button>`, `<Input>`, `<Pill>` (or `<Badge>` filter variant) primitives.
-  - `.module.css` files; `index.ts`.
-- [ ] **Toolbar functionality:**
+- [x] **OpenAPI contract verification** (prerequisite, was Open Question §8): inspected `api/openapi.yaml` — `listDocs` currently only accepts `Limit` + `Cursor` parameters; **no `?filter=` / `?sort=` support exists**. Per the IMPL gating, the toolbar authoring tasks are paused pending an upstream `rfc-api` contract change. The table layout itself is independent of those params, so this phase ships in two slices:
+  - **7a (this PR):** table layout swap, `<DirectoryTable>` composite, render-level tests. No URL-driven filter/sort.
+  - **7b (deferred):** `<DirectoryToolbar>`, filter / sort URL state, loader forwarding. Gates on the contract change.
+- [x] **Update `_index.tsx`:** loader stays the same (`listDocs` + `Link`-header pagination); the rendering swapped from the `<DocCard>` `<ul>` grid to the new `<DirectoryTable>`. `<DocCard>` stays in `src/components/portal/DocCard/` through this phase (Resolved §13 — schedule deletion in a follow-up PR ~2 weeks after this phase ships if no second usage materialises). The route-level `HydrateFallback` was updated to a table-shaped skeleton.
+- [x] **Add `src/components/portal/DirectoryTable/`** as a portal composite:
+  - `DirectoryTable.tsx` — accepts `documents: readonly Document[]` props and renders a semantic `<table>` with 5 columns (ID, Title, Status, Authors, Updated). Title is the only clickable cell; the row's accessible name comes from the link (WAI-ARIA pattern for sortable / filterable data tables). Empty `authors` arrays render an em-dash placeholder. The `<time>` element preserves the raw ISO `updated_at` for hover-as-tooltip / machine reading.
+  - `.module.css` — table chrome (sticky-feel uppercase header row, hairline borders, hover row, horizontal scroll container so narrow viewports don't overflow the page).
+  - `index.ts`.
+  - `DirectoryTable.test.tsx` — 5 tests covering column headers, row content, single-link-per-row invariant, empty-authors fallback, semantic `<time>` element.
+- [ ] **Add `src/components/portal/DirectoryToolbar/`** as a portal composite — _Deferred to 7b._
+  - `DirectoryToolbar.tsx` — accepts `filters`, `sort`, `onFilterChange`, `onSortChange` props. Uses `<Button>`, `<Input>`, `<Badge>` filter variant primitives.
+- [ ] **Toolbar functionality** — _Deferred to 7b._
   - **Filter triggers** use native `<details>`/`<summary>` for the dropdown surface (Resolved §7 — defer the Popover primitive until Phase 9 confirms it's needed for the search-modal preview-pane positioning).
   - **Sort** dropdown with `updated_desc` / `updated_asc` / `id_desc` / `id_asc` — same `<details>` shape.
   - **Filter + sort state in the URL** (`?filter=type:rfc&sort=updated_desc`) so refresh / share / back-button works. RR7's `useSearchParams` provides this.
   - **Results count** — total fixtures available pre-filter, then `(N of M shown)` post-filter.
-- [ ] **OpenAPI contract verification** (prerequisite — must complete before authoring tasks below): confirm `rfc-api`'s `listDocs` accepts `?filter=` / `?sort=` query params per `api/openapi.yaml`. If yes, regenerate the orval client and proceed. If no, raise a contract change upstream in `rfc-api` and pause Phase 7 until that lands. (Was Open Question §8.)
-- [ ] **Loader update:** parse the new URL params and forward to `listDocs` once the contract is verified.
-- [ ] **Tests:**
-  - `tests/api/indexRoute.test.ts` — loader handles filter + sort params.
-  - `tests/api/indexRouteRender.test.tsx` — table renders rows; toolbar interactions update URL + trigger reload.
-- [ ] **Card grid removed** from the live route; `<DocCard>` retained in `src/components/portal/DocCard/` through this phase (Resolved §13 — schedule deletion in a follow-up PR ~2 weeks after this phase ships if no second usage materialises).
+- [ ] **Loader update:** parse the new URL params and forward to `listDocs` once the contract is verified — _Deferred to 7b._
+- [x] **Tests:**
+  - `tests/api/indexRoute.test.ts` — loader unchanged; existing 3 tests stay green.
+  - `tests/api/indexRouteRender.test.tsx` — full render through `createRoutesStub` exercises the new table end-to-end. The accessible-name link assertion (`screen.getByRole("link", { name: "Use PostgreSQL for primary storage" })`) and the Badge humanised-status assertions both survive the swap unchanged.
+  - `src/components/portal/DirectoryTable/DirectoryTable.test.tsx` — 5 new component-level tests (column headers, row content, single-link invariant, empty authors, `<time>`).
+- [x] **Card grid removed** from the live route; `<DocCard>` retained in `src/components/portal/DocCard/` through this phase (Resolved §13 — schedule deletion in a follow-up PR ~2 weeks after this phase ships if no second usage materialises).
 
 #### Success Criteria
 
-- `/` renders the table shape from the mockup with all current fixture corpus surfaced.
-- Filter + sort affect the visible rows and persist via URL params.
-- Existing `_index` loader + render tests updated and green; new toolbar interaction tests added.
-- `just check` 100% green; `just build` clean.
+**7a — table layout (this PR):**
+
+- `/` renders the table shape from the mockup with all current fixture corpus surfaced. ✅
+- Existing `_index` loader + render tests stay green against the new table. ✅
+- New `<DirectoryTable>` component-level tests (5 cases) added. ✅
+- `just check` 100% green; `just build` clean. ✅ (150 tests, 27 files)
+
+**7b — toolbar (deferred):**
+
+- _(Deferred)_ Filter + sort affect the visible rows and persist via URL params.
+- _(Deferred)_ New toolbar interaction tests added.
+- _(Deferred)_ `rfc-api`'s `listDocs` accepts `?filter=` / `?sort=` query params.
 
 ---
 
