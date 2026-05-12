@@ -23,9 +23,8 @@
 
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { Link } from "react-router";
-import { Kbd } from "@donaldgifford/design-system";
+import { Input, Kbd } from "@donaldgifford/design-system";
 
-import { Input } from "../../ds-candidates/Input";
 import { SearchModal } from "../SearchModal";
 import { ThemeToggle } from "../ThemeToggle";
 import styles from "./Topbar.module.css";

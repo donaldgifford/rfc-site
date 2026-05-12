@@ -22,7 +22,7 @@ created: 2026-05-11
 | 3 — `<Topbar>` | ✅ Shipped | 7 tests (now 7 incl. Phase 9a updates). |
 | 4 — `<Card>` + `<Tabs>` + `<CodeBlock>` | ✅ Shipped | 18 tests across all three. |
 | 5 — `<Breadcrumb>` (in-repo) + `<Badge>` filter/severity (upstream) | ✅ Shipped | 6 in-repo tests; upstream branch `feat/badge-filter-severity-variants` (commit `3c0f1d1`). |
-| 6 — Batch promotion | 🟡 1 of 4 promoted | `<Kbd>` promoted (design-system commit `e66886a`, consumed via `bun link` against the local 0.4.0-pre branch); `<Button>` / `<Input>` / `<Card>` deferred to follow-up PRs. |
+| 6 — Batch promotion | 🟡 2 of 4 promoted | `<Kbd>` + `<Input>` promoted (design-system commits `e66886a` + `ca47c3a`, consumed via `bun link` against the local 0.4.0-pre branch); `<Button>` / `<Card>` deferred to follow-up PRs. |
 | 7a — `<DirectoryTable>` | ✅ Shipped | 5 tests. |
 | 7b — `<DirectoryToolbar>` (filter+sort URL state) | 🔴 Blocked | Upstream `rfc-api` contract change required for `listDocs?filter=…&sort=…`. |
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
@@ -315,7 +315,7 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
   | Candidate | Sites pre-9 | Sites post-9 | Verdict |
   |---|---|---|---|
   | `<Button>` | 1 (`search.tsx`) | 2 (`search.tsx` + `<SearchModal>`) | **Ready** — promotion-eligible post-Phase-9a (deferred follow-up). |
-  | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | **Ready** — same (deferred follow-up). |
+  | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system commit `ca47c3a`). |
   | `<Kbd>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>` footer) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system commit `e66886a`). |
   | `<Card>` | 0 | 2 (`<DocSidebar>` blocks + `<RFCPreviewCard>` popover) | **Ready** — Phase 8 created both sites (deferred follow-up). |
   | `<Tabs>` | 0 | 0 in this IMPL (future API examples / MCP only) | **Stay** in `ds-candidates/`. |
@@ -326,8 +326,8 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
 - [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
   - ✅ `<Kbd>`: promoted to `../design-system/src/primitives/Kbd/` on the `feat/badge-filter-severity-variants` branch (commit `e66886a`). CSS converted from CSS Modules to prefixed-global `.ds-kbd` per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md); 5 tests migrated to `tests/primitives/Kbd.test.tsx`; `src/index.ts` exports the public surface. Existing `badge-filter-severity-variants` changeset extended to cover both changes for the `0.4.0` release.
+  - ✅ `<Input>`: promoted to `../design-system/src/primitives/Input/` (commit `ca47c3a`). CSS converted: `.ds-input` (shell), `.ds-input__field` (inner input), `.ds-input__slot` (prefix/suffix wrappers). 8 tests migrated; `user-event` swapped for `fireEvent` so the design-system doesn't gain a new devDependency.
   - [ ] `<Button>` — deferred follow-up.
-  - [ ] `<Input>` — deferred follow-up.
   - [ ] `<Card>` — deferred follow-up.
 - [x] **Once the design-system release lands** — partial: validated locally via `bun link` against the design-system feat branch's `dist/` (the 0.4.0 release hasn't published yet, but the linked artefact is identical to what the release will ship):
   - ✅ `<Kbd>` consumed via `import { Kbd } from "@donaldgifford/design-system"` in `src/components/portal/Topbar/Topbar.tsx` and `src/components/portal/SearchModal/SearchModal.tsx`.
