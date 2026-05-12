@@ -61,13 +61,14 @@ describe("<Topbar>", () => {
     expect(toggle).toBeInTheDocument();
   });
 
-  it("⌘K navigates to /search", async () => {
+  it("⌘K opens the <SearchModal>", async () => {
     const user = userEvent.setup();
     renderTopbar({ initialPath: "/" });
 
-    expect(screen.queryByText(/search page/i)).not.toBeInTheDocument();
+    // Modal is closed by default.
+    expect(screen.queryByRole("dialog", { name: /search documents/i })).toBeNull();
     await user.keyboard("{Meta>}k{/Meta}");
-    expect(await screen.findByText(/search page/i)).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /search documents/i })).toBeInTheDocument();
   });
 
   it("⌘K does NOT trigger when the focus is inside an input (so users mid-typing aren't ambushed)", async () => {
@@ -83,7 +84,6 @@ describe("<Topbar>", () => {
             </>
           ),
         },
-        { path: "/search", element: <div>Search page</div> },
       ],
       { initialEntries: ["/"] },
     );
@@ -92,7 +92,16 @@ describe("<Topbar>", () => {
     const external = screen.getByTestId<HTMLInputElement>("external");
     await user.click(external);
     await user.keyboard("{Meta>}k{/Meta}");
-    // We should NOT have navigated.
-    expect(screen.queryByText(/search page/i)).not.toBeInTheDocument();
+    // Modal should NOT have opened.
+    expect(screen.queryByRole("dialog", { name: /search documents/i })).toBeNull();
+  });
+
+  it("clicking the topbar search trigger opens the modal (plain click)", async () => {
+    const user = userEvent.setup();
+    renderTopbar({ initialPath: "/" });
+
+    expect(screen.queryByRole("dialog", { name: /search documents/i })).toBeNull();
+    await user.click(screen.getByRole("link", { name: /search documents/i }));
+    expect(await screen.findByRole("dialog", { name: /search documents/i })).toBeInTheDocument();
   });
 });

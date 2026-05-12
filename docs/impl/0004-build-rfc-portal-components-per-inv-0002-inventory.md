@@ -416,30 +416,45 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
 
 #### Tasks
 
-- [ ] **`<SearchModal>` portal composite** at `src/components/portal/SearchModal/`:
-  - Renders as a fixed-position overlay using `--z-overlay` (v0.3.0) over a backdrop with `--shadow-lg`.
-  - Hosts the existing `searchDocs` call (extracted from the current route) so it works in both modal + standalone-route modes.
-  - Filter pills (all / titles / body / authors / labels) using the Phase 5 `<Pill>` filter variant.
-  - Results grouped by document type (RFCs, ADRs, …) with sticky group headers.
-  - Side preview pane on hover: shows the full snippet + a "Open" link to the doc page.
-  - Footer: keyboard hints using `<Kbd>` (`↑↓` navigate, `↵` open, `esc` close).
-- [ ] **`⌘K` global shortcut:** opens the modal from any route. Bind in `src/root.tsx` after `<Topbar>` mounts.
-- [ ] **Modal-vs-route reconciliation:**
-  - Direct nav to `/search` still works (no-JS friendly).
-  - Opening the modal sets `?modal=1` on the current URL (Resolved §11) so the back button closes the modal and refresh re-opens it. The existing `q` / filter params on `/search` continue to round-trip via the URL.
-- [ ] **Accessibility:** focus-trap inside the modal; `aria-modal="true"`; `<dialog>` element (native) if browser support is fine, else a focus-trap polyfill. Confirm jsdom test compatibility.
-- [ ] **Tests:**
-  - `tests/portal/components/SearchModal.test.tsx` — opens on `⌘K`, closes on `esc` / click-outside, filter pills affect results, preview pane shows the hovered hit.
-  - `tests/api/searchRouteRender.test.tsx` — the URL-driven `/search` route still works as a no-JS fallback.
+- [x] **`<SearchModal>` portal composite** at `src/components/portal/SearchModal/`:
+  - Renders as a fixed-position overlay using `--z-overlay` (v0.3.0) over a translucent backdrop (`rgba(0,0,0,0.45)`); the dialog itself uses `--shadow-lg`.
+  - Controlled API (`open` + `onOpenChange`); the parent (`<Topbar>`) owns the state.
+  - Hosts the `searchDocs` orval call directly so the modal is fully self-contained — the legacy `/search` route stays as the no-JS fallback per Resolved §11.
+  - Header (title + close), `<Input>` searchbox (Enter submits), results body, footer with `<Kbd>` hints (`Esc` close, `↵` search).
+  - Results re-use the same `<Snippet>` rendering as the route so the UI is consistent across surfaces.
+  - AbortController on every search call so prior in-flight requests get cancelled when the user retypes.
+  - Inert error surface: 4xx/5xx responses + network errors render `"Search failed — try again."` instead of crashing.
+  - _(Deferred to 9b)_ Filter pills (`<Badge variant="filter">`) — gate on the upstream design-system 0.4.0 release.
+  - _(Deferred to 9b)_ Results grouped by document type with sticky group headers.
+  - _(Deferred to 9b)_ Side preview pane on hover.
+  - _(Deferred to 9b)_ Full WAI-ARIA Dialog focus-trap polish — currently the input gets focus on open + `Escape` closes; tab-cycling within the dialog is browser-native.
+- [x] **`⌘K` global shortcut:** updated in `<Topbar>` to open `<SearchModal>` instead of navigating to `/search`. The "don't steal focus from inputs" guard is preserved.
+- [x] **Modal-vs-route reconciliation (partial):**
+  - Direct nav to `/search` still works (no-JS friendly). ✅
+  - Clicking the topbar trigger with **plain click** opens the modal; **meta-click / middle-click** navigates to `/search` (Cmd+click to open in a new tab still works).
+  - _(Deferred to 9b)_ `?modal=1` URL state so back-button closes the modal and refresh re-opens it (Resolved §11).
+- [x] **Accessibility (partial):** `role="dialog"`, `aria-modal="true"`, `aria-labelledby` wires to the title. Focus moves to the input on open via `queueMicrotask` + ref. Escape closes (bound via document keydown). Backdrop click closes. Backdrop and inline close button have distinct accessible names (`"Close search"` vs `"Close search dialog"`) so RTL queries can disambiguate.
+- [x] **Tests:**
+  - `src/components/portal/SearchModal/SearchModal.test.tsx` — 7 tests with a local MSW server: hidden when `open=false`; labelled dialog + focused input on open; query submission renders MSW-backed hits; Escape closes; backdrop click closes; close button closes; empty-prompt copy.
+  - `src/components/portal/Topbar/Topbar.test.tsx` — 3 updates: ⌘K opens the modal (not navigates); modal stays closed when ⌘K fires inside an input; clicking the topbar trigger opens the modal.
+  - `tests/api/searchRouteRender.test.tsx` — unchanged; the URL-driven `/search` route still works as a no-JS fallback (4 tests stayed green).
 
 #### Success Criteria
 
-- `⌘K` opens the modal from any route; `esc` / outside-click closes it.
-- Filter pills narrow the visible results.
-- Preview pane shows the selected hit's snippet.
-- Direct nav to `/search` continues to work (no-JS path preserved).
-- All keyboard interactions pass WAI-ARIA Dialog spec.
-- `just check` 100% green; `just build` clean.
+**9a — modal overlay + ⌘K wiring (this PR):**
+
+- `⌘K` opens the modal from any route; `esc` / outside-click closes it. ✅
+- Modal hosts `searchDocs` and renders hits with the same `<Snippet>` chrome as the legacy route. ✅
+- Direct nav to `/search` continues to work (no-JS path preserved). ✅
+- `just check` 100% green; `just build` clean. ✅ (171 tests, 30 files)
+
+**9b — filter pills + grouped results + preview pane + focus-trap (deferred):**
+
+- _(Deferred)_ Filter pills narrow the visible results (gates on design-system `0.4.0` for `<Badge variant="filter">`).
+- _(Deferred)_ Grouped results + sticky group headers.
+- _(Deferred)_ Preview pane shows the selected hit's snippet.
+- _(Deferred)_ Full WAI-ARIA Dialog focus-trap (the current implementation focuses the input on open + Escape closes + Tab cycles natively; a proper focus-trap polish is a follow-up).
+- _(Deferred)_ `?modal=1` URL state for back-button-closes-modal behaviour (Resolved §11).
 
 ---
 
