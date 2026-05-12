@@ -22,8 +22,13 @@
  *     an uppercase mono heading that pins to the top of the scrolling
  *     body via `position: sticky`. Group order follows the
  *     `FILTER_TYPES` constant so the layout is stable across queries.
+ *   - ✅ WAI-ARIA Dialog focus-trap — Tab + Shift+Tab cycle inside the
+ *     dialog only; the previously-focused element is restored on
+ *     close. Implemented on the dialog's keydown handler so the
+ *     surrounding `<Outlet>` stays interactive (we never call
+ *     `inert` / `aria-hidden` on the rest of the page — that would
+ *     fight RR7's hydration boundaries).
  *   - Side preview pane on hover (deferred).
- *   - Full WAI-ARIA Dialog focus-trap polish (deferred).
  */
 
 import {
@@ -80,6 +85,8 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   // Empty set = no filter (show all). Otherwise: visible types only.
   const [selectedTypes, setSelectedTypes] = useState<ReadonlySet<string>>(new Set());
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const toggleType = useCallback((typeId: string) => {
@@ -102,23 +109,62 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
     onOpenChange(false);
   }, [onOpenChange]);
 
-  // Focus the input when the modal opens.
+  // Capture the previously-focused element on open, focus the input,
+  // and restore focus to the captured element on close.
   useEffect(() => {
     if (!open) return;
+    const active = document.activeElement;
+    previouslyFocusedRef.current = active instanceof HTMLElement ? active : null;
     // useEffect runs after paint; focus on the next tick to ensure the
     // input is mounted.
     queueMicrotask(() => {
       inputRef.current?.focus();
     });
+    return () => {
+      // Hand focus back so keyboard users don't end up at the document
+      // root after the modal unmounts. Guard against the previous
+      // element having been detached during the modal's lifetime.
+      const previous = previouslyFocusedRef.current;
+      if (previous?.isConnected === true) {
+        previous.focus();
+      }
+    };
   }, [open]);
 
-  // Global Escape — bound only while open so we don't fight other listeners.
+  // Global Escape + Tab focus-trap — bound only while open so we don't
+  // fight other listeners. The Tab handler cycles focus inside the
+  // dialog so it can never escape to the underlying page; the
+  // focusable selector mirrors the WAI-ARIA Authoring Practices'
+  // canonical list.
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
         close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const root = dialogRef.current;
+      if (root === null) return;
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute("inert") && el.offsetParent !== null);
+
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (first === undefined || last === undefined) return;
+      const active = document.activeElement;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -193,7 +239,13 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   return (
     <div className={styles.overlay}>
       <button type="button" className={styles.backdrop} aria-label="Close search" onClick={close} />
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={styles.dialog}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={styles.dialog}
+      >
         <header className={styles.header}>
           <h2 id={titleId} className={styles.title}>
             Search documents

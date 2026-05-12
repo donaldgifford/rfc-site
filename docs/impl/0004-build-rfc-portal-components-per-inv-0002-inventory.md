@@ -28,7 +28,7 @@ created: 2026-05-11
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
 | 8b — `<RFCPreviewCard>` + `<Anchor>` extension | ✅ Shipped | 5 + 1 tests. |
 | 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
-| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 2 of 5 shipped | Filter pills + grouped-by-type sticky headers shipped; preview pane / focus-trap polish / `?modal=1` remain follow-up polish. |
+| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 3 of 5 shipped | Filter pills + grouped-by-type sticky headers + WAI-ARIA Dialog focus-trap shipped; preview pane / `?modal=1` URL state remain follow-up polish. |
 
 **Coverage:** 171 tests across 30 files; `just check` 100% green; production build clean (server bundle 79.31 kB / 21.28 kB gzip).
 
@@ -447,7 +447,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
   - ✅ Filter pills (`<Badge variant="filter">`) — `All` + per-type pills (`RFC` / `ADR` / `Design` / `Impl` / `Plan` / `Inv`) wrapped in chrome-less `<button type="button">` toggles. Empty selection = no filter (show all results); per-type pills support multi-select. Implementation is client-side over the rendered `SearchResult[]`; the `searchDocs` payload is unchanged. The Badge primitive's `aria-pressed` reflects the selected state for screen readers. 3 new tests in `SearchModal.test.tsx` cover the toolbar render, type-filter narrowing, and the All-pill reset.
   - ✅ Results grouped by `document.type` with sticky group headers. Each non-empty bucket renders inside its own `<section aria-labelledby data-group-type>` with a `position: sticky` uppercase mono `<h3>` heading. Group order follows `FILTER_TYPES` so the layout is stable; an unrecognised type (added upstream without a portal release) falls through to a trailing bucket so it doesn't disappear.
   - _(Deferred to 9b)_ Side preview pane on hover.
-  - _(Deferred to 9b)_ Full WAI-ARIA Dialog focus-trap polish — currently the input gets focus on open + `Escape` closes; tab-cycling within the dialog is browser-native.
+  - ✅ Full WAI-ARIA Dialog focus-trap polish — Tab + Shift+Tab cycle inside the dialog only; the previously-focused element is captured on open and restored on close (so keyboard users don't end up at the document root after dismiss). Implemented via a document-level `keydown` listener bound only while the modal is open; the focusable selector mirrors the WAI-ARIA Authoring Practices' canonical list and filters out hidden / `inert` elements. The surrounding `<Outlet>` stays interactive — we never call `inert` / `aria-hidden` on the rest of the page since that would fight RR7's hydration boundaries.
 - [x] **`⌘K` global shortcut:** updated in `<Topbar>` to open `<SearchModal>` instead of navigating to `/search`. The "don't steal focus from inputs" guard is preserved.
 - [x] **Modal-vs-route reconciliation (partial):**
   - Direct nav to `/search` still works (no-JS friendly). ✅
@@ -473,7 +473,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
 - ✅ Filter pills narrow the visible results — `All` + 6 per-type pills, multi-select on the per-type pills, `All` clears them. Backed by `<Badge variant="filter">` from `@donaldgifford/design-system@0.4.0-pre` (consumed locally via `bun link`).
 - ✅ Grouped results + sticky group headers — each non-empty type-bucket renders under a sticky uppercase mono `<h3>` so the user always sees the active section while scrolling.
 - _(Deferred)_ Preview pane shows the selected hit's snippet.
-- _(Deferred)_ Full WAI-ARIA Dialog focus-trap (the current implementation focuses the input on open + Escape closes + Tab cycles natively; a proper focus-trap polish is a follow-up).
+- ✅ Full WAI-ARIA Dialog focus-trap — Tab cycling stays inside the dialog (Shift+Tab from first → last, Tab from last → first); previously-focused element is captured on open and restored on close so keyboard users don't drop to the document root.
 - _(Deferred)_ `?modal=1` URL state for back-button-closes-modal behaviour (Resolved §11).
 
 ---

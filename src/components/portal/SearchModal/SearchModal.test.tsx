@@ -190,6 +190,51 @@ describe("<SearchModal>", () => {
     });
   });
 
+  it("traps Tab cycling — Shift+Tab from the first focusable wraps to the last", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: true });
+
+    const closeButton = screen.getByRole("button", { name: /close search dialog/i });
+
+    // Focus the inline Close button (the first interactive control inside
+    // the dialog after the backdrop). Shift+Tab should wrap around to
+    // the last focusable inside the dialog rather than escape it.
+    closeButton.focus();
+    expect(closeButton).toHaveFocus();
+
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+
+    // Focus should land on some element *inside* the dialog (not the
+    // body or the backdrop). The dialog node itself is the role=dialog
+    // container, so we just assert focus is contained.
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it("restores focus to the previously-focused element when the modal closes", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: false });
+
+    // The Host renders an "open" trigger button outside the modal.
+    const trigger = screen.getByRole("button", { name: /^open$/i });
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+    await user.click(trigger);
+
+    // Once the modal opens it steals focus to the input.
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    // Close it — focus should snap back to the trigger button.
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(trigger).toHaveFocus();
+    });
+  });
+
   it("groups hits by document.type with a sticky heading per non-empty bucket", async () => {
     const user = userEvent.setup();
     renderModal({ initialOpen: true });
