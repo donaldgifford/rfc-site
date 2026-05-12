@@ -28,7 +28,12 @@
  *     surrounding `<Outlet>` stays interactive (we never call
  *     `inert` / `aria-hidden` on the rest of the page — that would
  *     fight RR7's hydration boundaries).
- *   - Side preview pane on hover (deferred).
+ *   - ✅ Side preview pane — hovering or focusing a hit sets it as the
+ *     active result; the preview pane on the right renders the doc's
+ *     metadata via `useGetDoc` (lazy, gated by `enabled`). The pane
+ *     is purely decorative on narrow viewports and collapses below
+ *     the body grid breakpoint via CSS only — keyboard users get the
+ *     same affordance on focus that mouse users get on hover.
  */
 
 import {
@@ -38,14 +43,17 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
   type SyntheticEvent,
 } from "react";
 import { Link } from "react-router";
 
 import { searchDocs } from "../../../portal/api/__generated__/search/search";
+import { useGetDoc, type getDocResponse } from "../../../portal/api/__generated__/docs/docs";
+import { classifyProblem } from "../../../portal/api/errors";
 import type { SearchResult } from "../../../portal/api/__generated__/model";
 import { urlIdFromCanonical } from "../../../portal/api/docId";
-import { Badge, Button, Input, Kbd } from "@donaldgifford/design-system";
+import { Badge, Button, Card, Input, Kbd } from "@donaldgifford/design-system";
 
 import { Snippet } from "../../../portal/markdown";
 
@@ -84,6 +92,9 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [errored, setErrored] = useState(false);
   // Empty set = no filter (show all). Otherwise: visible types only.
   const [selectedTypes, setSelectedTypes] = useState<ReadonlySet<string>>(new Set());
+  // The hit currently under hover / focus — drives the side preview
+  // pane. `null` = no active hit (empty prompt).
+  const [activeResult, setActiveResult] = useState<SearchResult | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -181,6 +192,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
     setErrored(false);
     setSearching(false);
     setSelectedTypes(new Set());
+    setActiveResult(null);
     abortRef.current?.abort();
     abortRef.current = null;
   }, [open]);
@@ -292,23 +304,32 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         </div>
 
         <div className={styles.body}>
-          {errored ? (
-            <p className={styles.empty}>Search failed — try again.</p>
-          ) : searching ? (
-            <p className={styles.empty}>Searching…</p>
-          ) : query.length === 0 ? (
-            <p className={styles.empty}>
-              Type a query and press <Kbd size="sm">Enter</Kbd> to search.
-            </p>
-          ) : results.length === 0 ? (
-            <p className={styles.empty}>
-              No results for <strong>{query}</strong>.
-            </p>
-          ) : filteredOut ? (
-            <p className={styles.empty}>No results match the selected document types.</p>
-          ) : (
-            <GroupedResults results={visibleResults} onSelect={close} />
-          )}
+          <div className={styles.list}>
+            {errored ? (
+              <p className={styles.empty}>Search failed — try again.</p>
+            ) : searching ? (
+              <p className={styles.empty}>Searching…</p>
+            ) : query.length === 0 ? (
+              <p className={styles.empty}>
+                Type a query and press <Kbd size="sm">Enter</Kbd> to search.
+              </p>
+            ) : results.length === 0 ? (
+              <p className={styles.empty}>
+                No results for <strong>{query}</strong>.
+              </p>
+            ) : filteredOut ? (
+              <p className={styles.empty}>No results match the selected document types.</p>
+            ) : (
+              <GroupedResults
+                results={visibleResults}
+                onSelect={close}
+                onActivate={setActiveResult}
+              />
+            )}
+          </div>
+          <aside className={styles.preview} aria-label="Result preview">
+            <PreviewPane result={activeResult} />
+          </aside>
         </div>
 
         <footer className={styles.footer}>
@@ -335,9 +356,11 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 function GroupedResults({
   results,
   onSelect,
+  onActivate,
 }: {
   results: readonly SearchResult[];
   onSelect: () => void;
+  onActivate: (result: SearchResult) => void;
 }) {
   const buckets = new Map<string, SearchResult[]>();
   for (const result of results) {
@@ -379,7 +402,12 @@ function GroupedResults({
             </h3>
             <ul className={styles.results}>
               {hits.map((result) => (
-                <ModalHit key={hitKey(result)} result={result} onSelect={onSelect} />
+                <ModalHit
+                  key={hitKey(result)}
+                  result={result}
+                  onSelect={onSelect}
+                  onActivate={onActivate}
+                />
               ))}
             </ul>
           </section>
@@ -392,6 +420,161 @@ function GroupedResults({
 function humaniseTypeLabel(typeId: string): string {
   if (typeId.length === 0) return "Other";
   return typeId.charAt(0).toUpperCase() + typeId.slice(1).toLowerCase();
+}
+
+function PreviewPane({ result }: { result: SearchResult | null }) {
+  if (result === null) {
+    return (
+      <p className={styles.previewEmpty}>Hover or focus a result to preview its metadata here.</p>
+    );
+  }
+
+  const { document, snippet, matched_terms } = result;
+  return (
+    <Card variant="elevated" padding="md" className={styles.previewCard}>
+      <PreviewBody
+        type={document.type}
+        urlId={urlIdFromCanonical(document.id)}
+        fallback={result}
+        snippetHtml={snippet}
+        matchedTerms={matched_terms ?? []}
+      />
+    </Card>
+  );
+}
+
+function PreviewBody({
+  type,
+  urlId,
+  fallback,
+  snippetHtml,
+  matchedTerms,
+}: {
+  type: string;
+  urlId: string;
+  fallback: SearchResult;
+  snippetHtml: string | undefined;
+  matchedTerms: readonly string[];
+}) {
+  const query = useGetDoc(type, urlId, {
+    query: {
+      enabled: true,
+      staleTime: 5 * 60 * 1000,
+    },
+  });
+
+  return (
+    <PreviewSurface
+      query={query}
+      fallback={fallback}
+      snippetHtml={snippetHtml}
+      matchedTerms={matchedTerms}
+    />
+  );
+}
+
+interface PreviewSurfaceProps {
+  query: {
+    data: getDocResponse | undefined;
+    isLoading: boolean;
+    isFetching: boolean;
+    isError: boolean;
+  };
+  fallback: SearchResult;
+  snippetHtml: string | undefined;
+  matchedTerms: readonly string[];
+}
+
+function PreviewSurface({ query, fallback, snippetHtml, matchedTerms }: PreviewSurfaceProps) {
+  const fallbackDoc = fallback.document;
+
+  if (query.isError) {
+    return <p className={styles.previewError}>Couldn’t load preview for {fallbackDoc.id}.</p>;
+  }
+
+  // While the full doc is in flight, render the search-result envelope
+  // so the pane isn't empty — the snippet + title alone are useful.
+  if (query.data === undefined || query.isLoading) {
+    return (
+      <PreviewLayout
+        idLabel={fallbackDoc.id}
+        title={fallbackDoc.title}
+        status={fallbackDoc.status}
+        snippetHtml={snippetHtml}
+        matchedTerms={matchedTerms}
+        meta={<span className={styles.previewMeta}>Loading…</span>}
+      />
+    );
+  }
+
+  if (query.data.status !== 200) {
+    const kind = classifyProblem(query.data.data);
+    return (
+      <p className={styles.previewError}>
+        {kind === "not-found"
+          ? `${fallbackDoc.id} not found.`
+          : `Couldn’t load preview for ${fallbackDoc.id}.`}
+      </p>
+    );
+  }
+
+  const doc = query.data.data;
+  const authors = (doc.authors ?? []).map((a) => a.name).join(", ");
+  return (
+    <PreviewLayout
+      idLabel={doc.id}
+      title={doc.title}
+      status={doc.status}
+      snippetHtml={snippetHtml}
+      matchedTerms={matchedTerms}
+      meta={
+        <>
+          {authors.length > 0 ? <span className={styles.previewMeta}>{authors}</span> : null}
+          <span className={styles.previewMeta}>
+            Updated <time dateTime={doc.updated_at}>{formatPreviewDate(doc.updated_at)}</time>
+          </span>
+        </>
+      }
+    />
+  );
+}
+
+function PreviewLayout({
+  idLabel,
+  title,
+  status,
+  snippetHtml,
+  matchedTerms,
+  meta,
+}: {
+  idLabel: string;
+  title: string;
+  status: string;
+  snippetHtml: string | undefined;
+  matchedTerms: readonly string[];
+  meta: ReactNode;
+}) {
+  return (
+    <div className={styles.previewBody}>
+      <div className={styles.previewHead}>
+        <span className={styles.previewId}>{idLabel}</span>
+        <Badge status={status} size="sm" />
+      </div>
+      <h3 className={styles.previewTitle}>{title}</h3>
+      <div className={styles.previewMetaRow}>{meta}</div>
+      <Snippet html={snippetHtml} fallbackTerms={matchedTerms} />
+    </div>
+  );
+}
+
+function formatPreviewDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 interface FilterPillProps {
@@ -426,15 +609,32 @@ function hitKey(result: SearchResult): string {
   return [result.document.type, result.document.id, result.section_slug ?? ""].join("/");
 }
 
-function ModalHit({ result, onSelect }: { result: SearchResult; onSelect: () => void }) {
+function ModalHit({
+  result,
+  onSelect,
+  onActivate,
+}: {
+  result: SearchResult;
+  onSelect: () => void;
+  onActivate: (result: SearchResult) => void;
+}) {
   const { document, snippet, matched_terms, section_heading, section_slug } = result;
   const portalRoute = `/${document.type}/${urlIdFromCanonical(document.id)}${
     section_slug !== undefined && section_slug !== "" ? `#${section_slug}` : ""
   }`;
   const matchedTerms = matched_terms ?? [];
+  const activate = () => {
+    onActivate(result);
+  };
   return (
     <li className={styles.hit}>
-      <Link to={portalRoute} className={styles.hitLink} onClick={onSelect}>
+      <Link
+        to={portalRoute}
+        className={styles.hitLink}
+        onClick={onSelect}
+        onMouseEnter={activate}
+        onFocus={activate}
+      >
         <p className={styles.hitMeta}>
           <span className={styles.hitId}>{document.id}</span>
         </p>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setupServer } from "msw/node";
 
 import { SearchModal } from "./SearchModal";
@@ -38,6 +39,9 @@ function Host({ initialOpen = true }: { initialOpen?: boolean }) {
 }
 
 function renderModal({ initialOpen = true }: { initialOpen?: boolean } = {}) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   const router = createMemoryRouter(
     [
       {
@@ -51,7 +55,11 @@ function renderModal({ initialOpen = true }: { initialOpen?: boolean } = {}) {
     ],
     { initialEntries: ["/"] },
   );
-  return render(<RouterProvider router={router} />);
+  return render(
+    <QueryClientProvider client={client}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
 }
 
 describe("<SearchModal>", () => {
@@ -256,6 +264,34 @@ describe("<SearchModal>", () => {
     const implSection = implHeading.closest("section");
     expect(implSection).not.toBeNull();
     expect(implSection).toHaveAttribute("data-group-type", "impl");
+  });
+
+  it("renders the empty preview prompt by default and swaps to a result on hit hover", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: true });
+
+    // Empty state — preview pane prompts the user to hover/focus a hit.
+    expect(screen.getByText(/hover or focus a result to preview/i)).toBeInTheDocument();
+
+    // Submit a query so there are hits to hover.
+    const input = screen.getByRole("searchbox", { name: /search query/i });
+    await user.type(input, "portal");
+    await user.keyboard("{Enter}");
+    await waitFor(() => {
+      expect(screen.queryByText(/searching/i)).toBeNull();
+    });
+
+    // Hover the first hit link — the preview pane should pick it up
+    // and swap from the empty prompt to result metadata.
+    const hitLinks = screen.getAllByRole("link");
+    const firstHit = hitLinks.find((node) => node.textContent.includes("MSW"));
+    expect(firstHit).toBeDefined();
+    if (firstHit === undefined) return;
+    await user.hover(firstHit);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/hover or focus a result to preview/i)).toBeNull();
+    });
   });
 
   it("clicking the All pill clears active type filters", async () => {

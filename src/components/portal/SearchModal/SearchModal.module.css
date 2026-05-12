@@ -90,9 +90,96 @@
 
 .body {
   flex: 1;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 200px;
+}
+
+/* On wider viewports the body becomes a 2-column grid: results list
+ * on the left, side preview pane on the right. Below the breakpoint
+ * the preview pane is hidden via CSS only — keyboard / mouse hover
+ * still drives `activeResult` state but the pane isn't visible. */
+@media (min-width: 760px) {
+  .body {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.list {
   overflow-y: auto;
   padding: var(--space-3) var(--space-4);
-  min-height: 200px;
+}
+
+.preview {
+  display: none;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  border-left: 1px solid var(--color-border-hairline);
+  background: var(--color-bg-base);
+}
+
+@media (min-width: 760px) {
+  .preview {
+    display: block;
+  }
+}
+
+.previewEmpty {
+  margin: 0;
+  padding: var(--space-6) 0;
+  color: var(--color-fg-tertiary);
+  font-size: var(--font-size-13);
+  text-align: center;
+}
+
+.previewCard {
+  width: 100%;
+}
+
+.previewBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.previewHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.previewId {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-11);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-fg-tertiary);
+}
+
+.previewTitle {
+  margin: 0;
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-500);
+}
+
+.previewMetaRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.previewMeta {
+  font-size: var(--font-size-12);
+  color: var(--color-fg-tertiary);
+}
+
+.previewError {
+  margin: 0;
+  padding: var(--space-3) 0;
+  color: var(--color-fg-tertiary);
+  font-size: var(--font-size-13);
+  font-style: italic;
 }
 
 .empty {
