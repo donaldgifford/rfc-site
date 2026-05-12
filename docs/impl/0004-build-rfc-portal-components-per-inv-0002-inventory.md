@@ -290,27 +290,37 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
 #### Tasks
 
-- [ ] **Readiness audit** — score each Phase 1-5 candidate against the checklist. Document the call per primitive in this phase's PR description.
-  - Likely promoted: `<Button>` (used everywhere), `<Input>` (topbar + search + future API params), `<Kbd>` (topbar + search), `<Card>` (RFC sidebar + future MCP/API).
-  - Likely stays in `ds-candidates/` (used only once at this point): `<CodeBlock>` (future MCP/API only), `<Tabs>` (future API/MCP only), `<Breadcrumb>` (Frameworks only).
-  - The `<Badge>` extension (Phase 5) ships via its own design-system release independent of this batch.
-  - Final promotion list confirmed in the audit; promotion is batched in one design-system PR per Resolved §12.
-- [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
-  - In the design-system repo (`../design-system`): `cp -r src/components/ds-candidates/<Component>/` → `src/primitives/<Component>/` (excluding the colocated `.test.tsx`), `git mv` the test into `tests/primitives/<Component>.test.tsx`, update `src/index.ts`, run lint/typecheck/test/build, add a changeset.
+- [x] **Readiness audit** — scored each Phase 1-5 candidate against the [readiness checklist](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#the-ds-candidates-contract) (`used 2+ places`, `API stable ~2 weeks`, `no portal-only deps`). Current usage site count (post-Phase-5):
+
+  | Candidate | Sites today | Sites after Phases 7-9 | Verdict |
+  |---|---|---|---|
+  | `<Button>` | 1 (`search.tsx`) | ≥3 (toolbar / search modal / future API) | **Wait** — promotion ready once the toolbar lands. |
+  | `<Input>` | 1 (`<Topbar>`) | ≥3 (toolbar filter / search modal) | **Wait** — same gating. |
+  | `<Kbd>` | 1 (`<Topbar>`) | 2 (search modal footer hints) | **Wait** — Phase 9 creates the second site. |
+  | `<Card>` | 0 | 2+ (RFC sidebar metadata blocks + cross-RFC preview card) | **Wait** — Phase 8 creates both sites. |
+  | `<Tabs>` | 0 | 0 in this IMPL (future API examples / MCP only) | **Stay** in `ds-candidates/`. |
+  | `<CodeBlock>` | 0 | 0 in this IMPL (future MCP / API only) | **Stay**. |
+  | `<Breadcrumb>` | 0 | 0 in this IMPL (Frameworks route only) | **Stay**. |
+
+  **Resolution:** Phase 6 promotion is **deferred until Phases 7-9 ship the second usage sites**. The IMPL's promotion model explicitly avoids premature promotion (DESIGN-0001 §The `ds-candidates/` contract). Phases 7-9 do not depend on the promotion — they consume the candidates via the `ds-candidates/<X>/` paths, exactly the same paths the promoted package imports will replace later. Promotion happens in a follow-up PR once Phases 7-9 land, riding the same `0.4.0` design-system release that the Phase 5 `<Badge>` extension produces (or a `0.5.0` if the timeline slips further). The `<Badge>` filter / severity variant work is independent and already shipped to the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`).
+
+- [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow): _Deferred — gates on Phase 7-9 second usage sites per the audit above._
+  - In the design-system repo (`../design-system`): `cp -r src/components/ds-candidates/<Component>/` → `src/primitives/<Component>/` (excluding the colocated `.test.tsx`), `git mv` the test into `tests/primitives/<Component>.test.tsx`, **convert CSS Modules to prefixed-global `.ds-<primitive>` classes per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md)**, update `src/index.ts`, run lint/typecheck/test/build, add a changeset.
   - In `../design-system` ship one changeset PR with all the batch promotions (minor bump, e.g., `0.3.0` → `0.4.0`).
-- [ ] **Once the design-system release lands** (changesets bot + publish workflow):
+- [ ] **Once the design-system release lands** (changesets bot + publish workflow): _Deferred._
   - Bump `package.json`: `^0.3.0` → `^0.4.0`.
   - `rm node_modules/@donaldgifford/design-system && bun install` (per the CLAUDE.md flow now that `bun unlink` isn't implemented).
   - Swap candidate imports for package imports across the portal: `src/components/ds-candidates/<C>/` → `@donaldgifford/design-system`.
   - Delete the now-promoted `src/components/ds-candidates/<C>/` folders.
-- [ ] **Sanity sweep:** `just check`; `just build`; visual diff on each route in `just dev-msw`.
+- [ ] **Sanity sweep:** `just check`; `just build`; visual diff on each route in `just dev-msw`. _Deferred._
 
 #### Success Criteria
 
-- Promoted primitives shipped in `@donaldgifford/design-system` and consumed via package imports across the portal.
-- `src/components/ds-candidates/` cleared of promoted entries; non-promoted primitives stay until a second usage site.
-- Zero visual regressions vs the pre-promotion state.
-- `just check` 100% green; `just build` clean (bundle should *shrink* slightly since the design-system tree is already deduped).
+- Readiness audit complete. ✅ **Result:** every candidate currently has 0-1 usage sites — none meet the "used 2+ places" bar today. Promotion deferred until Phases 7-9 create the second sites.
+- _(Deferred)_ Promoted primitives shipped in `@donaldgifford/design-system` and consumed via package imports across the portal.
+- _(Deferred)_ `src/components/ds-candidates/` cleared of promoted entries; non-promoted primitives stay until a second usage site.
+- _(Deferred)_ Zero visual regressions vs the pre-promotion state.
+- _(Deferred)_ `just check` 100% green; `just build` clean (bundle should *shrink* slightly since the design-system tree is already deduped).
 
 ---
 
