@@ -43,9 +43,11 @@ describe("/$type/$id route — full render", () => {
     });
 
     // Status humanises "proposed" → "Proposed" in the Badge label.
-    expect(screen.getByText("Proposed")).toBeInTheDocument();
+    // Appears in both the header Badge and the Phase 8a DocSidebar Status block.
+    expect(screen.getAllByText("Proposed").length).toBeGreaterThanOrEqual(2);
     // "RFC-0001" appears in both the breadcrumb and the dateline — assert ≥1.
     expect(screen.getAllByText(/RFC-0001/).length).toBeGreaterThanOrEqual(2);
+    // The byline appears in the header; individual authors appear in the sidebar list.
     expect(screen.getByText(/Sam Author, Riley Reviewer/)).toBeInTheDocument();
     // The body now renders as proper Markdown HTML — heading from fixture
     // + a distinctive substring from the body. The Phase 5 swap means

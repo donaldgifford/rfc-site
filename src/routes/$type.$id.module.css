@@ -6,8 +6,30 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  max-width: 880px;
+  max-width: 1180px;
   margin: 0 auto;
+}
+
+/* IMPL-0004 Phase 8a — two-column grid: prose body on the left, the
+ * metadata sidebar on the right. Collapses to a single column on
+ * narrow viewports so the sidebar sits below the prose instead of
+ * cramping the text.
+ */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prose {
+  min-width: 0; /* prose containers need this for word-break to work inside grid */
 }
 
 .crumbs {

@@ -376,28 +376,36 @@ Two-column layout per the mockup: left metadata sidebar (status / author / creat
 
 #### Tasks
 
-- [ ] **Update `$type.$id.tsx`:** wrap the existing chrome + `<DocumentView>` in a two-column grid layout. Loader unchanged.
-- [ ] **Add `src/components/portal/DocSidebar/`** — accepts the `Document` payload + renders metadata blocks (using `<Card>` for each block: Status / Authors / Created / Updated / Revision / Source).
-- [ ] **Add `src/components/portal/RFCPreviewCard/`** — popover-style hover card.
+- [x] **Update `$type.$id.tsx`:** wrapped the existing chrome (breadcrumbs + header) outside, then sat `<DocSidebar />` + `<DocumentView />` inside a `.layout` two-column CSS grid (`minmax(0, 1fr) 280px`). The grid collapses to a single column under `900px` viewport. Loader unchanged.
+- [x] **Add `src/components/portal/DocSidebar/`** — accepts the `Document` payload + renders 5-7 metadata blocks (Status / Authors / Created / Updated / Source, plus Discussion and Labels when those fields are populated). Each block is a `<Card variant="elevated" padding="sm">` with the label in `Card.Header` (uppercase + `--tracking-wider`) and the value in `Card.Body`. Source link routes to the `<repo>/blob/<commit|HEAD>/<path>` URL.
+- [ ] **Add `src/components/portal/RFCPreviewCard/`** — _Deferred to Phase 8b._ Popover-style hover card.
   - Listens to a custom `onPreview` callback exposed by `<Anchor>` (extending `src/portal/markdown/components/Anchor.tsx`).
   - Fetches the target document's metadata on first hover (`getDoc` orval hook with cache via TanStack Query).
   - Renders `<Card variant="elevated">` containing the doc's id + title + status `<Badge>` + authors + date.
   - **Accessibility:** triggers on **hover and focus** (Resolved §9 — focus support is the a11y baseline; a small open-delay debounces accidental keyboard triggers). Closes on `esc` and on focus leaving the link.
   - **Positioning:** **CSS-only positioner** for v1 (Resolved §10 — `position: absolute` anchored to the link with sensible left/right flip via `data-side` attr). If the simpler approach gets squirrely against viewport edges or scroll containers, swap in `@floating-ui/react` as a follow-up.
-- [ ] **`<Anchor>` extension:** add a Phase 8 prop `previewable?: boolean` (default `true` for resolved-internal links). When `true`, wraps the link in a `<RFCPreviewCard target={...}>` so the popover hydrates on hover/focus.
-- [ ] **Sidebar styling** uses `--shadow-sm` (v0.3.0) for the elevated metadata blocks. Labels use `--tracking-wider` (v0.3.0) for the uppercase mono feel.
-- [ ] **Tests:**
-  - `tests/portal/markdown/components/Anchor.test.tsx` — new case: previewable internal link wraps in `<RFCPreviewCard>`.
-  - `tests/portal/components/RFCPreviewCard.test.tsx` — hover/focus opens, click navigates, escape closes.
-  - `tests/portal/components/DocSidebar.test.tsx` — renders all metadata blocks with the payload.
-  - `tests/api/docPageRender.test.tsx` — full-render sees sidebar + prose laid out side-by-side.
+- [ ] **`<Anchor>` extension:** add a Phase 8 prop `previewable?: boolean` (default `true` for resolved-internal links). When `true`, wraps the link in a `<RFCPreviewCard target={...}>` so the popover hydrates on hover/focus. — _Deferred to Phase 8b._
+- [x] **Sidebar styling** uses `--shadow-sm` (v0.3.0) for the elevated metadata blocks (via `<Card variant="elevated">`). Labels use `--tracking-wider` (v0.3.0) for the uppercase mono feel.
+- [x] **Tests:**
+  - _(Deferred 8b)_ `tests/portal/markdown/components/Anchor.test.tsx` — new case: previewable internal link wraps in `<RFCPreviewCard>`.
+  - _(Deferred 8b)_ `tests/portal/components/RFCPreviewCard.test.tsx` — hover/focus opens, click navigates, escape closes.
+  - `src/components/portal/DocSidebar/DocSidebar.test.tsx` — 7 tests cover baseline blocks, the `<aside aria-label>` landmark, raw ISO timestamps via `<time dateTime>`, HEAD fallback when `source.commit` is absent, conditional rendering of `authors` / `discussion` / `labels`.
+  - `tests/api/docPageRender.test.tsx` — updated to expect the Status badge in both the header and the sidebar (`getAllByText("Proposed").length >= 2`).
 
 #### Success Criteria
 
-- RFC page renders the two-column mockup layout against both themes.
-- Cross-RFC links in the body show a preview popover on hover + focus.
-- Existing `$type.$id` tests still green; new sidebar + preview-card tests added.
-- `just check` 100% green; `just build` clean.
+**8a — sidebar + two-column layout (this PR):**
+
+- RFC page renders the two-column mockup layout against both themes. ✅ (responsive collapse to a single column under 900px).
+- Sidebar surfaces Status / Authors / Created / Updated / Source plus conditional Discussion + Labels blocks. ✅
+- Existing `$type.$id` tests still green against the new layout. ✅
+- New `<DocSidebar>` component-level tests (7 cases) added. ✅
+- `just check` 100% green; `just build` clean. ✅ (157 tests, 28 files)
+
+**8b — cross-RFC preview card (deferred):**
+
+- _(Deferred)_ Cross-RFC links in the body show a preview popover on hover + focus.
+- _(Deferred)_ `<Anchor>` `previewable` extension + `<RFCPreviewCard>` portal composite + their tests.
 
 ---
 
