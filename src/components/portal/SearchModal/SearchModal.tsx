@@ -34,9 +34,10 @@ import { Link } from "react-router";
 import { searchDocs } from "../../../portal/api/__generated__/search/search";
 import type { SearchResult } from "../../../portal/api/__generated__/model";
 import { urlIdFromCanonical } from "../../../portal/api/docId";
+import { Kbd } from "@donaldgifford/design-system";
+
 import { Button } from "../../ds-candidates/Button";
 import { Input } from "../../ds-candidates/Input";
-import { Kbd } from "../../ds-candidates/Kbd";
 import { Snippet } from "../../../portal/markdown";
 
 import styles from "./SearchModal.module.css";

@@ -22,7 +22,7 @@ created: 2026-05-11
 | 3 — `<Topbar>` | ✅ Shipped | 7 tests (now 7 incl. Phase 9a updates). |
 | 4 — `<Card>` + `<Tabs>` + `<CodeBlock>` | ✅ Shipped | 18 tests across all three. |
 | 5 — `<Breadcrumb>` (in-repo) + `<Badge>` filter/severity (upstream) | ✅ Shipped | 6 in-repo tests; upstream branch `feat/badge-filter-severity-variants` (commit `3c0f1d1`). |
-| 6 — Batch promotion | 🟡 Audit complete; promotion deferred | 4 of 7 candidates now eligible (`<Button>`/`<Input>`/`<Kbd>`/`<Card>`); cross-repo follow-up PR. |
+| 6 — Batch promotion | 🟡 1 of 4 promoted | `<Kbd>` promoted (design-system commit `e66886a`, consumed via `bun link` against the local 0.4.0-pre branch); `<Button>` / `<Input>` / `<Card>` deferred to follow-up PRs. |
 | 7a — `<DirectoryTable>` | ✅ Shipped | 5 tests. |
 | 7b — `<DirectoryToolbar>` (filter+sort URL state) | 🔴 Blocked | Upstream `rfc-api` contract change required for `listDocs?filter=…&sort=…`. |
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
@@ -314,25 +314,26 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
   | Candidate | Sites pre-9 | Sites post-9 | Verdict |
   |---|---|---|---|
-  | `<Button>` | 1 (`search.tsx`) | 2 (`search.tsx` + `<SearchModal>`) | **Ready** — promotion-eligible post-Phase-9a. |
-  | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | **Ready** — same. |
-  | `<Kbd>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>` footer) | **Ready** — same. |
-  | `<Card>` | 0 | 2 (`<DocSidebar>` blocks + `<RFCPreviewCard>` popover) | **Ready** — Phase 8 created both sites. |
+  | `<Button>` | 1 (`search.tsx`) | 2 (`search.tsx` + `<SearchModal>`) | **Ready** — promotion-eligible post-Phase-9a (deferred follow-up). |
+  | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | **Ready** — same (deferred follow-up). |
+  | `<Kbd>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>` footer) | ✅ **Promoted** to `@donaldgifford/design-system@0.4.0` (design-system commit `e66886a`). |
+  | `<Card>` | 0 | 2 (`<DocSidebar>` blocks + `<RFCPreviewCard>` popover) | **Ready** — Phase 8 created both sites (deferred follow-up). |
   | `<Tabs>` | 0 | 0 in this IMPL (future API examples / MCP only) | **Stay** in `ds-candidates/`. |
   | `<CodeBlock>` | 0 | 0 in this IMPL (future MCP / API only) | **Stay**. |
   | `<Breadcrumb>` | 0 | 0 in this IMPL (Frameworks route only) | **Stay**. |
 
   **Resolution:** Four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar after Phase 9a shipped. The actual promotion (CSS-Module → prefixed-global `.ds-*` class conversion per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md), cross-repo `cp -r` + test move, design-system minor bump, `bun link` validation, rfc-site import swap, candidate folder deletion) is deferred to a follow-up PR — it's a non-trivial cross-repo coordination that doesn't fit cleanly inside this branch's scope. The `<Badge>` filter / severity variant work is already on the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`); the promotion follow-up PR will ride the same `0.4.0` release and ship all five (`<Button>` / `<Input>` / `<Kbd>` / `<Card>` + the `<Badge>` extension) together.
 
-- [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow): _Deferred — gates on Phase 7-9 second usage sites per the audit above._
-  - In the design-system repo (`../design-system`): `cp -r src/components/ds-candidates/<Component>/` → `src/primitives/<Component>/` (excluding the colocated `.test.tsx`), `git mv` the test into `tests/primitives/<Component>.test.tsx`, **convert CSS Modules to prefixed-global `.ds-<primitive>` classes per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md)**, update `src/index.ts`, run lint/typecheck/test/build, add a changeset.
-  - In `../design-system` ship one changeset PR with all the batch promotions (minor bump, e.g., `0.3.0` → `0.4.0`).
-- [ ] **Once the design-system release lands** (changesets bot + publish workflow): _Deferred._
-  - Bump `package.json`: `^0.3.0` → `^0.4.0`.
-  - `rm node_modules/@donaldgifford/design-system && bun install` (per the CLAUDE.md flow now that `bun unlink` isn't implemented).
-  - Swap candidate imports for package imports across the portal: `src/components/ds-candidates/<C>/` → `@donaldgifford/design-system`.
-  - Delete the now-promoted `src/components/ds-candidates/<C>/` folders.
-- [ ] **Sanity sweep:** `just check`; `just build`; visual diff on each route in `just dev-msw`. _Deferred._
+- [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
+  - ✅ `<Kbd>`: promoted to `../design-system/src/primitives/Kbd/` on the `feat/badge-filter-severity-variants` branch (commit `e66886a`). CSS converted from CSS Modules to prefixed-global `.ds-kbd` per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md); 5 tests migrated to `tests/primitives/Kbd.test.tsx`; `src/index.ts` exports the public surface. Existing `badge-filter-severity-variants` changeset extended to cover both changes for the `0.4.0` release.
+  - [ ] `<Button>` — deferred follow-up.
+  - [ ] `<Input>` — deferred follow-up.
+  - [ ] `<Card>` — deferred follow-up.
+- [x] **Once the design-system release lands** — partial: validated locally via `bun link` against the design-system feat branch's `dist/` (the 0.4.0 release hasn't published yet, but the linked artefact is identical to what the release will ship):
+  - ✅ `<Kbd>` consumed via `import { Kbd } from "@donaldgifford/design-system"` in `src/components/portal/Topbar/Topbar.tsx` and `src/components/portal/SearchModal/SearchModal.tsx`.
+  - ✅ `src/components/ds-candidates/Kbd/` deleted.
+  - [ ] After 0.4.0 publishes: `bun update @donaldgifford/design-system`, switch off `bun link` (`just ds-unlink`), final import-swap PR.
+- [x] **Sanity sweep:** `just check` 100% green (166 tests; the 5 colocated Kbd tests moved to design-system); `just build` clean.
 
 #### Success Criteria
 
