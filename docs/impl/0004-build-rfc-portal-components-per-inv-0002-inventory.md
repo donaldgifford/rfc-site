@@ -378,17 +378,17 @@ Two-column layout per the mockup: left metadata sidebar (status / author / creat
 
 - [x] **Update `$type.$id.tsx`:** wrapped the existing chrome (breadcrumbs + header) outside, then sat `<DocSidebar />` + `<DocumentView />` inside a `.layout` two-column CSS grid (`minmax(0, 1fr) 280px`). The grid collapses to a single column under `900px` viewport. Loader unchanged.
 - [x] **Add `src/components/portal/DocSidebar/`** — accepts the `Document` payload + renders 5-7 metadata blocks (Status / Authors / Created / Updated / Source, plus Discussion and Labels when those fields are populated). Each block is a `<Card variant="elevated" padding="sm">` with the label in `Card.Header` (uppercase + `--tracking-wider`) and the value in `Card.Body`. Source link routes to the `<repo>/blob/<commit|HEAD>/<path>` URL.
-- [ ] **Add `src/components/portal/RFCPreviewCard/`** — _Deferred to Phase 8b._ Popover-style hover card.
-  - Listens to a custom `onPreview` callback exposed by `<Anchor>` (extending `src/portal/markdown/components/Anchor.tsx`).
-  - Fetches the target document's metadata on first hover (`getDoc` orval hook with cache via TanStack Query).
-  - Renders `<Card variant="elevated">` containing the doc's id + title + status `<Badge>` + authors + date.
-  - **Accessibility:** triggers on **hover and focus** (Resolved §9 — focus support is the a11y baseline; a small open-delay debounces accidental keyboard triggers). Closes on `esc` and on focus leaving the link.
-  - **Positioning:** **CSS-only positioner** for v1 (Resolved §10 — `position: absolute` anchored to the link with sensible left/right flip via `data-side` attr). If the simpler approach gets squirrely against viewport edges or scroll containers, swap in `@floating-ui/react` as a follow-up.
-- [ ] **`<Anchor>` extension:** add a Phase 8 prop `previewable?: boolean` (default `true` for resolved-internal links). When `true`, wraps the link in a `<RFCPreviewCard target={...}>` so the popover hydrates on hover/focus. — _Deferred to Phase 8b._
+- [x] **Add `src/components/portal/RFCPreviewCard/`** — popover-style hover card.
+  - Wraps a single trigger child (typically an RR7 `<Link>`) in a `<span>` and attaches hover / focus handlers. The orval-generated `useGetDoc` hook fetches the target lazily — `enabled: false` until the first hover/focus — so untouched preview-enabled links cost nothing.
+  - Renders `<Card variant="elevated" padding="md" role="tooltip">` containing the doc's id + title + status `<Badge size="sm">` + authors + dateline.
+  - **Accessibility (Resolved §9):** triggers on **hover AND focus**, `aria-describedby` wires the trigger to the popover when open, `Escape` closes. Configurable `openDelay` (defaults to `150ms` to debounce accidental triggers; pass `0` in tests).
+  - **Positioning (Resolved §10):** **CSS-only positioner** for v1 — `position: absolute; top: calc(100% + var(--space-1)); left: 0; z-index: var(--z-overlay)`. Viewport-edge handling is deferred; swap in `@floating-ui/react` if the simple approach gets squirrely.
+  - **Inert error surface:** when the target returns a 404 problem response, the popover renders `"<ID> not found"` (parsed via `classifyProblem`) instead of crashing; generic non-200s render `"Couldn't load <ID>"`.
+- [x] **`<Anchor>` extension:** added the Phase 8b prop `previewable?: boolean` (default `true`). When `true` and the anchor resolves to a portal route, the resolved RR7 `<Link>` is wrapped in `<RFCPreviewCard type={…} id={…}>`. The route segments come from the resolved portal route (split + verified to have exactly 2 segments). Internal links that resolve to non-doc routes fall back to the bare link.
 - [x] **Sidebar styling** uses `--shadow-sm` (v0.3.0) for the elevated metadata blocks (via `<Card variant="elevated">`). Labels use `--tracking-wider` (v0.3.0) for the uppercase mono feel.
 - [x] **Tests:**
-  - _(Deferred 8b)_ `tests/portal/markdown/components/Anchor.test.tsx` — new case: previewable internal link wraps in `<RFCPreviewCard>`.
-  - _(Deferred 8b)_ `tests/portal/components/RFCPreviewCard.test.tsx` — hover/focus opens, click navigates, escape closes.
+  - `tests/portal/markdown/components/Anchor.test.tsx` — added a 5th test: previewable internal link wraps in `<RFCPreviewCard>` (asserts `span[data-state="closed"]` ancestor). The existing test helper got a `QueryClientProvider` wrapper so the lazy `useGetDoc` hook can mount.
+  - `src/components/portal/RFCPreviewCard/RFCPreviewCard.test.tsx` — 5 tests with a local MSW server: popover hidden by default; opens on hover and fetches; closes on pointer-leave; closes on `Escape`; renders the not-found error surface for 404 problem responses.
   - `src/components/portal/DocSidebar/DocSidebar.test.tsx` — 7 tests cover baseline blocks, the `<aside aria-label>` landmark, raw ISO timestamps via `<time dateTime>`, HEAD fallback when `source.commit` is absent, conditional rendering of `authors` / `discussion` / `labels`.
   - `tests/api/docPageRender.test.tsx` — updated to expect the Status badge in both the header and the sidebar (`getAllByText("Proposed").length >= 2`).
 
@@ -402,10 +402,11 @@ Two-column layout per the mockup: left metadata sidebar (status / author / creat
 - New `<DocSidebar>` component-level tests (7 cases) added. ✅
 - `just check` 100% green; `just build` clean. ✅ (157 tests, 28 files)
 
-**8b — cross-RFC preview card (deferred):**
+**8b — cross-RFC preview card:**
 
-- _(Deferred)_ Cross-RFC links in the body show a preview popover on hover + focus.
-- _(Deferred)_ `<Anchor>` `previewable` extension + `<RFCPreviewCard>` portal composite + their tests.
+- Cross-RFC links in the body show a preview popover on hover + focus. ✅
+- `<Anchor>` `previewable` extension + `<RFCPreviewCard>` portal composite + 5 new tests. ✅
+- `just check` 100% green; `just build` clean. ✅ (163 tests, 29 files)
 
 ---
 

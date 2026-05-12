@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { DocumentView } from "../../../../src/portal/markdown/DocumentView";
 import type { Document } from "../../../../src/portal/api/__generated__/model";
@@ -21,11 +22,22 @@ function fixture(body: string, links: Document["links"] = []): Document {
 }
 
 function renderWithRouter(doc: Document): void {
+  // <Anchor> wraps resolved internal links in <RFCPreviewCard> (IMPL-0004
+  // Phase 8b), which uses TanStack Query to lazy-fetch the target. A
+  // QueryClient is required for the hook to mount; production gets one
+  // from the App wrapper in src/root.tsx.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   const Stub = createRoutesStub([
     { path: "/", Component: () => <DocumentView document={doc} /> },
     { path: "/:type/:id", Component: () => <p>doc page</p> },
   ]);
-  render(<Stub initialEntries={["/"]} />);
+  render(
+    <QueryClientProvider client={queryClient}>
+      <Stub initialEntries={["/"]} />
+    </QueryClientProvider>,
+  );
 }
 
 describe("<Anchor>", () => {
@@ -71,5 +83,16 @@ describe("<Anchor>", () => {
     renderWithRouter(doc);
     const link = await screen.findByRole("link", { name: "§Goals" });
     expect(link).toHaveAttribute("href", "#goals");
+  });
+
+  it("wraps resolved internal links in <RFCPreviewCard> for hover preview (Phase 8b)", async () => {
+    const doc = fixture("See [ADR-0001](ADR-0001) for context.", [
+      { direction: "outgoing", target: "ADR-0001", href: "/api/v1/adr/0001" },
+    ]);
+    renderWithRouter(doc);
+    const link = await screen.findByRole("link", { name: "ADR-0001" });
+    // <RFCPreviewCard> wraps in a span with data-state="closed" until hover.
+    const wrapper = link.closest('span[data-state="closed"]');
+    expect(wrapper).not.toBeNull();
   });
 });
