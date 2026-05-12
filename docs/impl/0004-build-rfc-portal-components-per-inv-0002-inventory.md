@@ -28,7 +28,7 @@ created: 2026-05-11
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
 | 8b — `<RFCPreviewCard>` + `<Anchor>` extension | ✅ Shipped | 5 + 1 tests. |
 | 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
-| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 3 of 5 shipped | Filter pills + grouped-by-type sticky headers + WAI-ARIA Dialog focus-trap shipped; preview pane / `?modal=1` URL state remain follow-up polish. |
+| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 4 of 5 shipped | Filter pills + grouped-by-type sticky headers + WAI-ARIA Dialog focus-trap + `?modal=1` URL state shipped; side preview pane remains follow-up polish. |
 
 **Coverage:** 171 tests across 30 files; `just check` 100% green; production build clean (server bundle 79.31 kB / 21.28 kB gzip).
 
@@ -452,7 +452,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
 - [x] **Modal-vs-route reconciliation (partial):**
   - Direct nav to `/search` still works (no-JS friendly). ✅
   - Clicking the topbar trigger with **plain click** opens the modal; **meta-click / middle-click** navigates to `/search` (Cmd+click to open in a new tab still works).
-  - _(Deferred to 9b)_ `?modal=1` URL state so back-button closes the modal and refresh re-opens it (Resolved §11).
+  - ✅ `?modal=1` URL state — `<Topbar>` now derives `modalOpen` from `useSearchParams().get("modal") === "1"` so opening the modal pushes a history entry (browser-back closes it) and refreshing a `?modal=1` URL re-opens it on hydration. Closing uses `replace: true` so the closed state doesn't litter history.
 - [x] **Accessibility (partial):** `role="dialog"`, `aria-modal="true"`, `aria-labelledby` wires to the title. Focus moves to the input on open via `queueMicrotask` + ref. Escape closes (bound via document keydown). Backdrop click closes. Backdrop and inline close button have distinct accessible names (`"Close search"` vs `"Close search dialog"`) so RTL queries can disambiguate.
 - [x] **Tests:**
   - `src/components/portal/SearchModal/SearchModal.test.tsx` — 7 tests with a local MSW server: hidden when `open=false`; labelled dialog + focused input on open; query submission renders MSW-backed hits; Escape closes; backdrop click closes; close button closes; empty-prompt copy.
@@ -474,7 +474,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
 - ✅ Grouped results + sticky group headers — each non-empty type-bucket renders under a sticky uppercase mono `<h3>` so the user always sees the active section while scrolling.
 - _(Deferred)_ Preview pane shows the selected hit's snippet.
 - ✅ Full WAI-ARIA Dialog focus-trap — Tab cycling stays inside the dialog (Shift+Tab from first → last, Tab from last → first); previously-focused element is captured on open and restored on close so keyboard users don't drop to the document root.
-- _(Deferred)_ `?modal=1` URL state for back-button-closes-modal behaviour (Resolved §11).
+- ✅ `?modal=1` URL state — back-button closes the modal; refreshing `?modal=1` re-opens it on hydration.
 
 ---
 

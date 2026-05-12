@@ -13,6 +13,11 @@
  * - Direct `/search` navigation stays as the no-JS-friendly fallback
  *   per IMPL-0004 Resolved §11 — a meta-Cmd-click on the trigger still
  *   opens the standalone route.
+ * - Modal open/close state is mirrored to the URL via `?modal=1`
+ *   (IMPL-0004 Phase 9b). Opening pushes a history entry so
+ *   browser-back closes the modal; refreshing a `?modal=1` URL
+ *   re-opens the modal. Direct deep-links to `/search` still work
+ *   for the no-JS fallback.
  * - Nav placeholders for `/api`, `/mcp`, `/frameworks` render as
  *   inert `<span aria-disabled>` so the spacing + visual rhythm is
  *   correct now, ahead of the routes themselves landing in a future
@@ -21,8 +26,8 @@
  * Per DESIGN-0001 §portal-only, `<Topbar>` is never promoted.
  */
 
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
-import { Link } from "react-router";
+import { useCallback, useEffect, type MouseEvent } from "react";
+import { Link, useSearchParams } from "react-router";
 import { Input, Kbd } from "@donaldgifford/design-system";
 
 import { SearchModal } from "../SearchModal";
@@ -40,12 +45,38 @@ const FUTURE_ROUTES: readonly FutureRouteLink[] = [
   { label: "Frameworks", hint: "Compliance frameworks (coming soon)" },
 ];
 
+const MODAL_PARAM = "modal";
+const MODAL_VALUE = "1";
+
 export function Topbar() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modalOpen = searchParams.get(MODAL_PARAM) === MODAL_VALUE;
+
+  // `setSearchParams` defaults to push semantics, so opening the modal
+  // adds a history entry — browser-back removes `?modal=1` and the
+  // next render reads `modalOpen=false`. Closing replaces the current
+  // entry so we don't litter history with the closed state.
+  const setModalOpen = useCallback(
+    (next: boolean) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          if (next) {
+            params.set(MODAL_PARAM, MODAL_VALUE);
+          } else {
+            params.delete(MODAL_PARAM);
+          }
+          return params;
+        },
+        { replace: !next },
+      );
+    },
+    [setSearchParams],
+  );
 
   const openModal = useCallback(() => {
     setModalOpen(true);
-  }, []);
+  }, [setModalOpen]);
 
   useEffect(() => {
     function handleKeydown(event: KeyboardEvent) {

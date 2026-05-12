@@ -104,4 +104,21 @@ describe("<Topbar>", () => {
     await user.click(screen.getByRole("link", { name: /search documents/i }));
     expect(await screen.findByRole("dialog", { name: /search documents/i })).toBeInTheDocument();
   });
+
+  it("opens the modal on mount when the URL has ?modal=1 (refresh re-opens)", () => {
+    renderTopbar({ initialPath: "/?modal=1" });
+    // The modal is bound to the `modal` query param so re-hydrating a
+    // URL with the param renders the dialog without any user
+    // interaction.
+    expect(screen.getByRole("dialog", { name: /search documents/i })).toBeInTheDocument();
+  });
+
+  it("closing the modal via Escape removes ?modal=1 from the URL", async () => {
+    const user = userEvent.setup();
+    renderTopbar({ initialPath: "/?modal=1" });
+
+    expect(screen.getByRole("dialog", { name: /search documents/i })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: /search documents/i })).toBeNull();
+  });
 });
