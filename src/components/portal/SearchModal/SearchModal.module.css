@@ -62,6 +62,32 @@
   border-bottom: 1px solid var(--color-border-hairline);
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border-hairline);
+}
+
+/* Chrome-less button so <Badge variant="filter"> is the visible target.
+ * Hover / focus styling rides on the Badge's data-selected machinery;
+ * we only handle the keyboard focus ring + the cursor. */
+.filterPill {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: var(--radius-pill, var(--radius-md));
+}
+
+.filterPill:focus-visible {
+  outline: 2px solid var(--color-accent-default);
+  outline-offset: 2px;
+}
+
 .body {
   flex: 1;
   overflow-y: auto;

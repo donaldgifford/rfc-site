@@ -129,4 +129,96 @@ describe("<SearchModal>", () => {
     renderModal({ initialOpen: true });
     expect(screen.getByText(/type a query and press/i)).toBeInTheDocument();
   });
+
+  it("renders type filter pills (All + one per DocumentType) with All selected by default", () => {
+    renderModal({ initialOpen: true });
+
+    // The toolbar should expose All + the 6 portal-supported types.
+    const toolbar = screen.getByRole("toolbar", { name: /filter results by document type/i });
+    expect(toolbar).toBeInTheDocument();
+
+    expect(screen.getByTestId("filter-all")).toHaveTextContent(/all/i);
+    for (const type of ["rfc", "adr", "design", "impl", "plan", "inv"]) {
+      expect(screen.getByTestId(`filter-${type}`)).toBeInTheDocument();
+    }
+
+    // All-pill is the only selected one initially — its inner Badge
+    // carries aria-pressed="true" while the per-type pills are false.
+    expect(screen.getByTestId("filter-all").querySelector("[aria-pressed]")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("filter-rfc").querySelector("[aria-pressed]")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("filters visible results when a type pill is selected", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: true });
+
+    // Submit a broad query so we get a multi-type result set from MSW.
+    const input = screen.getByRole("searchbox", { name: /search query/i });
+    await user.type(input, "the");
+    await user.keyboard("{Enter}");
+    await waitFor(() => {
+      expect(screen.queryByText(/searching/i)).toBeNull();
+    });
+
+    // Activate the IMPL filter — the All pill should deselect, IMPL
+    // should announce as pressed.
+    await user.click(screen.getByTestId("filter-impl"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-impl").querySelector("[aria-pressed]")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByTestId("filter-all").querySelector("[aria-pressed]")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+    });
+
+    // Every visible hit's id should start with IMPL- now. The
+    // results list re-renders so the assertion is wrapped in waitFor.
+    await waitFor(() => {
+      const ids = screen.getAllByText(/^[A-Z]+-\d+$/).map((node) => node.textContent);
+      expect(ids.length).toBeGreaterThan(0);
+      expect(ids.every((id) => id.startsWith("IMPL-"))).toBe(true);
+    });
+  });
+
+  it("clicking the All pill clears active type filters", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: true });
+
+    const input = screen.getByRole("searchbox", { name: /search query/i });
+    await user.type(input, "the");
+    await user.keyboard("{Enter}");
+    await waitFor(() => {
+      expect(screen.queryByText(/searching/i)).toBeNull();
+    });
+
+    // Narrow then widen.
+    await user.click(screen.getByTestId("filter-rfc"));
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-rfc").querySelector("[aria-pressed]")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    });
+    await user.click(screen.getByTestId("filter-all"));
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-rfc").querySelector("[aria-pressed]")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      expect(screen.getByTestId("filter-all").querySelector("[aria-pressed]")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    });
+  });
 });

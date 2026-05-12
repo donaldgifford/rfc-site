@@ -12,12 +12,14 @@
  * closes. Results list re-uses the same `searchDocs` payload + Snippet
  * rendering as the route so behaviour is consistent across surfaces.
  *
- * Scope notes (per IMPL-0004 Phase 9 — deferred to follow-ups):
- *   - Filter pills (`<Badge variant="filter">`) gate on the upstream
- *     design-system 0.4.0 release.
- *   - Grouped-by-type results + sticky group headers.
- *   - Side preview pane on hover.
- *   - Full WAI-ARIA Dialog focus-trap polish.
+ * Phase 9b extensions (incrementally landing as design-system 0.4.0
+ * primitives unlock them):
+ *   - ✅ Filter pills (`<Badge variant="filter">`) — client-side filter
+ *     applied to the rendered results. "All" resets; per-type pills
+ *     toggle multi-select.
+ *   - Grouped-by-type results + sticky group headers (deferred).
+ *   - Side preview pane on hover (deferred).
+ *   - Full WAI-ARIA Dialog focus-trap polish (deferred).
  */
 
 import {
@@ -34,13 +36,29 @@ import { Link } from "react-router";
 import { searchDocs } from "../../../portal/api/__generated__/search/search";
 import type { SearchResult } from "../../../portal/api/__generated__/model";
 import { urlIdFromCanonical } from "../../../portal/api/docId";
-import { Button, Input, Kbd } from "@donaldgifford/design-system";
+import { Badge, Button, Input, Kbd } from "@donaldgifford/design-system";
 
 import { Snippet } from "../../../portal/markdown";
 
 import styles from "./SearchModal.module.css";
 
 const DEFAULT_LIMIT = 25;
+
+/**
+ * Doc-type filter pills. The list mirrors the fixture tree at
+ * `tests/examples/docs/<type>/` and the canonical-id prefixes recognised
+ * by `rfc-api`. `Document.type` is a free-form string in the schema, so
+ * unrecognised types (added upstream without a portal release) fall
+ * through the filter as if no pill is selected.
+ */
+const FILTER_TYPES = [
+  { id: "rfc", label: "RFC" },
+  { id: "adr", label: "ADR" },
+  { id: "design", label: "Design" },
+  { id: "impl", label: "Impl" },
+  { id: "plan", label: "Plan" },
+  { id: "inv", label: "Inv" },
+] as const;
 
 export interface SearchModalProps {
   /** Controlled open state. */
@@ -55,8 +73,26 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [errored, setErrored] = useState(false);
+  // Empty set = no filter (show all). Otherwise: visible types only.
+  const [selectedTypes, setSelectedTypes] = useState<ReadonlySet<string>>(new Set());
   const inputRef = useRef<HTMLInputElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const toggleType = useCallback((typeId: string) => {
+    setSelectedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(typeId)) {
+        next.delete(typeId);
+      } else {
+        next.add(typeId);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearTypes = useCallback(() => {
+    setSelectedTypes(new Set());
+  }, []);
 
   const close = useCallback(() => {
     onOpenChange(false);
@@ -94,6 +130,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
     setResults([]);
     setErrored(false);
     setSearching(false);
+    setSelectedTypes(new Set());
     abortRef.current?.abort();
     abortRef.current = null;
   }, [open]);
@@ -143,6 +180,12 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
   if (!open) return null;
 
+  const filtersActive = selectedTypes.size > 0;
+  const visibleResults = filtersActive
+    ? results.filter((result) => selectedTypes.has(result.document.type))
+    : results;
+  const filteredOut = filtersActive && results.length > 0 && visibleResults.length === 0;
+
   return (
     <div className={styles.overlay}>
       <button type="button" className={styles.backdrop} aria-label="Close search" onClick={close} />
@@ -172,6 +215,26 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           />
         </form>
 
+        <div role="toolbar" aria-label="Filter results by document type" className={styles.filters}>
+          <FilterPill
+            label="All"
+            selected={!filtersActive}
+            onActivate={clearTypes}
+            data-testid="filter-all"
+          />
+          {FILTER_TYPES.map((type) => (
+            <FilterPill
+              key={type.id}
+              label={type.label}
+              selected={selectedTypes.has(type.id)}
+              onActivate={() => {
+                toggleType(type.id);
+              }}
+              data-testid={`filter-${type.id}`}
+            />
+          ))}
+        </div>
+
         <div className={styles.body}>
           {errored ? (
             <p className={styles.empty}>Search failed — try again.</p>
@@ -185,9 +248,11 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
             <p className={styles.empty}>
               No results for <strong>{query}</strong>.
             </p>
+          ) : filteredOut ? (
+            <p className={styles.empty}>No results match the selected document types.</p>
           ) : (
             <ul className={styles.results}>
-              {results.map((result) => (
+              {visibleResults.map((result) => (
                 <ModalHit key={hitKey(result)} result={result} onSelect={close} />
               ))}
             </ul>
@@ -204,6 +269,34 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         </footer>
       </div>
     </div>
+  );
+}
+
+interface FilterPillProps {
+  label: string;
+  selected: boolean;
+  onActivate: () => void;
+  "data-testid"?: string;
+}
+
+/**
+ * Wraps `<Badge variant="filter">` in a chrome-less `<button>` so the
+ * pill is a proper toggle target — native keyboard support (Space /
+ * Enter), focus ring via `:focus-visible`, and the Badge primitive's
+ * `aria-pressed` reflects the selected state.
+ */
+function FilterPill({ label, selected, onActivate, ...rest }: FilterPillProps) {
+  return (
+    <button
+      type="button"
+      className={styles.filterPill}
+      onClick={onActivate}
+      data-testid={rest["data-testid"]}
+    >
+      <Badge variant="filter" selected={selected}>
+        {label}
+      </Badge>
+    </button>
   );
 }
 

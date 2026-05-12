@@ -28,7 +28,7 @@ created: 2026-05-11
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
 | 8b — `<RFCPreviewCard>` + `<Anchor>` extension | ✅ Shipped | 5 + 1 tests. |
 | 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
-| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 Deferred | Filter pills gate on design-system `0.4.0` release; rest are follow-up polish. |
+| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 1 of 5 shipped | Filter pills shipped (3 new tests; All-pill + per-type toggle); grouped results / preview pane / focus-trap polish / `?modal=1` remain follow-up polish. |
 
 **Coverage:** 171 tests across 30 files; `just check` 100% green; production build clean (server bundle 79.31 kB / 21.28 kB gzip).
 
@@ -444,7 +444,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
   - Results re-use the same `<Snippet>` rendering as the route so the UI is consistent across surfaces.
   - AbortController on every search call so prior in-flight requests get cancelled when the user retypes.
   - Inert error surface: 4xx/5xx responses + network errors render `"Search failed — try again."` instead of crashing.
-  - _(Deferred to 9b)_ Filter pills (`<Badge variant="filter">`) — gate on the upstream design-system 0.4.0 release.
+  - ✅ Filter pills (`<Badge variant="filter">`) — `All` + per-type pills (`RFC` / `ADR` / `Design` / `Impl` / `Plan` / `Inv`) wrapped in chrome-less `<button type="button">` toggles. Empty selection = no filter (show all results); per-type pills support multi-select. Implementation is client-side over the rendered `SearchResult[]`; the `searchDocs` payload is unchanged. The Badge primitive's `aria-pressed` reflects the selected state for screen readers. 3 new tests in `SearchModal.test.tsx` cover the toolbar render, type-filter narrowing, and the All-pill reset.
   - _(Deferred to 9b)_ Results grouped by document type with sticky group headers.
   - _(Deferred to 9b)_ Side preview pane on hover.
   - _(Deferred to 9b)_ Full WAI-ARIA Dialog focus-trap polish — currently the input gets focus on open + `Escape` closes; tab-cycling within the dialog is browser-native.
@@ -470,7 +470,7 @@ Upgrades the minimal `/search` page (IMPL-0003 Phase 7) into the mockup's full-p
 
 **9b — filter pills + grouped results + preview pane + focus-trap (deferred):**
 
-- _(Deferred)_ Filter pills narrow the visible results (gates on design-system `0.4.0` for `<Badge variant="filter">`).
+- ✅ Filter pills narrow the visible results — `All` + 6 per-type pills, multi-select on the per-type pills, `All` clears them. Backed by `<Badge variant="filter">` from `@donaldgifford/design-system@0.4.0-pre` (consumed locally via `bun link`).
 - _(Deferred)_ Grouped results + sticky group headers.
 - _(Deferred)_ Preview pane shows the selected hit's snippet.
 - _(Deferred)_ Full WAI-ARIA Dialog focus-trap (the current implementation focuses the input on open + Escape closes + Tab cycles natively; a proper focus-trap polish is a follow-up).
