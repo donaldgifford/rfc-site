@@ -267,13 +267,13 @@ Last primitive wave. `<Breadcrumb>` is straightforward; the filter-pill + severi
 
 #### Tasks — `<Badge>` extension (in `../design-system`)
 
-- [ ] In the design-system repo: add `variant: "status" | "filter" | "severity"` to `<Badge>` (default stays `"status"` for backward compatibility — existing rfc-site call-sites unaffected). Each variant maps to a distinct palette.
+- [x] In the design-system repo: add `variant: "status" | "filter" | "severity"` to `<Badge>` (default stays `"status"` for backward compatibility — existing rfc-site call-sites unaffected). Each variant maps to a distinct palette. Landed on the `feat/badge-filter-severity-variants` branch of `../design-system` (commit `3c0f1d1`).
   - `status` — current behaviour (Draft / Proposed / Accepted / …) backed by `--color-status-*`.
-  - `filter` — selected/unselected states for the Phase 9 search-modal filter pills. Adds an `aria-pressed`-friendly `selected?: boolean` prop or accepts a click handler — finalise the API in the design-system PR.
-  - `severity` — critical / high / medium / low for the Frameworks rules view, also backed by `--color-status-*`.
-- [ ] Add tests for each variant in the design-system's `tests/primitives/Badge.test.tsx`.
-- [ ] Add a changeset (minor bump). The Phase 6 batch promotion will ride this same minor release (or it lands as a patch ahead of Phase 6 if convenient).
-- [ ] **No new `ds-candidate` folder** in rfc-site — the extension is upstream-only.
+  - `filter` — selected/unselected states for the Phase 9 search-modal filter pills. `selected?: boolean` drives both the accent palette and `aria-pressed`; click wiring is consumer responsibility (wrap in `<button>` or pass `onClick` + role/tabIndex).
+  - `severity` — critical / high / medium / low for the Frameworks rules view. Palette maps onto existing `--color-status-*` tokens (no new tokens introduced): `critical → rejected`, `high → draft`, `medium → proposed`, `low → tertiary fg`. Pass via `status="critical"` etc.
+- [x] Add tests for each variant in the design-system's `tests/primitives/Badge.test.tsx`. 16 new tests, 28 total in the file; 352 tests in the design-system suite. New exports: `BADGE_SEVERITIES`, `BADGE_VARIANTS`, `BadgeSeverity`, `BadgeVariant`.
+- [x] Add a changeset (minor bump). Filed as `.changeset/badge-filter-severity-variants.md` for the next design-system release. Phase 6's batch promotion can ride this same release or land afterwards once additional candidates hit the readiness checklist.
+- [x] **No new `ds-candidate` folder** in rfc-site — the extension is upstream-only. rfc-site picks up the new variants once the `0.4.0` design-system release lands and `package.json` is bumped (deferred to Phase 6 / Phase 7 consumption).
 
 #### Success Criteria
 
