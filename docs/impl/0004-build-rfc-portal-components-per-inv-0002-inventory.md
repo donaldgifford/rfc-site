@@ -30,7 +30,7 @@ created: 2026-05-11
 | 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
 | 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | ✅ 5 of 5 shipped | Filter pills + grouped-by-type sticky headers + WAI-ARIA Dialog focus-trap + `?modal=1` URL state + side preview pane on hover/focus all shipped. |
 
-**Coverage:** 171 tests across 30 files; `just check` 100% green; production build clean (server bundle 79.31 kB / 21.28 kB gzip).
+**Coverage:** 151 tests across 26 files (the Kbd 5 + Input 8 + Card 7 + Button 9 colocated suites migrated to design-system with the Phase 6 promotions); `just check` 100% green; production build clean (server bundle 92.45 kB / 24.62 kB gzip).
 
 
 <!--toc:start-->
@@ -324,7 +324,7 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
   **Resolution:** Four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar after Phase 9a shipped. ✅ All four have been promoted (CSS-Module → prefixed-global `.ds-*` class conversion per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md), cross-repo file move with test migration, design-system `0.4.0` minor bump, `bun link` validation, rfc-site import swap, candidate folder deletion). The `<Badge>` filter / severity variant work was already on the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`); all five changes (`<Button>` / `<Input>` / `<Kbd>` / `<Card>` + the `<Badge>` extension) ride the same `0.4.0` release.
 
-- [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
+- [x] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow):
   - ✅ `<Kbd>`: promoted to `../design-system/src/primitives/Kbd/` on the `feat/badge-filter-severity-variants` branch (commit `e66886a`). CSS converted from CSS Modules to prefixed-global `.ds-kbd` per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md); 5 tests migrated to `tests/primitives/Kbd.test.tsx`; `src/index.ts` exports the public surface. Existing `badge-filter-severity-variants` changeset extended to cover both changes for the `0.4.0` release.
   - ✅ `<Input>`: promoted to `../design-system/src/primitives/Input/` (commit `ca47c3a`). CSS converted: `.ds-input` (shell), `.ds-input__field` (inner input), `.ds-input__slot` (prefix/suffix wrappers). 8 tests migrated; `user-event` swapped for `fireEvent` so the design-system doesn't gain a new devDependency.
   - ✅ `<Card>`: promoted to `../design-system/src/primitives/Card/` (commit `05bf8c1`). CSS converted: `.ds-card` (root), `.ds-card__header` / `.ds-card__body` / `.ds-card__footer` (sub-components). 7 tests migrated; the `asChild` test was rewritten to render a plain `<a>` instead of an RR7 `<Link>` so design-system doesn't gain a `react-router` dep. The `Object.assign(CardRoot, { Header, Body, Footer })` dot-notation pattern is preserved verbatim. `@radix-ui/react-slot` added to design-system runtime dependencies.
@@ -333,7 +333,7 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
   - ✅ `<Kbd>` consumed via `import { Kbd } from "@donaldgifford/design-system"` in `src/components/portal/Topbar/Topbar.tsx` and `src/components/portal/SearchModal/SearchModal.tsx`.
   - ✅ `src/components/ds-candidates/Kbd/` deleted.
   - [ ] After 0.4.0 publishes: `bun update @donaldgifford/design-system`, switch off `bun link` (`just ds-unlink`), final import-swap PR.
-- [x] **Sanity sweep:** `just check` 100% green (166 tests; the 5 colocated Kbd tests moved to design-system); `just build` clean.
+- [x] **Sanity sweep:** `just check` 100% green (151 tests across 26 files after all four promotions; the colocated Kbd 5 + Input 8 + Card 7 + Button 9 tests moved to design-system); `just build` clean.
 
 #### Success Criteria
 
