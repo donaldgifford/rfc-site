@@ -11,8 +11,7 @@
  * does not fetch any data.
  */
 
-import { Card } from "../../ds-candidates/Card";
-import { Badge } from "@donaldgifford/design-system";
+import { Badge, Card } from "@donaldgifford/design-system";
 
 import type { Document } from "../../../portal/api/__generated__/model";
 

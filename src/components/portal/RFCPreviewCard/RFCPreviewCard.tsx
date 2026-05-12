@@ -21,9 +21,8 @@
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Badge } from "@donaldgifford/design-system";
+import { Badge, Card } from "@donaldgifford/design-system";
 
-import { Card } from "../../ds-candidates/Card";
 import { useGetDoc, type getDocResponse } from "../../../portal/api/__generated__/docs/docs";
 import { classifyProblem } from "../../../portal/api/errors";
 
