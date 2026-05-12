@@ -9,9 +9,29 @@ created: 2026-05-11
 
 # IMPL 0004: Build rfc-portal components per INV-0002 inventory
 
-**Status:** Draft
+**Status:** In flight — 7 of 9 phases shipped on `feat/components` as of 2026-05-08; remaining items gate on cross-repo coordination.
 **Author:** Donald Gifford
 **Date:** 2026-05-11
+
+## Phase status snapshot (2026-05-08)
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1 — `<Button>` + authoring conventions | ✅ Shipped | 9 tests. |
+| 2 — `<Input>` + `<Kbd>` | ✅ Shipped | 13 tests across both. |
+| 3 — `<Topbar>` | ✅ Shipped | 7 tests (now 7 incl. Phase 9a updates). |
+| 4 — `<Card>` + `<Tabs>` + `<CodeBlock>` | ✅ Shipped | 18 tests across all three. |
+| 5 — `<Breadcrumb>` (in-repo) + `<Badge>` filter/severity (upstream) | ✅ Shipped | 6 in-repo tests; upstream branch `feat/badge-filter-severity-variants` (commit `3c0f1d1`). |
+| 6 — Batch promotion | 🟡 Audit complete; promotion deferred | 4 of 7 candidates now eligible (`<Button>`/`<Input>`/`<Kbd>`/`<Card>`); cross-repo follow-up PR. |
+| 7a — `<DirectoryTable>` | ✅ Shipped | 5 tests. |
+| 7b — `<DirectoryToolbar>` (filter+sort URL state) | 🔴 Blocked | Upstream `rfc-api` contract change required for `listDocs?filter=…&sort=…`. |
+| 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
+| 8b — `<RFCPreviewCard>` + `<Anchor>` extension | ✅ Shipped | 5 + 1 tests. |
+| 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
+| 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | 🟡 Deferred | Filter pills gate on design-system `0.4.0` release; rest are follow-up polish. |
+
+**Coverage:** 171 tests across 30 files; `just check` 100% green; production build clean (server bundle 79.31 kB / 21.28 kB gzip).
+
 
 <!--toc:start-->
 - [Objective](#objective)
@@ -292,17 +312,17 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
 - [x] **Readiness audit** — scored each Phase 1-5 candidate against the [readiness checklist](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md#the-ds-candidates-contract) (`used 2+ places`, `API stable ~2 weeks`, `no portal-only deps`). Current usage site count (post-Phase-5):
 
-  | Candidate | Sites today | Sites after Phases 7-9 | Verdict |
+  | Candidate | Sites pre-9 | Sites post-9 | Verdict |
   |---|---|---|---|
-  | `<Button>` | 1 (`search.tsx`) | ≥3 (toolbar / search modal / future API) | **Wait** — promotion ready once the toolbar lands. |
-  | `<Input>` | 1 (`<Topbar>`) | ≥3 (toolbar filter / search modal) | **Wait** — same gating. |
-  | `<Kbd>` | 1 (`<Topbar>`) | 2 (search modal footer hints) | **Wait** — Phase 9 creates the second site. |
-  | `<Card>` | 0 | 2+ (RFC sidebar metadata blocks + cross-RFC preview card) | **Wait** — Phase 8 creates both sites. |
+  | `<Button>` | 1 (`search.tsx`) | 2 (`search.tsx` + `<SearchModal>`) | **Ready** — promotion-eligible post-Phase-9a. |
+  | `<Input>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>`) | **Ready** — same. |
+  | `<Kbd>` | 1 (`<Topbar>`) | 2 (`<Topbar>` + `<SearchModal>` footer) | **Ready** — same. |
+  | `<Card>` | 0 | 2 (`<DocSidebar>` blocks + `<RFCPreviewCard>` popover) | **Ready** — Phase 8 created both sites. |
   | `<Tabs>` | 0 | 0 in this IMPL (future API examples / MCP only) | **Stay** in `ds-candidates/`. |
   | `<CodeBlock>` | 0 | 0 in this IMPL (future MCP / API only) | **Stay**. |
   | `<Breadcrumb>` | 0 | 0 in this IMPL (Frameworks route only) | **Stay**. |
 
-  **Resolution:** Phase 6 promotion is **deferred until Phases 7-9 ship the second usage sites**. The IMPL's promotion model explicitly avoids premature promotion (DESIGN-0001 §The `ds-candidates/` contract). Phases 7-9 do not depend on the promotion — they consume the candidates via the `ds-candidates/<X>/` paths, exactly the same paths the promoted package imports will replace later. Promotion happens in a follow-up PR once Phases 7-9 land, riding the same `0.4.0` design-system release that the Phase 5 `<Badge>` extension produces (or a `0.5.0` if the timeline slips further). The `<Badge>` filter / severity variant work is independent and already shipped to the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`).
+  **Resolution:** Four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar after Phase 9a shipped. The actual promotion (CSS-Module → prefixed-global `.ds-*` class conversion per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md), cross-repo `cp -r` + test move, design-system minor bump, `bun link` validation, rfc-site import swap, candidate folder deletion) is deferred to a follow-up PR — it's a non-trivial cross-repo coordination that doesn't fit cleanly inside this branch's scope. The `<Badge>` filter / severity variant work is already on the design-system's `feat/badge-filter-severity-variants` branch (commit `3c0f1d1`); the promotion follow-up PR will ride the same `0.4.0` release and ship all five (`<Button>` / `<Input>` / `<Kbd>` / `<Card>` + the `<Badge>` extension) together.
 
 - [ ] **For each promoted primitive** (per [DESIGN-0001 §Promotion workflow](../design/0001-portal-architecture-and-ds-candidates-promotion-model.md) + CLAUDE.md §Promotion workflow): _Deferred — gates on Phase 7-9 second usage sites per the audit above._
   - In the design-system repo (`../design-system`): `cp -r src/components/ds-candidates/<Component>/` → `src/primitives/<Component>/` (excluding the colocated `.test.tsx`), `git mv` the test into `tests/primitives/<Component>.test.tsx`, **convert CSS Modules to prefixed-global `.ds-<primitive>` classes per [INV-0001](../investigation/0001-ship-css-modules-from-design-system-tsup-build.md)**, update `src/index.ts`, run lint/typecheck/test/build, add a changeset.
@@ -316,11 +336,11 @@ Batch promotion of the candidates that have hit the [readiness checklist](../des
 
 #### Success Criteria
 
-- Readiness audit complete. ✅ **Result:** every candidate currently has 0-1 usage sites — none meet the "used 2+ places" bar today. Promotion deferred until Phases 7-9 create the second sites.
-- _(Deferred)_ Promoted primitives shipped in `@donaldgifford/design-system` and consumed via package imports across the portal.
-- _(Deferred)_ `src/components/ds-candidates/` cleared of promoted entries; non-promoted primitives stay until a second usage site.
-- _(Deferred)_ Zero visual regressions vs the pre-promotion state.
-- _(Deferred)_ `just check` 100% green; `just build` clean (bundle should *shrink* slightly since the design-system tree is already deduped).
+- Readiness audit complete. ✅ **Result post-Phase-9a:** four candidates (`<Button>`, `<Input>`, `<Kbd>`, `<Card>`) hit the 2+ usage-site bar and are promotion-eligible; three (`<Tabs>`, `<CodeBlock>`, `<Breadcrumb>`) stay in `ds-candidates/` pending future-IMPL routes that consume them.
+- _(Follow-up PR)_ Promoted primitives shipped in `@donaldgifford/design-system` (`0.4.0` riding the `<Badge>` filter / severity variant changeset) and consumed via package imports across the portal.
+- _(Follow-up PR)_ `src/components/ds-candidates/` cleared of `<Button>` / `<Input>` / `<Kbd>` / `<Card>`; `<Tabs>` / `<CodeBlock>` / `<Breadcrumb>` stay until a second usage site materialises in a future IMPL.
+- _(Follow-up PR)_ Zero visual regressions vs the pre-promotion state.
+- _(Follow-up PR)_ `just check` 100% green; `just build` clean (bundle should *shrink* slightly since the design-system tree is already deduped).
 
 ---
 
