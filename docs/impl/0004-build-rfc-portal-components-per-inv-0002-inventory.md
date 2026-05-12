@@ -9,7 +9,7 @@ created: 2026-05-11
 
 # IMPL 0004: Build rfc-portal components per INV-0002 inventory
 
-**Status:** In flight — 7 of 9 phases shipped on `feat/components` as of 2026-05-08; remaining items gate on cross-repo coordination.
+**Status:** In review — 11 of 12 phase slices shipped on `feat/components` ([donaldgifford/rfc-site#6](https://github.com/donaldgifford/rfc-site/pull/6)); Phase 7b is blocked on an upstream `rfc-api` OpenAPI contract change. The cross-repo design-system 0.4.0 release rides [donaldgifford/design-system#11](https://github.com/donaldgifford/design-system/pull/11).
 **Author:** Donald Gifford
 **Date:** 2026-05-11
 
@@ -575,6 +575,8 @@ In this repo:
 
 External:
 
+- [donaldgifford/rfc-site#6](https://github.com/donaldgifford/rfc-site/pull/6) — this IMPL's PR.
+- [donaldgifford/design-system#11](https://github.com/donaldgifford/design-system/pull/11) — cross-repo `0.4.0` release riding the `<Badge>` filter/severity variants + the four primitive promotions (`<Kbd>` / `<Input>` / `<Card>` / `<Button>`).
 - [`donaldgifford/design-system/rfc-portal-mockup_15.html`](https://github.com/donaldgifford/design-system/blob/main/rfc-portal-mockup_15.html) — visual reference.
 - [`@donaldgifford/design-system` CHANGELOG](https://github.com/donaldgifford/design-system/blob/main/CHANGELOG.md) — v0.3.0 token additions consumed across this IMPL.
 - [WAI-ARIA Authoring Practices — Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) — keyboard contract for `<Tabs>` (Phase 4).
