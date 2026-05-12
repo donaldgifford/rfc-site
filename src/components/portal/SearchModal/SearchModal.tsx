@@ -17,7 +17,11 @@
  *   - ✅ Filter pills (`<Badge variant="filter">`) — client-side filter
  *     applied to the rendered results. "All" resets; per-type pills
  *     toggle multi-select.
- *   - Grouped-by-type results + sticky group headers (deferred).
+ *   - ✅ Grouped-by-type results with sticky group headers — the
+ *     visible hits are bucketed by `document.type`; each group renders
+ *     an uppercase mono heading that pins to the top of the scrolling
+ *     body via `position: sticky`. Group order follows the
+ *     `FILTER_TYPES` constant so the layout is stable across queries.
  *   - Side preview pane on hover (deferred).
  *   - Full WAI-ARIA Dialog focus-trap polish (deferred).
  */
@@ -251,11 +255,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           ) : filteredOut ? (
             <p className={styles.empty}>No results match the selected document types.</p>
           ) : (
-            <ul className={styles.results}>
-              {visibleResults.map((result) => (
-                <ModalHit key={hitKey(result)} result={result} onSelect={close} />
-              ))}
-            </ul>
+            <GroupedResults results={visibleResults} onSelect={close} />
           )}
         </div>
 
@@ -270,6 +270,76 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
       </div>
     </div>
   );
+}
+
+/**
+ * Bucket the visible search hits by `document.type` and render each
+ * non-empty group beneath a sticky uppercase heading. Group order
+ * follows `FILTER_TYPES` so the layout is stable across queries;
+ * unrecognised types fall through to a trailing "Other" bucket so a
+ * future-added doc-type doesn't disappear from search before the
+ * portal release that names it.
+ */
+function GroupedResults({
+  results,
+  onSelect,
+}: {
+  results: readonly SearchResult[];
+  onSelect: () => void;
+}) {
+  const buckets = new Map<string, SearchResult[]>();
+  for (const result of results) {
+    const type = result.document.type;
+    const bucket = buckets.get(type);
+    if (bucket === undefined) {
+      buckets.set(type, [result]);
+    } else {
+      bucket.push(result);
+    }
+  }
+
+  const orderedTypes: { id: string; label: string }[] = [];
+  for (const type of FILTER_TYPES) {
+    if (buckets.has(type.id)) orderedTypes.push({ id: type.id, label: type.label });
+  }
+  for (const [id] of buckets) {
+    if (!FILTER_TYPES.some((t) => t.id === id)) {
+      orderedTypes.push({ id, label: humaniseTypeLabel(id) });
+    }
+  }
+
+  return (
+    <div className={styles.groups}>
+      {orderedTypes.map(({ id, label }) => {
+        const hits = buckets.get(id) ?? [];
+        return (
+          <section
+            key={id}
+            aria-labelledby={`search-group-${id}`}
+            data-group-type={id}
+            className={styles.group}
+          >
+            <h3 id={`search-group-${id}`} className={styles.groupHeading}>
+              {label}
+              <span className={styles.groupCount} aria-hidden="true">
+                {hits.length}
+              </span>
+            </h3>
+            <ul className={styles.results}>
+              {hits.map((result) => (
+                <ModalHit key={hitKey(result)} result={result} onSelect={onSelect} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function humaniseTypeLabel(typeId: string): string {
+  if (typeId.length === 0) return "Other";
+  return typeId.charAt(0).toUpperCase() + typeId.slice(1).toLowerCase();
 }
 
 interface FilterPillProps {

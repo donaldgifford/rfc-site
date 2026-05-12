@@ -190,6 +190,29 @@ describe("<SearchModal>", () => {
     });
   });
 
+  it("groups hits by document.type with a sticky heading per non-empty bucket", async () => {
+    const user = userEvent.setup();
+    renderModal({ initialOpen: true });
+
+    const input = screen.getByRole("searchbox", { name: /search query/i });
+    await user.type(input, "the");
+    await user.keyboard("{Enter}");
+
+    // Wait for the group headings to render — at least the IMPL bucket
+    // is non-empty because the impl fixtures match "the".
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /impl/i, level: 3 })).toBeInTheDocument();
+    });
+
+    // The group is announced as a section with aria-labelledby pointing
+    // at the heading; data-group-type pins the type on the wrapping
+    // <section> so the test can assert on it.
+    const implHeading = screen.getByRole("heading", { name: /impl/i, level: 3 });
+    const implSection = implHeading.closest("section");
+    expect(implSection).not.toBeNull();
+    expect(implSection).toHaveAttribute("data-group-type", "impl");
+  });
+
   it("clicking the All pill clears active type filters", async () => {
     const user = userEvent.setup();
     renderModal({ initialOpen: true });
