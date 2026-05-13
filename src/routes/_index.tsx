@@ -1,7 +1,10 @@
 import type { Route } from "./+types/_index";
 import { Link } from "react-router";
 import { listDocs } from "../portal/api/__generated__/docs/docs";
-import type { DocumentListResponse } from "../portal/api/__generated__/model";
+import type {
+  DocumentListFilterableResponse,
+  ListDocsSortParameter,
+} from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { parseLinkHeader, type PaginationCursors } from "../portal/api/pagination";
 import { DirectoryTable } from "../components/portal/DirectoryTable";
@@ -22,21 +25,59 @@ export function meta(_args: Route.MetaArgs) {
 }
 
 interface IndexLoaderData {
-  readonly docs: DocumentListResponse;
+  readonly docs: DocumentListFilterableResponse;
   readonly cursors: PaginationCursors;
+  /** X-Total-Count from the response (filtered total when filters are active). */
+  readonly totalCount: number;
+  /**
+   * X-Total-Count-Unfiltered — present only when at least one filter is
+   * active. Used by the empty-state branch to distinguish "no matches
+   * in this filter" from "no docs at all".
+   */
+  readonly totalUnfiltered: number | undefined;
 }
 
 export async function loader({ request }: Route.LoaderArgs): Promise<IndexLoaderData> {
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor") ?? undefined;
 
-  const response = await listDocs({ limit: DEFAULT_LIMIT, cursor });
+  // Pass-through the URL's filter[] + sort into listDocs (DESIGN-0003).
+  // The generated client serialises filter as a repeated query param;
+  // sort is single-valued. Invalid sort or filter values propagate as
+  // 400 problem+json — out-of-band URLs surface through the route
+  // error boundary instead of silently falling back, which would
+  // desync the toolbar's URL state from the rendered result set.
+  const filterValues = url.searchParams.getAll("filter");
+  const sortRaw = url.searchParams.get("sort");
+
+  const response = await listDocs({
+    limit: DEFAULT_LIMIT,
+    cursor,
+    ...(filterValues.length > 0 ? { filter: filterValues } : {}),
+    ...(sortRaw !== null && sortRaw.length > 0
+      ? { sort: sortRaw as ListDocsSortParameter }
+      : {}),
+  });
   throwIfProblem(response);
 
   return {
     docs: response.data,
     cursors: parseLinkHeader(response.headers.get("link")),
+    totalCount: parseCount(response.headers.get("x-total-count")),
+    totalUnfiltered: parseOptionalCount(response.headers.get("x-total-count-unfiltered")),
   };
+}
+
+function parseCount(raw: string | null): number {
+  if (raw === null) return 0;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function parseOptionalCount(raw: string | null): number | undefined {
+  if (raw === null) return undefined;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
