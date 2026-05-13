@@ -96,4 +96,29 @@ describe("/ index route — full render", () => {
       expect(screen.getByText(/no documents yet/i)).toBeInTheDocument();
     });
   });
+
+  it("renders the filter-aware empty state when a filter narrows to zero matches", async () => {
+    // X-Total-Count-Unfiltered=8 signals the filter is active and the
+    // corpus is non-empty; the empty array means the filter narrowed to
+    // zero matches. _index.tsx branches the surface text accordingly.
+    server.use(
+      http.get("*/api/v1/docs", () =>
+        HttpResponse.json([], {
+          status: 200,
+          headers: {
+            "X-Total-Count": "0",
+            "X-Total-Count-Unfiltered": "8",
+          },
+        }),
+      ),
+    );
+
+    renderRoute(indexFixture, ["/?filter=type:nonexistent"]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/no documents match this filter/i)).toBeInTheDocument();
+    });
+    // The "no docs at all" surface should NOT render under this branch.
+    expect(screen.queryByText(/no documents yet/i)).toBeNull();
+  });
 });
