@@ -113,6 +113,108 @@ describe("MSW handlers — listDocs (pagination round-trip)", () => {
   });
 });
 
+describe("MSW handlers — listDocs filter + sort (Phase 7b)", () => {
+  it("default sort is created_desc (mirrors rfc-api v0.3.0)", async () => {
+    // The 8-fixture corpus has IMPL-0001 at 2026-04-21 (most recent) and
+    // ADR-0001 at 2025-09-12 (oldest). Default sort surfaces the latest
+    // first.
+    const response = await fetch(`${BASE_URL}/api/v1/docs?limit=100`);
+    expect(response.status).toBe(200);
+    const docs = (await response.json()) as { id: string; created_at: string }[];
+    expect(docs[0]?.id).toBe("IMPL-0001");
+    expect(docs[docs.length - 1]?.id).toBe("ADR-0001");
+  });
+
+  it("single-type filter narrows the result set (and emits X-Total-Count-Unfiltered)", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?filter=type:rfc&limit=100`);
+    expect(response.status).toBe(200);
+    const docs = (await response.json()) as { id: string; type: string }[];
+    expect(docs.every((d) => d.type === "rfc")).toBe(true);
+    expect(response.headers.get("X-Total-Count")).toBe(String(docs.length));
+    // Header should be present iff a filter is active.
+    expect(response.headers.get("X-Total-Count-Unfiltered")).toBe("8");
+  });
+
+  it("does NOT emit X-Total-Count-Unfiltered when no filter is active", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?limit=100`);
+    expect(response.headers.get("X-Total-Count-Unfiltered")).toBeNull();
+    expect(response.headers.get("X-Total-Count")).toBe("8");
+  });
+
+  it("multi-value type filter is OR within field (RFC ∪ ADR)", async () => {
+    const url = new URL(`${BASE_URL}/api/v1/docs`);
+    url.searchParams.append("filter", "type:rfc");
+    url.searchParams.append("filter", "type:adr");
+    url.searchParams.set("limit", "100");
+
+    const response = await fetch(url.href);
+    expect(response.status).toBe(200);
+    const docs = (await response.json()) as { type: string }[];
+    expect(docs.every((d) => d.type === "rfc" || d.type === "adr")).toBe(true);
+    expect(docs.some((d) => d.type === "rfc")).toBe(true);
+    expect(docs.some((d) => d.type === "adr")).toBe(true);
+  });
+
+  it("sort=id_asc orders alphabetically by canonical id", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?sort=id_asc&limit=100`);
+    const docs = (await response.json()) as { id: string }[];
+    const ids = docs.map((d) => d.id);
+    expect(ids).toEqual([...ids].sort());
+  });
+
+  it("Link rel=next preserves filter + sort across cursor pagination", async () => {
+    // 2 RFC fixtures; limit=1 forces a Link header on page 1.
+    const response = await fetch(
+      `${BASE_URL}/api/v1/docs?filter=type:rfc&sort=updated_asc&limit=1`,
+    );
+    expect(response.status).toBe(200);
+    const link = response.headers.get("Link");
+    expect(link).not.toBeNull();
+    expect(link).toMatch(/filter=type%3Arfc/);
+    expect(link).toMatch(/sort=updated_asc/);
+
+    // Follow the rel=next link and assert the second page stays inside
+    // the filtered+sorted view.
+    const nextHref = link?.match(/^<([^>]+)>/)?.[1];
+    expect(nextHref).toBeDefined();
+    if (nextHref === undefined) return;
+    const page2 = await fetch(`${BASE_URL}${nextHref}`);
+    expect(page2.status).toBe(200);
+    const docs2 = (await page2.json()) as { type: string }[];
+    expect(docs2.every((d) => d.type === "rfc")).toBe(true);
+  });
+
+  it("returns 400 problem+json on malformed filter shape", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?filter=garbled`);
+    expect(response.status).toBe(400);
+    expect(response.headers.get("content-type")).toMatch(/application\/problem\+json/);
+    const problem = (await response.json()) as { status: number; detail?: string };
+    expect(problem.status).toBe(400);
+    expect(problem.detail).toContain("malformed filter");
+  });
+
+  it("returns 400 problem+json on unknown filter field", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?filter=author:alice`);
+    expect(response.status).toBe(400);
+    const problem = (await response.json()) as { detail?: string };
+    expect(problem.detail).toContain("unknown filter field: author");
+  });
+
+  it("returns 400 problem+json on unknown type value", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?filter=type:zzz`);
+    expect(response.status).toBe(400);
+    const problem = (await response.json()) as { detail?: string };
+    expect(problem.detail).toContain("unknown type: zzz");
+  });
+
+  it("returns 400 problem+json on out-of-range sort value", async () => {
+    const response = await fetch(`${BASE_URL}/api/v1/docs?sort=weird_order`);
+    expect(response.status).toBe(400);
+    const problem = (await response.json()) as { detail?: string };
+    expect(problem.detail).toContain("sort value out of range: weird_order");
+  });
+});
+
 describe("MSW handlers — searchDocs", () => {
   it("filters fixtures by substring against title / body / id and wraps in SearchResult envelopes", async () => {
     const response = await fetch(`${BASE_URL}/api/v1/search?q=postgres&limit=10`);
