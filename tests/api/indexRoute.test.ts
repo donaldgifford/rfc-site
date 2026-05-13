@@ -133,8 +133,7 @@ describe("/ index loader", () => {
     // parseLinkHeader returns the opaque cursor token and that the
     // underlying URL carries the filter + sort params for the next
     // request — the consumer-side guarantee for Phase 7b pagination.
-    const nextUrl =
-      "/api/v1/docs?filter=type%3Arfc&sort=updated_asc&limit=24&cursor=NEXT_CURSOR";
+    const nextUrl = "/api/v1/docs?filter=type%3Arfc&sort=updated_asc&limit=24&cursor=NEXT_CURSOR";
     server.use(
       http.get("*/api/v1/docs", () =>
         HttpResponse.json([], {
@@ -163,9 +162,7 @@ describe("/ index loader", () => {
     server.events.on("response:mocked", ({ request }) => {
       observedUrl = request.url;
     });
-    const baseRequest = new Request(
-      "http://localhost/?filter=type:rfc&sort=updated_asc&limit=1",
-    );
+    const baseRequest = new Request("http://localhost/?filter=type:rfc&sort=updated_asc&limit=1");
     // The loader uses DEFAULT_LIMIT=24 so override limit by calling
     // listDocs directly through the loader; the handler's Link header
     // is what we want to validate, and the loader already exposes its

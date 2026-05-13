@@ -8,6 +8,7 @@ import type {
 import { throwIfProblem } from "../portal/api/errors";
 import { parseLinkHeader, type PaginationCursors } from "../portal/api/pagination";
 import { DirectoryTable } from "../components/portal/DirectoryTable";
+import { DirectoryToolbar } from "../components/portal/DirectoryToolbar";
 import { Skeleton } from "../components/portal/Skeleton";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./_index.module.css";
@@ -54,9 +55,7 @@ export async function loader({ request }: Route.LoaderArgs): Promise<IndexLoader
     limit: DEFAULT_LIMIT,
     cursor,
     ...(filterValues.length > 0 ? { filter: filterValues } : {}),
-    ...(sortRaw !== null && sortRaw.length > 0
-      ? { sort: sortRaw as ListDocsSortParameter }
-      : {}),
+    ...(sortRaw !== null && sortRaw.length > 0 ? { sort: sortRaw as ListDocsSortParameter } : {}),
   });
   throwIfProblem(response);
 
@@ -81,7 +80,7 @@ function parseOptionalCount(raw: string | null): number | undefined {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { docs, cursors } = loaderData;
+  const { docs, cursors, totalCount, totalUnfiltered } = loaderData;
 
   return (
     <main className={styles.main}>
@@ -89,9 +88,13 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         <h1 className={styles.heading}>Directory</h1>
       </header>
 
+      <DirectoryToolbar totalCount={totalCount} totalUnfiltered={totalUnfiltered} />
+
       {docs.length === 0 ? (
         <p className={styles.empty}>
-          No documents yet. Check back once rfc-api has indexed at least one type.
+          {totalUnfiltered !== undefined
+            ? "No documents match this filter. Clear filters to see all docs."
+            : "No documents yet. Check back once rfc-api has indexed at least one type."}
         </p>
       ) : (
         <DirectoryTable documents={docs} />

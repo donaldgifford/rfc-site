@@ -177,6 +177,7 @@ describe("MSW handlers — listDocs filter + sort (Phase 7b)", () => {
     // the filtered+sorted view.
     const nextHref = link?.match(/^<([^>]+)>/)?.[1];
     expect(nextHref).toBeDefined();
+    if (nextHref === undefined) return;
     const page2 = await fetch(`${BASE_URL}${nextHref}`);
     expect(page2.status).toBe(200);
     const docs2 = (await page2.json()) as { type: string }[];

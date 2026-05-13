@@ -34,11 +34,7 @@
 
 import { faker } from "@faker-js/faker";
 import { http, HttpResponse } from "msw";
-import type {
-  Document,
-  ListDocsSortParameter,
-  SearchResult,
-} from "../__generated__/model";
+import type { Document, ListDocsSortParameter, SearchResult } from "../__generated__/model";
 import { canonicalFromUrl } from "../docId";
 import { byType, findById, loadFixtures } from "./fixtures";
 
@@ -47,14 +43,7 @@ faker.seed(0xdec1a55);
 const DEFAULT_LIMIT = 3;
 const MAX_LIMIT = 200;
 
-const KNOWN_TYPES: ReadonlySet<string> = new Set([
-  "rfc",
-  "adr",
-  "design",
-  "impl",
-  "plan",
-  "inv",
-]);
+const KNOWN_TYPES: ReadonlySet<string> = new Set(["rfc", "adr", "design", "impl", "plan", "inv"]);
 
 const SORT_VALUES: ReadonlySet<string> = new Set<ListDocsSortParameter>([
   "created_desc",
@@ -250,9 +239,7 @@ type FilterParseResult =
   | { ok: true; filters: ReadonlyMap<string, ReadonlySet<string>> }
   | { ok: false; problem: Response };
 
-type SortParseResult =
-  | { ok: true; sort: ListDocsSortParameter }
-  | { ok: false; problem: Response };
+type SortParseResult = { ok: true; sort: ListDocsSortParameter } | { ok: false; problem: Response };
 
 /**
  * Parse repeatable `filter=field:value` params. Phase 1 of DESIGN-0003
