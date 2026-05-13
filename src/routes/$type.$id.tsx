@@ -6,6 +6,7 @@ import { throwIfProblem } from "../portal/api/errors";
 import { Badge } from "@donaldgifford/design-system";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import { Skeleton } from "../components/portal/Skeleton";
+import { DocSidebar } from "../components/portal/DocSidebar";
 import { DocumentView } from "../portal/markdown";
 import styles from "./$type.$id.module.css";
 
@@ -57,7 +58,12 @@ export default function DocPage({ loaderData }: Route.ComponentProps) {
         ) : null}
       </header>
 
-      <DocumentView document={doc} />
+      <div className={styles.layout}>
+        <DocSidebar document={doc} />
+        <article className={styles.prose}>
+          <DocumentView document={doc} />
+        </article>
+      </div>
     </main>
   );
 }

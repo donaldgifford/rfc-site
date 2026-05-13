@@ -82,5 +82,8 @@ ds-link:
     bun link @donaldgifford/design-system
 
 ds-unlink:
-    bun unlink @donaldgifford/design-system
+    # `bun unlink @pkg` isn't implemented as of Bun 1.3 — remove the
+    # symlink directly so the next `bun install` resolves from the
+    # registry against the version pinned in package.json + bun.lock.
+    rm -f node_modules/@donaldgifford/design-system
     bun install

@@ -4,9 +4,8 @@ import { listDocs } from "../portal/api/__generated__/docs/docs";
 import type { DocumentListResponse } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { parseLinkHeader, type PaginationCursors } from "../portal/api/pagination";
-import { DocCard } from "../components/portal/DocCard";
+import { DirectoryTable } from "../components/portal/DirectoryTable";
 import { Skeleton } from "../components/portal/Skeleton";
-import { ThemeToggle } from "../components/portal/ThemeToggle";
 import { RouteErrorBoundary } from "../components/portal/RouteErrorBoundary";
 import styles from "./_index.module.css";
 
@@ -47,12 +46,6 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     <main className={styles.main}>
       <header className={styles.header}>
         <h1 className={styles.heading}>Directory</h1>
-        <div className={styles.headerActions}>
-          <Link to="/search" className={styles.searchLink}>
-            Search
-          </Link>
-          <ThemeToggle />
-        </div>
       </header>
 
       {docs.length === 0 ? (
@@ -60,13 +53,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
           No documents yet. Check back once rfc-api has indexed at least one type.
         </p>
       ) : (
-        <ul className={styles.grid}>
-          {docs.map((doc) => (
-            <li key={`${doc.type}/${doc.id}`}>
-              <DocCard doc={doc} />
-            </li>
-          ))}
-        </ul>
+        <DirectoryTable documents={docs} />
       )}
 
       {cursors.next || cursors.prev ? (
@@ -98,19 +85,18 @@ export function HydrateFallback() {
     <main className={styles.main}>
       <header className={styles.header}>
         <Skeleton width="160px" height="38px" variant="block" />
-        <Skeleton width="92px" height="28px" variant="block" />
       </header>
-      <ul className={styles.grid} aria-busy="true">
-        {Array.from({ length: 6 }, (_, i) => (
-          <li key={i}>
-            <div className={styles.skeletonCard}>
-              <Skeleton width="60px" height="14px" />
-              <Skeleton width="100%" height="22px" />
-              <Skeleton width="70%" height="16px" />
-            </div>
-          </li>
+      <div className={styles.skeletonTable} aria-busy="true">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className={styles.skeletonRow}>
+            <Skeleton width="80px" height="14px" />
+            <Skeleton width="100%" height="14px" />
+            <Skeleton width="80px" height="20px" />
+            <Skeleton width="120px" height="14px" />
+            <Skeleton width="80px" height="14px" />
+          </div>
         ))}
-      </ul>
+      </div>
     </main>
   );
 }
