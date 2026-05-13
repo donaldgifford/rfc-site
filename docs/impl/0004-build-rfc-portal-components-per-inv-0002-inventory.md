@@ -9,7 +9,7 @@ created: 2026-05-11
 
 # IMPL 0004: Build rfc-portal components per INV-0002 inventory
 
-**Status:** Phase 7b in flight on `feat/phase-7b-directory-toolbar` after rfc-api shipped the [DESIGN-0003 contract in v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0) ([rfc-api#29](https://github.com/donaldgifford/rfc-api/pull/29)). 11 of 12 phase slices shipped on `feat/components` ([donaldgifford/rfc-site#6](https://github.com/donaldgifford/rfc-site/pull/6)). The cross-repo design-system 0.4.0 release rides [donaldgifford/design-system#11](https://github.com/donaldgifford/design-system/pull/11). Phase 7b follow-up tracked in [donaldgifford/rfc-site#7](https://github.com/donaldgifford/rfc-site/issues/7).
+**Status:** Closed — all 12 phase slices shipped. Phase 1-9 landed on `feat/components` ([donaldgifford/rfc-site#6](https://github.com/donaldgifford/rfc-site/pull/6)); Phase 7b shipped on `feat/phase-7b-directory-toolbar` ([donaldgifford/rfc-site#8](https://github.com/donaldgifford/rfc-site/pull/8)) after rfc-api shipped the [DESIGN-0003 contract in v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0) ([rfc-api#29](https://github.com/donaldgifford/rfc-api/pull/29)). The cross-repo design-system 0.4.0 release rode [donaldgifford/design-system#11](https://github.com/donaldgifford/design-system/pull/11). The Phase 7b consumer-side tracking issue [#7](https://github.com/donaldgifford/rfc-site/issues/7) is closed by #8. **Known follow-up:** `<DirectoryToolbar>`'s visual presentation diverges from the mockup at `design-system/rfc-portal-mockup_15.html:354-513` (icon-only filter trigger + cascading filter menu + segmented sort toggle vs. our text Type button + flat pill panel + native `<select>`). The wiring underneath (URL state, contract, tests) is the load-bearing piece and is stable; the visual rework is deferred to a follow-up IMPL that may also spawn a `<Popover>` ds-candidate (per IMPL-0004 Resolved §7 — Popover deferred until a route confirms it's needed; directory toolbar is now the second confirmation after Search modal).
 **Author:** Donald Gifford
 **Date:** 2026-05-11
 
@@ -24,13 +24,13 @@ created: 2026-05-11
 | 5 — `<Breadcrumb>` (in-repo) + `<Badge>` filter/severity (upstream) | ✅ Shipped | 6 in-repo tests; upstream branch `feat/badge-filter-severity-variants` (commit `3c0f1d1`). |
 | 6 — Batch promotion | ✅ 4 of 4 promoted | `<Kbd>` + `<Input>` + `<Card>` + `<Button>` promoted (design-system commits `e66886a` + `ca47c3a` + `05bf8c1` + `c84eec2`, consumed via `bun link` against the local 0.4.0-pre branch). All four promotable ds-candidates cleared from `src/components/ds-candidates/`. |
 | 7a — `<DirectoryTable>` | ✅ Shipped | 5 tests. |
-| 7b — `<DirectoryToolbar>` (filter+sort URL state) | 🟡 In flight | Unblocked by [rfc-api v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0); shipping on `feat/phase-7b-directory-toolbar`. Tracked in [#7](https://github.com/donaldgifford/rfc-site/issues/7). |
+| 7b — `<DirectoryToolbar>` (filter+sort URL state) | ✅ Shipped | 10 tests. Wired against rfc-api v0.3.0's listDocs filter+sort contract; MSW honors filter+sort + emits the conditional `X-Total-Count-Unfiltered`; loader Link `rel=next` round-trip preserves both params. Visual presentation deferred per Status header. |
 | 8a — `<DocSidebar>` + two-column layout | ✅ Shipped | 7 tests. |
 | 8b — `<RFCPreviewCard>` + `<Anchor>` extension | ✅ Shipped | 5 + 1 tests. |
 | 9a — `<SearchModal>` + `⌘K` wiring | ✅ Shipped | 7 + 3 tests. |
 | 9b — Filter pills / grouped results / preview pane / focus-trap polish / `?modal=1` | ✅ 5 of 5 shipped | Filter pills + grouped-by-type sticky headers + WAI-ARIA Dialog focus-trap + `?modal=1` URL state + side preview pane on hover/focus all shipped. |
 
-**Coverage:** 151 tests across 26 files (the Kbd 5 + Input 8 + Card 7 + Button 9 colocated suites migrated to design-system with the Phase 6 promotions); `just check` 100% green; production build clean (server bundle 92.45 kB / 24.62 kB gzip).
+**Coverage:** 177 tests across 27 files (the Kbd 5 + Input 8 + Card 7 + Button 9 colocated suites migrated to design-system with the Phase 6 promotions); `just check` 100% green; production build clean (server bundle 96.06 kB / 25.73 kB gzip).
 
 
 <!--toc:start-->
@@ -359,15 +359,16 @@ Replaces the current card grid in `_index.tsx` with the mockup's table shape: nu
   - `.module.css` — table chrome (sticky-feel uppercase header row, hairline borders, hover row, horizontal scroll container so narrow viewports don't overflow the page).
   - `index.ts`.
   - `DirectoryTable.test.tsx` — 5 tests covering column headers, row content, single-link-per-row invariant, empty-authors fallback, semantic `<time>` element.
-- [x] **Bump rfc-api OpenAPI pin to v0.3.0 and regenerate** (7b commit 1, this PR): vendor `api/openapi.yaml` from [rfc-api v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0); run `just gen-api`; `just gen-api-check` verifies orval drift is clean. Generated types pick up `ListDocsFilterParameter` (string array, `field:value` pattern), `ListDocsSortParameter` (6-value enum, default `created_desc`), and the new `DocumentListFilterable` response shape.
-- [ ] **Forward `filter` + `sort` URL params through the `_index` loader** (7b commit 2): loader reads `filter[]` + `sort` from `searchParams`, forwards to `listDocs`, captures `X-Total-Count-Unfiltered` alongside `X-Total-Count`. Returns the full param set so the toolbar component can render the active selection without re-parsing the URL.
-  - Loader test: `tests/api/indexRoute.test.ts` gains a `rel="next"` round-trip case asserting Link-header `next` URL preserves the active `filter` + `sort` so cursor traversal stays inside the filtered view (validates the rfc-api `r.RequestURI` Link header fix shipped in v0.3.0).
-- [ ] **Add `src/components/portal/DirectoryToolbar/`** (7b commit 3): portal composite mounted above `<DirectoryTable>` in `_index.tsx`.
-  - `DirectoryToolbar.tsx` — multi-select for `type:` filter (native `<details>`/`<summary>` per Resolved §7 — defer Popover primitive); sort `<select>` with the six v0.3.0 values (`created_desc` / `created_asc` / `updated_desc` / `updated_asc` / `id_desc` / `id_asc`); writes to URL via `useSearchParams`. Uses `<Button>` + `<Badge variant="filter">` primitives from `@donaldgifford/design-system@0.4.0`.
-  - **Cursor-on-sort-change handling:** flipping sort mid-traversal invalidates the cursor (rfc-api returns 400 on cursor/sort mismatch per DESIGN-0003 §Cursor encoding). Toolbar's `onSortChange` clears `cursor` from the URL atomically with the new `sort`.
-  - **Results count widget:** `(N of M shown)` derived from `X-Total-Count` (filtered, N) vs `X-Total-Count-Unfiltered` (only present when filter active, M). When unfiltered, render the single total.
-  - `DirectoryToolbar.test.tsx` — covers filter toggle, multi-select OR semantics, sort change clears cursor, results-count branches.
-- [ ] **Branch empty state on `X-Total-Count-Unfiltered`** (7b commit 4): `_index.tsx` renders "No documents match this filter — clear filters to see all docs" when the header is present and the page is empty; falls back to the existing "No documents yet" surface when the header is absent.
+- [x] **Bump rfc-api OpenAPI pin to v0.3.0 and regenerate** ([rfc-site#8](https://github.com/donaldgifford/rfc-site/pull/8) commit `73c3fdd`): vendored `api/openapi.yaml` from [rfc-api v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0); ran `just gen-api`; `just gen-api-check` verified clean drift. Generated types: `ListDocsFilterParameter` (string array, `field:value` pattern), `ListDocsSortParameter` (6-value enum, default `created_desc`), `DocumentListFilterable` response shape.
+- [x] **MSW dev-mode fidelity** (commit `05183be`): `/api/v1/docs` handler parses `?filter=` (repeatable, OR within field, AND across fields; `type:<id>` only; 400 on malformed/unknown field/unknown value), `?sort=` (six-value enum, default `created_desc`; 400 on out-of-range), emits `X-Total-Count` always and `X-Total-Count-Unfiltered` only when a filter is active. Link `rel=next` inherits every inbound search param so filter + sort round-trip across cursor pagination automatically. Cursor-sort mismatch (400) NOT modelled in MSW (opaque-offset cursors); rfc-api enforces it for real, and `<DirectoryToolbar>` clears `?cursor=` on `?sort=` change so the mismatch never fires in practice. 10 new tests cover the contract surface.
+- [x] **Forward `filter` + `sort` URL params through the `_index` loader** (commit `bcff322`): loader reads `filter[]` + `sort` from `searchParams`, forwards to `listDocs`, captures `X-Total-Count-Unfiltered` alongside `X-Total-Count`. Invalid sort/filter propagate as 400 → route error boundary (no silent fallback that would desync the URL from the rendered set). 5 new tests cover param forwarding, count-header capture, absent-header fallback, and Link `rel=next` round-trip preserving filter + sort (validates the rfc-api `r.RequestURI` Link-header fix shipped in v0.3.0).
+- [x] **Add `src/components/portal/DirectoryToolbar/`** (commit `5ef4721`): portal composite mounted above `<DirectoryTable>` in `_index.tsx`.
+  - `DirectoryToolbar.tsx` — multi-select for `type:` filter (native `<details>`/`<summary>` per Resolved §7 — Popover primitive deferred); sort `<select>` with the six v0.3.0 values; writes to URL via `useSearchParams`. Uses `<Button>` + `<Badge variant="filter">` primitives from `@donaldgifford/design-system@0.4.0`.
+  - **Cursor-on-sort-change handling:** flipping sort mid-traversal invalidates the cursor (rfc-api returns 400 per DESIGN-0003 §Cursor encoding). Toolbar's `setSort` clears `cursor` from the URL atomically with the new `sort`. Filter changes also clear cursor — keyset cursors are scoped to a (filter, sort) pair so resetting to page 1 of the new view is the only coherent UX.
+  - **Default-sort omission:** selecting `created_desc` (the rfc-api default per DESIGN-0003 OQ3-b) removes `?sort=` from the URL entirely so the address bar stays clean.
+  - **Results count widget:** `(N of M shown)` derived from `X-Total-Count` (filtered, N) vs `X-Total-Count-Unfiltered` (only present when filter active, M). When unfiltered, renders `N documents` / `1 document` (singular-aware).
+  - 10 `DirectoryToolbar.test.tsx` cases — landmark + sort select + Type trigger rendering, single-toggle clears cursor, multi-select OR, All-pill clear, sort change clears cursor, default-sort URL cleanup, count widget branches, initial URL state hydration for both filter and sort.
+- [x] **Branch empty state on `X-Total-Count-Unfiltered`** (commit `5ef4721` + render test in `cd5c3fa`): `_index.tsx` renders "No documents match this filter. Clear filters to see all docs." when the header is present and the page is empty; falls back to the existing "No documents yet" surface when the header is absent. Render test in `tests/api/indexRouteRender.test.tsx` covers both branches.
 - [x] **Tests:**
   - `tests/api/indexRoute.test.ts` — loader unchanged; existing 3 tests stay green.
   - `tests/api/indexRouteRender.test.tsx` — full render through `createRoutesStub` exercises the new table end-to-end. The accessible-name link assertion (`screen.getByRole("link", { name: "Use PostgreSQL for primary storage" })`) and the Badge humanised-status assertions both survive the swap unchanged.
@@ -387,10 +388,11 @@ Replaces the current card grid in `_index.tsx` with the mockup's table shape: nu
 
 - `rfc-api`'s `listDocs` accepts `?filter=` / `?sort=` query params. ✅ ([rfc-api v0.3.0](https://github.com/donaldgifford/rfc-api/releases/tag/v0.3.0))
 - OpenAPI pin bumped to v0.3.0; `__generated__/` model has `ListDocsFilterParameter` + `ListDocsSortParameter` + `DocumentListFilterable`. ✅
-- Filter + sort affect the visible rows and persist via URL params.
-- `rel="next"` cursor preserves filter + sort across pages (Link round-trip test).
-- `_index` empty state branches between "no matches in filter" vs "no docs at all" via `X-Total-Count-Unfiltered`.
-- New toolbar component-level tests (filter toggle, sort change clears cursor, results-count branches).
+- Filter + sort affect the visible rows and persist via URL params. ✅
+- `rel="next"` cursor preserves filter + sort across pages (Link round-trip test). ✅
+- `_index` empty state branches between "no matches in filter" vs "no docs at all" via `X-Total-Count-Unfiltered`. ✅
+- 10 new toolbar component-level tests (filter toggle, multi-select OR, sort change clears cursor, default-sort URL cleanup, results-count branches, initial URL state hydration). ✅
+- Visual presentation matches the mockup at `design-system/rfc-portal-mockup_15.html:354-513`. ❌ Deferred — wiring shipped; visual rework tracked in a follow-up IMPL. Mockup specifies icon-only filter trigger + two-level cascading filter menu + segmented sort toggle + uppercase-mono RESULTS widget with tabular-num value; current build uses text Type button + flat pill panel + native `<select>` + bold-count widget. All-CSS-and-JSX swap against the same URL state machine + test contract.
 
 ---
 
