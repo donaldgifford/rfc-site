@@ -7,6 +7,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSanitize, { defaultSchema, type Options as SanitizeOptions } from "rehype-sanitize";
 
+import { remarkGithubAlerts } from "./plugins/github-alerts";
 import mermaidMarker from "./plugins/mermaid-marker";
 import normalizeHastProperties from "./plugins/normalize-hast-properties";
 import stripDoczBoilerplate from "./plugins/strip-docz-boilerplate";
@@ -55,6 +56,8 @@ export const sanitizeSchema: SanitizeOptions = {
     code: [...defaultCodeAttrs, "style", "dataLanguage", "tabIndex"],
     pre: ["className", "tabIndex", "style", "dataLanguage", "dataMermaidSource"],
     span: ["className", "style"],
+    // GFM alerts → admonition div (remark-github-alerts plugin).
+    div: ["className"],
   },
 };
 
@@ -74,7 +77,8 @@ function elementText(node: Element): string {
 // `remark-parse` / `remark-rehype` are owned by react-markdown itself.
 // `strip-docz-boilerplate` runs before `remark-rehype` (it operates on mdast)
 // to drop tooling artefacts (markdownlint comments + auto-TOC blocks).
-export const remarkPlugins: PluggableList = [remarkGfm, stripDoczBoilerplate];
+// `remark-github-alerts` runs after GFM so the blockquote tokens exist.
+export const remarkPlugins: PluggableList = [remarkGfm, stripDoczBoilerplate, remarkGithubAlerts];
 
 // Plugins consumed by `react-markdown`'s `rehypePlugins` prop.
 // Order is load-bearing:

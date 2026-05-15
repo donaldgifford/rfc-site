@@ -2,202 +2,436 @@
  * Prose styling for `<DocumentView>` (rendered Markdown body).
  * Tokens only — see CLAUDE.md §Hard rules.
  *
- * Scoped to `.markdown-body`. Phase 5 mounts this on the doc page; Phase 7
- * will mount a narrower variant on the search-result snippet.
+ * Scoped to `.markdown-body`. Mockup §744-1179 is the visual contract.
  */
 
 .markdown-body {
   font-family: var(--font-sans);
-  font-size: var(--font-size-15);
-  line-height: 1.65;
-  color: var(--color-fg-primary);
+  font-size: 15.5px;
+  line-height: 1.72;
+  color: var(--fg-primary);
 }
 
 .markdown-body > * + * {
-  margin-top: var(--space-4);
+  margin-top: 18px;
 }
 
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
+/* Headings */
+.markdown-body h2 {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin: 56px 0 18px 0;
+  color: var(--fg-primary);
+  padding-top: 8px;
+  scroll-margin-top: 80px;
+  position: relative;
+}
+
+.markdown-body h2:first-child {
+  margin-top: 0;
+}
+
+.markdown-body h3 {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 36px 0 12px 0;
+  color: var(--fg-primary);
+  scroll-margin-top: 80px;
+  position: relative;
+}
+
+.markdown-body h4 {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 28px 0 10px 0;
+  color: var(--fg-primary);
+}
+
 .markdown-body h5,
 .markdown-body h6 {
-  position: relative;
-  margin-top: var(--space-8);
-  margin-bottom: var(--space-3);
-  font-weight: var(--font-weight-600);
-  line-height: 1.25;
-  color: var(--color-fg-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 24px 0 8px 0;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.markdown-body h1 {
-  font-size: var(--font-size-32);
-}
-.markdown-body h2 {
-  font-size: var(--font-size-26);
-  border-bottom: 1px solid var(--color-border-hairline);
-  padding-bottom: var(--space-2);
-}
-.markdown-body h3 {
-  font-size: var(--font-size-22);
-}
-.markdown-body h4 {
-  font-size: var(--font-size-18);
-}
-.markdown-body h5 {
-  font-size: var(--font-size-16);
-}
-.markdown-body h6 {
-  font-size: var(--font-size-15);
-  color: var(--color-fg-secondary);
-}
-
+/* Heading anchor — mono `#` hash hover prefix, mockup §756-764 */
 .markdown-body a.heading-anchor {
   position: absolute;
-  left: calc(-1 * var(--space-5));
-  width: var(--space-5);
-  text-align: center;
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--fg-muted);
   text-decoration: none;
-  color: var(--color-fg-muted);
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity 160ms var(--ease);
+  line-height: 1;
 }
 
 .markdown-body a.heading-anchor::before {
   content: "#";
 }
 
-.markdown-body :is(h1, h2, h3, h4, h5, h6):hover a.heading-anchor,
+.markdown-body :is(h2, h3):hover a.heading-anchor,
 .markdown-body a.heading-anchor:focus {
   opacity: 1;
 }
 
+/* Paragraphs + lists, mockup §773-777 */
 .markdown-body p {
-  margin: 0;
+  margin: 0 0 18px 0;
+  color: var(--fg-secondary);
 }
 
-.markdown-body a {
-  color: var(--color-accent-default);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.markdown-body a:hover {
-  color: var(--color-accent-dim);
+.markdown-body p strong {
+  color: var(--fg-primary);
+  font-weight: 500;
 }
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: var(--space-6);
-  margin: 0;
+  padding-left: 24px;
+  margin: 0 0 20px 0;
 }
 
-.markdown-body li + li {
-  margin-top: var(--space-1);
+.markdown-body li {
+  margin-bottom: 6px;
+  color: var(--fg-secondary);
 }
 
-.markdown-body li > p {
-  margin-top: var(--space-2);
+.markdown-body li::marker {
+  color: var(--fg-muted);
 }
 
-.markdown-body blockquote {
-  margin: 0;
-  padding: var(--space-2) var(--space-4);
-  border-left: 3px solid var(--color-border-strong);
-  color: var(--color-fg-secondary);
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-sm);
+/* Links — accent + dotted underline on hover */
+.markdown-body a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dotted transparent;
+  transition: border-bottom-color 120ms var(--ease);
 }
 
+.markdown-body a:hover {
+  border-bottom-color: var(--accent-dim);
+}
+
+/* Inline code — subtle terminal chip, mockup §778-787 */
 .markdown-body :not(pre) > code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
-  padding: 2px var(--space-1);
-  background: var(--color-code-bg);
-  color: var(--color-code-fg);
-  border: 1px solid var(--color-code-border);
-  border-radius: var(--radius-xs);
+  font-size: 13px;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  color: var(--fg-primary);
 }
 
+/* Code blocks — Tokyo Night, mockup §789-823 */
 .markdown-body pre {
   font-family: var(--font-mono);
-  font-size: var(--font-size-13-5);
-  line-height: 1.55;
-  padding: var(--space-4);
-  background: var(--color-code-bg);
-  border: 1px solid var(--color-code-border);
-  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.65;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  padding: 18px 22px;
+  border-radius: var(--r-sm);
   overflow-x: auto;
-  /* Shiki sets inline `style="background-color:..."` from the theme — we
-     override with !important below so the design-system surface wins. */
-}
-
-.markdown-body pre,
-.markdown-body pre code {
-  background: var(--color-code-bg) !important;
+  margin: 24px 0;
+  color: var(--code-fg);
+  position: relative;
 }
 
 .markdown-body pre code {
+  background: none;
+  border: none;
   padding: 0;
-  border: 0;
-  font-size: inherit;
   color: inherit;
+  font-size: inherit;
+  font-family: inherit;
 }
 
-/* Shiki dual-theme: by default the inline `style="color:--shiki-light"` is
-   rendered (light theme). When `data-theme="dark"` is on the html element,
-   swap to the dark color via CSS variable resolution. */
+/* Shiki dual-theme — keep the dark theme colours under data-theme="dark" */
 [data-theme="dark"] .markdown-body .shiki,
 [data-theme="dark"] .markdown-body .shiki span {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
 }
 
+.markdown-body pre,
+.markdown-body pre code {
+  background: var(--code-bg) !important;
+}
+
+/* Blockquote — quiet, no left bar, raised bg + serif quote glyph, mockup §837-859 */
+.markdown-body blockquote {
+  margin: 24px 0;
+  padding: 16px 22px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-sm);
+  color: var(--fg-secondary);
+  font-style: italic;
+  position: relative;
+}
+
+.markdown-body blockquote::before {
+  content: "\201C";
+  position: absolute;
+  top: 2px;
+  left: 10px;
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--fg-muted);
+  opacity: 0.6;
+  font-style: normal;
+}
+
+.markdown-body blockquote p {
+  margin: 0;
+  padding-left: 18px;
+  color: inherit;
+}
+
+/* Tables — mockup §1019-1049 */
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-14);
+  margin: 0 0 24px 0;
+  font-size: 13.5px;
+  color: var(--fg-secondary);
 }
 
-.markdown-body th,
-.markdown-body td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border-hairline);
+.markdown-body table th,
+.markdown-body table td {
+  padding: 10px 14px;
   text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-hairline);
 }
 
-.markdown-body th {
-  font-weight: var(--font-weight-600);
-  background: var(--color-bg-elevated);
-  color: var(--color-fg-secondary);
+.markdown-body table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 12px 14px 10px 14px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-raised);
 }
 
+.markdown-body table tr:last-child td {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.markdown-body table td code {
+  font-size: 12px;
+  padding: 1px 5px;
+}
+
+/* Admonitions — Oxide-style saturated tint, sharp corners, mockup §1051-1154 */
+.markdown-body .admonition {
+  margin: 24px 0;
+  padding: 16px 20px 16px 56px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  position: relative;
+}
+
+.markdown-body .admonition .adm-label {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+/* Circular icon chip floated absolutely on the left */
+.markdown-body .admonition::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 17px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.markdown-body .admonition p {
+  margin: 0;
+  display: inline;
+  color: inherit;
+}
+
+.markdown-body .admonition p + p {
+  display: block;
+  margin-top: 10px;
+}
+
+.markdown-body .admonition.note {
+  background: color-mix(in srgb, var(--status-proposed) 16%, var(--bg-base));
+  color: color-mix(in srgb, var(--status-proposed) 70%, var(--fg-primary));
+}
+.markdown-body .admonition.note .adm-label {
+  color: var(--status-proposed);
+}
+.markdown-body .admonition.note p {
+  color: color-mix(in srgb, var(--status-proposed) 50%, var(--fg-primary));
+}
+.markdown-body .admonition.note::before {
+  content: "i";
+  background: var(--status-proposed);
+  color: var(--bg-base);
+  font-style: italic;
+  font-family: var(--font-serif);
+  font-size: 14px;
+}
+
+.markdown-body .admonition.warning {
+  background: color-mix(in srgb, var(--status-draft) 16%, var(--bg-base));
+  color: color-mix(in srgb, var(--status-draft) 70%, var(--fg-primary));
+}
+.markdown-body .admonition.warning .adm-label {
+  color: var(--status-draft);
+}
+.markdown-body .admonition.warning p {
+  color: color-mix(in srgb, var(--status-draft) 50%, var(--fg-primary));
+}
+.markdown-body .admonition.warning::before {
+  content: "!";
+  background: var(--status-draft);
+  color: var(--bg-base);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.markdown-body .admonition.tip {
+  background: color-mix(in srgb, var(--status-accepted) 16%, var(--bg-base));
+  color: color-mix(in srgb, var(--status-accepted) 70%, var(--fg-primary));
+}
+.markdown-body .admonition.tip .adm-label {
+  color: var(--status-accepted);
+}
+.markdown-body .admonition.tip p {
+  color: color-mix(in srgb, var(--status-accepted) 50%, var(--fg-primary));
+}
+.markdown-body .admonition.tip::before {
+  content: "\2713";
+  background: var(--status-accepted);
+  color: var(--bg-base);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.markdown-body .admonition.caution {
+  background: color-mix(in srgb, var(--status-rejected) 16%, var(--bg-base));
+  color: color-mix(in srgb, var(--status-rejected) 70%, var(--fg-primary));
+}
+.markdown-body .admonition.caution .adm-label {
+  color: var(--status-rejected);
+}
+.markdown-body .admonition.caution p {
+  color: color-mix(in srgb, var(--status-rejected) 50%, var(--fg-primary));
+}
+.markdown-body .admonition.caution::before {
+  content: "\2715";
+  background: var(--status-rejected);
+  color: var(--bg-base);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.markdown-body .admonition a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  border-bottom: none;
+}
+.markdown-body .admonition code {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+  color: currentColor;
+}
+
+/* Mermaid diagram container, mockup §1156-1178 */
+.markdown-body .mermaid-block {
+  margin: 24px 0;
+  padding: 32px 24px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+}
+
+.markdown-body .mermaid-block__diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.markdown-body .mermaid-block__source {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  white-space: pre;
+  color: var(--code-fg);
+}
+
+.markdown-body .mermaid-block__error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--status-rejected);
+}
+
+/* HR */
 .markdown-body hr {
   border: 0;
-  border-top: 1px solid var(--color-border-hairline);
-  margin: var(--space-8) 0;
+  border-top: 1px solid var(--border-hairline);
+  margin: 48px 0;
 }
 
+/* Images */
 .markdown-body img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-md);
+  border-radius: var(--r-sm);
 }
 
-.markdown-body input[type="checkbox"] {
-  margin-right: var(--space-2);
-}
-
+/* Search-snippet `<mark>` */
 .markdown-body mark {
-  background: var(--color-accent-bg);
-  color: inherit;
+  background: var(--accent-bg);
+  color: var(--accent);
   padding: 0 2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--r-xs);
+  font-weight: 500;
 }
 
+/* Broken-link sentinel from <Anchor> */
 .markdown-body [data-broken-link] {
-  color: var(--color-fg-muted);
+  color: var(--fg-muted);
   text-decoration: line-through wavy;
   cursor: not-allowed;
 }

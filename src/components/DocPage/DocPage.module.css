@@ -1,0 +1,48 @@
+/* Mockup §640-650 + §1521-1532 — `.rfc-view` + responsive */
+.view {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 240px;
+  gap: 56px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 40px 96px 40px;
+}
+
+.sidebarLeft {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.content {
+  min-width: 0;
+}
+
+.sidebarRight {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+@media (max-width: 1100px) {
+  .view {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 40px;
+  }
+  .sidebarRight {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .view {
+    grid-template-columns: 1fr;
+  }
+  .sidebarLeft {
+    display: none;
+  }
+}

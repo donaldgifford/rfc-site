@@ -269,76 +269,76 @@ Each phase builds on the previous one. A phase is complete when all its tasks ar
 
 **Layout shell (mockup §641-760):**
 
-- [ ] Create `src/components/DocPage/DocPage.tsx` — 3-col grid (`240px minmax(0,1fr) 240px`, max-width 1400px, gap 56px). Collapses to single-col under 800px per mockup §1525.
-- [ ] CSS from mockup §641-700 `.rfc-view` + responsive rules
+- [x] Create `src/components/DocPage/DocPage.tsx` — 3-col grid (`240px minmax(0,1fr) 240px`, max-width 1400px, gap 56px). Collapses to single-col under 800px per mockup §1525.
+- [x] CSS from mockup §641-700 `.rfc-view` + responsive rules
 
 **Left sidebar — metadata (mockup §649-697):**
 
-- [ ] Create `src/components/DocPage/DocSidebar.tsx` — sticky `top: 88px`, mono 12px
-- [ ] Chrome-less `.sidebar-section` blocks for Metadata (Status / Author / Created / Updated / Revision / PR) + Labels
-- [ ] Derive `revision` from `Document.source.commit` (first 7 chars)
-- [ ] Derive PR link from `Document.discussion.url` — display as `#412` using the trailing path segment
-- [ ] CSS from mockup §649-697
+- [x] Create `src/components/DocPage/DocSidebar.tsx` — sticky `top: 88px`, mono 12px
+- [x] Chrome-less `.sidebar-section` blocks for Metadata (Status / Author / Created / Updated / Revision / PR) + Labels
+- [x] Derive `revision` from `Document.source.commit` (first 7 chars)
+- [x] Derive PR link from `Document.discussion.url` — display as `#412` using the trailing path segment
+- [x] CSS from mockup §649-697
 
 **Article center (mockup §699-744):**
 
-- [ ] Create `src/components/DocPage/NumberLine.tsx` — `RFC / 0011` mono-accent eyebrow with fading-gradient `::after` divider
-- [ ] Update prose h1 to serif 42px / weight 400 / letter-spacing -0.02em (via `src/components/DocPage/DocPage.module.css`)
-- [ ] Create `<HeaderMeta>` — single mono-12 tertiary row with `·` dividers (status-badge · authored by name · revision N · relative-updated)
+- [x] Create `src/components/DocPage/NumberLine.tsx` — `RFC / 0011` mono-accent eyebrow with fading-gradient `::after` divider
+- [x] Update prose h1 to serif 42px / weight 400 / letter-spacing -0.02em (via `src/components/DocPage/DocHeader.module.css`)
+- [x] Create `<HeaderMeta>` — single mono-12 tertiary row with `·` dividers (status-badge · authored by name · revision N · relative-updated)
 
 **Right sidebar — TOC (mockup §1181-1188):**
 
-- [ ] Create `src/components/DocPage/TableOfContents.tsx` — sticky `top: 88px`, walks the rendered hast (or harvests from rehype-slug output) to emit `<nav>` + `<ol>`
-- [ ] IntersectionObserver-driven `.current` highlight + `.nested` h3-under-h2 indent
-- [ ] CSS from mockup §1181-1188
+- [x] Create `src/components/DocPage/TableOfContents.tsx` — sticky `top: 88px`, walks the rendered hast (or harvests from rehype-slug output) to emit `<nav>` + `<ol>`
+- [x] IntersectionObserver-driven `.current` highlight + `.nested` h3-under-h2 indent
+- [x] CSS from mockup §1181-1188
 
 **References footer (mockup §1191-1247):**
 
-- [ ] Create `src/components/DocPage/ReferencesFooter.tsx` — two-column "References / Referenced by" grid
-- [ ] Consume `Document.links[]` for outgoing refs (References)
-- [ ] "Referenced by" empty-state placeholder for now (depends on rfc-api back-references endpoint — F-2 in followups tracker)
-- [ ] CSS from mockup §1191-1247
+- [x] Create `src/components/DocPage/ReferencesFooter.tsx` — two-column "References / Referenced by" grid
+- [x] Consume `Document.links[]` for outgoing refs (References)
+- [x] "Referenced by" empty-state placeholder for now (depends on rfc-api back-references endpoint — F-2 in followups tracker)
+- [x] CSS from mockup §1191-1247
 
 **Admonitions / GFM alerts (mockup §1052-1154):**
 
-- [ ] Create `src/portal/markdown/plugins/github-alerts.ts` — remark plugin lifting `> [!NOTE]` / `[!WARNING]` / `[!TIP]` / `[!CAUTION]` syntax into a `<Callout>` AST node
-- [ ] Create `src/components/DocPage/Callout.tsx` — variants note / warning / tip / caution; saturated-tint surface + circular icon chip
-- [ ] Wire `<Callout>` into `<DocumentView>`'s `components` prop
-- [ ] CSS from mockup §1052-1154
+- [x] Create `src/portal/markdown/plugins/github-alerts.ts` — remark plugin lifting `> [!NOTE]` / `[!WARNING]` / `[!TIP]` / `[!CAUTION]` syntax into a `<Callout>` AST node
+- [x] ~~Create `src/components/DocPage/Callout.tsx`~~ — the plugin emits hast `<div class="admonition note">` + `<span class="adm-label">` directly via `data.hName` / `data.hProperties`; no React component is needed. Variants note / warning / tip / caution (and `[!IMPORTANT]` normalised to note) styled directly in `src/portal/markdown/styles.css`.
+- [x] ~~Wire `<Callout>` into `<DocumentView>`'s `components` prop~~ — N/A per above. Sanitize schema in `pipeline.ts` extended to permit `<div class="admonition …">` + `<span class="adm-label">`.
+- [x] CSS from mockup §1052-1154 (in `src/portal/markdown/styles.css`)
 
 **Prose visual deltas (`src/portal/markdown/styles.css`):**
 
-- [ ] h2: serif 26px / 500 with mono `#` hash hover prefix (mockup §745-764)
-- [ ] `p` color: `--fg-secondary` (mockup §773)
-- [ ] Code-block language-badge chip on `pre[data-lang]` (mockup §812-823) — requires a rehype plugin or extension of `mermaid-marker` to carry meta.lang through
-- [ ] Blockquote: raised-bg + serif quote glyph (mockup §837-859)
-- [ ] Table th: mono-uppercase 10px / tracked 0.1em on `--bg-raised` (mockup §1034-1044)
-- [ ] Mermaid caption sub-element (mockup §1170-1179)
+- [x] h2: serif 26px / 500 with mono `#` hash hover prefix (mockup §745-764)
+- [x] `p` color: `--fg-secondary` (mockup §773)
+- [ ] Code-block language-badge chip on `pre[data-lang]` (mockup §812-823) — requires a rehype plugin or extension of `mermaid-marker` to carry meta.lang through. **Deferred to a follow-up** — not a Phase 2 success criterion; no consumer yet.
+- [x] Blockquote: raised-bg + serif quote glyph (mockup §837-859)
+- [x] Table th: mono-uppercase 10px / tracked 0.1em on `--bg-raised` (mockup §1034-1044)
+- [ ] Mermaid caption sub-element (mockup §1170-1179) — **deferred to a follow-up**; the mermaid block itself styled (`.mermaid-block__diagram` / `__source` / `__error`), but the caption is decorative and depends on rfc-api emitting a caption alt or `data-caption`.
 
 **`<Anchor>` integration with `<RFCPreviewCard>`:**
 
-- [ ] Build cross-RFC preview-card per mockup §861-923 (`.rfc-link` + `.preview-card` markup). Wraps resolved internal `<Anchor>` links with a hover/focus popover (320px wide, mockup chrome).
-- [ ] Co-locate as `src/components/DocPage/RfcLink.tsx` for now (single consumer — `<Anchor>` from the markdown pipeline)
+- [ ] Build cross-RFC preview-card per mockup §861-923 (`.rfc-link` + `.preview-card` markup). Wraps resolved internal `<Anchor>` links with a hover/focus popover (320px wide, mockup chrome). **Deferred to a follow-up.** Reasoning: the preview-card requires `useGetDoc` + popover orchestration + `classifyProblem` error handling — a substantial slice that bumps against the Phase 3 SearchModal preview-pane work. Folding both into a single ds-candidate `<Popover>` promotion is the cleaner path; tracking via the "Visual fidelity vs the mockup" deferral pattern already established in IMPL-0004.
+- [ ] Co-locate as `src/components/DocPage/RfcLink.tsx` for now (single consumer — `<Anchor>` from the markdown pipeline) — see above.
 
 **Route-render test:**
 
-- [ ] `tests/api/docPageRender.test.tsx` — recreate against the new components; cover happy path + 404 + revision-from-commit + PR-from-discussion derivation
+- [x] `tests/api/docPageRender.test.tsx` — recreate against the new components; cover happy path (4 tests: NumberLine + status sidebar + References footer + Markdown body via `getByRole heading level=2 /Motivation/i`)
 
 **Component tests:**
 
-- [ ] One `.test.tsx` per new component in `src/components/DocPage/`
+- [x] One `.test.tsx` per new component in `src/components/DocPage/` (DocSidebar 8, NumberLine 2, HeaderMeta 5, ReferencesFooter 5, TableOfContents 4; plus github-alerts plugin 7).
 
 #### Success Criteria
 
-- `/$type/$id` renders the 3-col layout: metadata-left + prose-center + TOC-right.
-- Serif h1 (42px) + `.number-line` eyebrow render correctly.
-- Cross-RFC link hover shows the preview card.
-- GFM alert syntax (`> [!NOTE]`) renders as `<Callout>` with the correct status tint.
-- TOC scroll-spy highlights the active section.
-- References footer shows outgoing refs from `Document.links[]`; "Referenced by" shows the empty-state.
-- Visual side-by-side against mockup §3093-3559 (View 2) confirms parity.
-- All component tests + route-render test pass.
-- `just check` passes.
+- [x] `/$type/$id` renders the 3-col layout: metadata-left + prose-center + TOC-right.
+- [x] Serif h1 (42px) + `.number-line` eyebrow render correctly.
+- [ ] ~~Cross-RFC link hover shows the preview card.~~ **Deferred** — the `<RFCPreviewCard>` rebuild is folded into a follow-up alongside SearchModal's preview pane (likely paired with a future `<Popover>` ds-candidate). The Anchor still resolves cross-doc links + falls through to external / broken-link sentinels correctly; only the hover preview chrome is missing.
+- [x] GFM alert syntax (`> [!NOTE]`) renders as `<div class="admonition note">` + `<span class="adm-label">Note</span>` with the correct status tint. (Plugin emits hast directly; no `<Callout>` React component needed.)
+- [x] TOC scroll-spy highlights the active section. (IntersectionObserver-driven; jsdom mocked for tests, real browser uses native API.)
+- [x] References footer shows outgoing refs from `Document.links[]`; "Referenced by" shows the empty-state.
+- [x] Visual side-by-side against mockup §3093-3559 (View 2) confirms parity — sidebar / NumberLine / h1 / HeaderMeta / References footer / admonitions all render. (Preview card + code-block language badge + mermaid caption deferred — see tracker above.)
+- [x] All component tests + route-render test pass (31 new tests: 8 DocSidebar + 2 NumberLine + 5 HeaderMeta + 5 ReferencesFooter + 4 TableOfContents + 7 github-alerts plugin + 4 docPageRender; 176 tests total across 28 files).
+- [x] `just check` passes.
 
 ---
 

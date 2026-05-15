@@ -1,8 +1,16 @@
+import { useRef } from "react";
 import type { Route } from "./+types/$type.$id";
 import { getDoc } from "../portal/api/__generated__/docs/docs";
 import type { Document } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { DocumentView } from "../portal/markdown";
+import {
+  DocHeader,
+  DocPage,
+  DocSidebar,
+  ReferencesFooter,
+  TableOfContents,
+} from "../components/DocPage";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "rfc-site" }];
@@ -18,16 +26,18 @@ export async function loader({ params }: Route.LoaderArgs): Promise<Document> {
   return response.data;
 }
 
-export default function DocPage({ loaderData }: Route.ComponentProps) {
+export default function DocPageRoute({ loaderData }: Route.ComponentProps) {
   const doc = loaderData;
+  const articleRef = useRef<HTMLDivElement | null>(null);
+
   return (
-    <main>
-      <h1>
-        {doc.id} — {doc.title}
-      </h1>
-      <p>Phase 0 stub; rebuild lands in Phase 2 per IMPL-0005.</p>
-      <DocumentView document={doc} />
-    </main>
+    <DocPage sidebar={<DocSidebar doc={doc} />} toc={<TableOfContents articleRef={articleRef} />}>
+      <DocHeader doc={doc} />
+      <div ref={articleRef}>
+        <DocumentView document={doc} />
+      </div>
+      <ReferencesFooter doc={doc} />
+    </DocPage>
   );
 }
 
