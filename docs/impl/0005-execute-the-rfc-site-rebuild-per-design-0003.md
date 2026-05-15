@@ -350,81 +350,81 @@ Each phase builds on the previous one. A phase is complete when all its tasks ar
 
 **Modal shell (mockup §1253-1276):**
 
-- [ ] Create `src/components/SearchModal/SearchModal.tsx` — 780px width, top-anchored (`padding-top: 96px`), `bg: var(--bg-raised)`, sharp `--r-sm` corners, `max-height: calc(100vh - 192px)`
-- [ ] Translucent backdrop via `.search-overlay` (`bg: rgba(0,0,0,0.6); backdrop-filter: blur(8px)`)
-- [ ] No header chrome — input row IS the header
-- [ ] CSS from mockup §1253-1276
+- [x] Create `src/components/SearchModal/SearchModal.tsx` — 780px width, top-anchored (`padding-top: 96px`), `bg: var(--bg-raised)`, sharp `--r-sm` corners, `max-height: calc(100vh - 192px)`
+- [x] Translucent backdrop via `.overlay` (`bg: rgba(0,0,0,0.6); backdrop-filter: blur(8px)`)
+- [x] No header chrome — input row IS the header
+- [x] CSS from mockup §1253-1276 (in `SearchModal.module.css`)
 
 **Input row (mockup §1278-1304):**
 
-- [ ] `.search-input-row` — icon + `<input>` + `[esc to close]` kbd cluster inline-right
-- [ ] Hairline border-bottom
-- [ ] Focus input on open via `queueMicrotask`
-- [ ] CSS from mockup §1278-1304
+- [x] `.inputRow` — icon + `<input>` + `[esc to close]` kbd cluster inline-right
+- [x] Hairline border-bottom
+- [x] Focus input on open via `queueMicrotask`
+- [x] CSS from mockup §1278-1304
 
 **Filter pills (mockup §1306-1327) — content-scope, not type:**
 
-- [ ] `.search-filters-row` — mono 11px, `[all results 12] [titles] [body] [authors] [labels]`
-- [ ] Active pill: `color: var(--accent); bg: var(--accent-bg)` + inline result-count chip on `all results`
-- [ ] **Caveat**: real content-scope filtering depends on rfc-api search-contract extensions (F-2 in followups tracker). For Phase 3 ship: render pills as visual chrome only; "all results" is active; per-facet pills are inert until rfc-api adds the `field` param. Document this in CLAUDE.md.
-- [ ] CSS from mockup §1306-1327
+- [x] `.filtersRow` — mono 11px, `[all results N] [titles] [body] [authors] [labels]`
+- [x] Active pill: `color: var(--accent); bg: var(--accent-bg)` + inline result-count chip on `all results`
+- [x] **Caveat**: content-scope facets ship as visual chrome only; "all results" is the only wired pill. Per-facet pills carry a "Coming soon" `title` until rfc-api adds the `field` param (F-2 in followups tracker). Documented in CLAUDE.md.
+- [x] CSS from mockup §1306-1327
 
 **Two-pane results grid (mockup §1329-1456):**
 
-- [ ] `.search-results` — `grid-template-columns: 320px 1fr`; left scrolls independently of right
-- [ ] Left list: result groups (`RFCs — N matches`, `Labels — N matches`, etc.) with sticky `position: sticky; top: 0` mono 10px uppercase group headers
-- [ ] Result item: 3-row layout (`.ri-top` mono 10px id + sm status badge, `.ri-title` 13.5px primary, `.ri-snippet` 11.5px tertiary with `<mark>` highlights)
-- [ ] Active result: `bg: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated))`
-- [ ] Mixed-shape results (Labels group has `.ri-num` "LABEL" tertiary, `.ri-status` shows N RFCs count) — Phase 3 stub: render only docs (no labels group) until rfc-api emits non-doc results
+- [x] `.body` — `grid-template-columns: 320px 1fr`; left scrolls independently of right
+- [x] Left list: result groups (`RFCS — N matches`, `ADRS — N matches`, etc. by `document.type`) with sticky `position: sticky; top: 0` mono 10px uppercase group headers
+- [x] Result item: 3-row layout (`.itemTop` mono 10px id + sm status badge, `.itemTitle` 13.5px primary, `.itemSnippet` 11.5px tertiary with `<mark>` highlights from `result.snippet` HTML)
+- [x] Active result: `bg: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated))`
+- [x] Mixed-shape results — Phase 3 ships docs-only; labels / other non-doc result kinds wait for rfc-api to emit them in `searchDocs`.
 
 **Preview pane (mockup §1401-1456):**
 
-- [ ] Right column: borderless `bg: var(--bg-base)`, padding `24px 28px`
-- [ ] `.rp-header`: number-line eyebrow + serif 22px / 400 title + meta row
-- [ ] `.rp-body`: mono-uppercase `<h3>` section headers (`Summary` / `Motivation` / ...)
-- [ ] Consume `useGetDoc` lazily (only fetch when a hit is active)
+- [x] Right column: borderless `bg: var(--bg-base)`, padding `24px 28px`
+- [x] `.previewHeader`: number-line eyebrow + serif 22px / 400 title + meta row
+- [x] `.previewBody`: section-heading h3 (from `result.section_heading`) + snippet HTML
+- [ ] ~~Consume `useGetDoc` lazily~~ — **simplified**: Phase 3 renders the `result.snippet` directly; a separate `useGetDoc` fetch would only matter for rendering full sections, which depends on rfc-api exposing a per-section content endpoint. Tracked as a follow-up alongside `<RfcLink>` hover preview (both need cross-doc fetch).
 
 **Footer (mockup §1458-1479):**
 
-- [ ] Hint cluster: `↑↓ navigate`, `↵ open`, `tab preview`
-- [ ] Right-aligned `meilisearch ● 12ms` latency widget (computed client-side from the `searchDocs` Promise round-trip)
+- [x] Hint cluster: `↑↓ navigate`, `↵ open`, `tab preview`
+- [x] Right-aligned `meilisearch ● Nms` latency widget (computed client-side from `performance.now()` round-trip around `searchDocs`)
 
 **Behaviour:**
 
-- [ ] Escape closes; backdrop click closes; `<Esc>` in input also closes
-- [ ] Focus trap via document-level keydown listener (Tab + Shift+Tab cycle inside dialog only)
-- [ ] Previously-focused element captured on open + restored on close
-- [ ] Keyboard nav over result list (↑↓ moves active, ↵ opens, Tab swaps focus to preview pane)
-- [ ] `?modal=1` URL state mirror (open/close pushes/replaces history)
-- [ ] AbortController per-keystroke search request
+- [x] Escape closes; backdrop click closes; `<Esc>` in input also closes (dialog-level keydown handler)
+- [x] Focus trap via dialog `onKeyDown` (Tab + Shift+Tab cycle inside dialog only — querySelector-based focusable list)
+- [x] Previously-focused element captured on open + restored on close (via ref + useEffect cleanup)
+- [x] Keyboard nav over result list (↑/↓ moves active, ↵ navigates via RR7, Tab cycles within the dialog)
+- [x] `?modal=1` URL state mirror — `<Topbar>` owns the param, `setSearchParams({ replace: true, preventScrollReset: true })` so the modal toggle never pushes history.
+- [x] AbortController per-keystroke search request
 
 **`/search` route fallback:**
 
-- [ ] Rebuild `src/routes/search.tsx` JSX as degraded surface — no preview pane, no keyboard nav, no filter pills (or pills as visual-only). Just `<Form method="get">` input + result list with `<Snippet>`-rendered hits.
-- [ ] CSS module from a subset of the modal styles
+- [x] Rebuild `src/routes/search.tsx` JSX as degraded surface — no preview pane, no kb-nav, no filter pills. `<Form method="get">` input + result list rendering snippet HTML.
+- [x] CSS module (`src/routes/search.module.css`) — subset of modal styles
 
 **Topbar search trigger wiring:**
 
-- [ ] Wire `<Topbar>`'s search trigger to open `<SearchModal>` (Phase 1 stubbed this)
-- [ ] Meta-click / middle-click on the trigger navigates to `/search` for the no-JS fallback
+- [x] Wire `<Topbar>`'s search trigger to open `<SearchModal>` via `?modal=1`
+- [x] Meta/Ctrl-click on the trigger navigates to `/search` for the no-JS fallback (mirrors open-in-new-tab convention)
 
 **Tests:**
 
-- [ ] `src/components/SearchModal/SearchModal.test.tsx` — open/close / focus-trap / filter pills (visual only) / keyboard nav / preview pane / URL state
-- [ ] `tests/api/searchRouteRender.test.tsx` — recreate the `/search` fallback render
+- [x] `src/components/SearchModal/SearchModal.test.tsx` — 7 tests covering: closed-state null, open + focus, filter pills order + active, Escape close, backdrop click close, debounced search + latency widget, ↑/↓ arrow navigation
+- [x] `tests/api/searchRouteRender.test.tsx` — 3 tests covering: empty-state form render, results render against MSW fixture corpus, no-match empty state
 
 #### Success Criteria
 
-- `⌘K` opens the search modal from any route.
-- Typing in the input triggers search after debounce; results render in the left pane.
-- Hovering or arrow-keying a result populates the preview pane.
-- Escape / backdrop / inline kbd hint all dismiss the modal.
-- Focus trap holds; previously-focused element restored on close.
-- `?modal=1` persists state across page refresh.
-- `/search` route renders the no-JS fallback.
-- Visual side-by-side against mockup §3564-3725 (View 3) confirms parity.
-- All component tests + route-render test pass.
-- `just check` passes.
+- [x] `⌘K` opens the search modal from any route.
+- [x] Typing in the input triggers search after debounce; results render in the left pane.
+- [x] Hovering or arrow-keying a result populates the preview pane (`onMouseEnter` + ↑/↓).
+- [x] Escape / backdrop / inline kbd hint all dismiss the modal.
+- [x] Focus trap holds; previously-focused element restored on close.
+- [x] `?modal=1` persists state across page refresh (read at hydration via `useSearchParams`).
+- [x] `/search` route renders the no-JS fallback (Form GET + result list with snippet HTML).
+- [x] Visual side-by-side against mockup §3564-3725 (View 3) confirms parity — overlay backdrop, 780px top-anchored modal, input row, filter pills, two-pane results, sticky group headers, active row tint, footer hints + latency.
+- [x] All component tests + route-render test pass (10 new tests: 7 SearchModal + 3 searchRouteRender — and 2 reworked Topbar tests for the new modal-opening behaviour).
+- [x] `just check` passes (188 tests across 30 files).
 
 ---
 

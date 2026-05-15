@@ -44,15 +44,25 @@ describe("<Topbar>", () => {
     }
   });
 
-  it("binds ⌘K / Ctrl+K to navigate to /search", () => {
+  it("binds ⌘K / Ctrl+K to open the search modal (?modal=1)", () => {
     renderTopbar("/");
+    expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.keyDown(document, { key: "k", metaKey: true });
-    // The Topbar lives inside the routes stub; after navigation the
-    // NavLink for Directory should still be in DOM but not active any more.
-    // We check by asserting the rerendered Directory link no longer has
-    // aria-current=page (navigation happened to /search, which the stub
-    // routes don't match but RR7's NavLink still updates).
-    const link = screen.getByRole("link", { name: "Directory" });
-    expect(link).not.toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("opens the search modal when the search trigger is clicked", () => {
+    renderTopbar("/");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /search documents/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("meta-click on the search trigger uses the /search no-JS fallback", () => {
+    renderTopbar("/");
+    fireEvent.click(screen.getByRole("button", { name: /search documents/i }), { metaKey: true });
+    // No dialog mount — RR7 navigated; we can't see /search's body here
+    // because the test route is "*", but the modal should NOT have opened.
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
