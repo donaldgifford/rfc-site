@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useTheme } from "@donaldgifford/design-system/theme";
 
 interface MermaidBlockProps {
   source: string;
@@ -15,12 +14,11 @@ interface MermaidBlockProps {
  *
  * On client mount: dynamically `await import("mermaid")` (Resolved §7 —
  * keeps the ~700 KB library out of the main bundle for non-mermaid pages),
- * initialises with the active theme, and replaces the placeholder with the
- * rendered SVG. Re-renders when the theme flips.
+ * initialises with the dark theme (the portal is dark-only per RFC-0001),
+ * and replaces the placeholder with the rendered SVG.
  */
 export function MermaidBlock({ source, children }: MermaidBlockProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +35,7 @@ export function MermaidBlock({ source, children }: MermaidBlockProps) {
         const { default: mermaid } = await import("mermaid");
         mermaid.initialize({
           startOnLoad: false,
-          theme: theme === "dark" ? "dark" : "default",
+          theme: "dark",
           securityLevel: "strict",
         });
         const id = `mermaid-${Math.random().toString(36).slice(2)}`;
@@ -55,7 +53,7 @@ export function MermaidBlock({ source, children }: MermaidBlockProps) {
     return () => {
       state.cancelled = true;
     };
-  }, [source, theme]);
+  }, [source]);
 
   return (
     <div className="mermaid-block" data-mermaid-block="">

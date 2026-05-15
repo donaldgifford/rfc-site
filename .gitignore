@@ -2,7 +2,6 @@ node_modules
 dist
 build
 .react-router
-tokens.css
 coverage
 
 # Build / tool caches
@@ -30,6 +29,11 @@ Thumbs.db
 # .env.*.local convention. Use *.local.md at the repo root for sticky
 # notes that should not leave the working copy.
 *.local.md
+
+# Historical CLAUDE.md backed up before the RFC-0001 / IMPL-0005 rewrite.
+# Git history has it too (last live revision: 4c6bc9b); the .bak is for
+# offline reference while the rebuild is in progress.
+CLAUDE.md.*.bak
 
 # mise per-user overrides (mise.toml is committed; mise.local.toml is not)
 mise.local.toml

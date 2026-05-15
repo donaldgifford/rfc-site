@@ -1,0 +1,9 @@
+/*
+ * Design tokens — populated in IMPL-0005 Phase 1 from the mockup's :root block
+ * at design-system/rfc-portal-mockup_15.html.
+ *
+ * Phase 0 ships this file empty so src/root.tsx's `import "./styles/tokens.css"`
+ * resolves and the build keeps passing during the wipe. Adding tokens here
+ * without Phase 1's full extraction would skew the visual rebuild — leave empty
+ * until the mockup is the source of truth.
+ */

@@ -1,7 +1,7 @@
 {
   "name": "rfc-site",
   "version": "0.0.0",
-  "description": "SSR web frontend for the rfc-api Markdown portal. See docs/design/0001-portal-architecture-and-ds-candidates-promotion-model.md.",
+  "description": "SSR web frontend for the rfc-api Markdown portal. See docs/rfc/0001 + docs/design/0003 + docs/impl/0005.",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -57,8 +57,6 @@
     "vitest": "^2.1.8"
   },
   "dependencies": {
-    "@donaldgifford/design-system": "^0.4.0",
-    "@radix-ui/react-slot": "^1.2.4",
     "@react-router/fs-routes": "^7.14.2",
     "@react-router/node": "^7.14.2",
     "@react-router/serve": "^7.14.2",
