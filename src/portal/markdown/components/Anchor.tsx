@@ -4,19 +4,10 @@ import { Link } from "react-router";
 import { apiHrefToPortalRoute } from "../../api/docId";
 import type { Link as DocLink } from "../../api/__generated__/model";
 import { useDocumentLinks } from "../DocumentView";
-import { RFCPreviewCard } from "../../../components/portal/RFCPreviewCard";
 
 interface AnchorProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href?: string | undefined;
   children?: ReactNode;
-  /**
-   * Whether to wrap resolved internal links in `<RFCPreviewCard>` so a
-   * hover / focus popover previews the target's metadata (IMPL-0004
-   * Phase 8b, Resolved §9). Defaults to `true`; pass `false` to opt out
-   * for inline body links inside the preview popover itself (avoids
-   * recursive hover state).
-   */
-  previewable?: boolean;
 }
 
 const EXTERNAL_PROTOCOL = /^https?:\/\//i;
@@ -49,8 +40,11 @@ function findLink(links: readonly DocLink[], href: string): DocLink | undefined 
  *      rel="noopener noreferrer">`.
  *   4. Anything else (unmatched internal-looking href) → `<span data-broken-link>`
  *      so it renders inertly + carries a hook for styling.
+ *
+ * Hover-preview chrome (previously RFCPreviewCard) was deleted in IMPL-0005
+ * Phase 0; it returns in a later phase if the visual rebuild needs it.
  */
-export function Anchor({ href, children, previewable = true, ...rest }: AnchorProps) {
+export function Anchor({ href, children, ...rest }: AnchorProps) {
   const links = useDocumentLinks();
 
   if (!href) {
@@ -69,23 +63,11 @@ export function Anchor({ href, children, previewable = true, ...rest }: AnchorPr
   if (resolved) {
     const portalRoute = apiHrefToPortalRoute(resolved.href);
     if (portalRoute) {
-      const link = (
+      return (
         <Link to={portalRoute} {...rest}>
           {children}
         </Link>
       );
-      // portalRoute is `/<type>/<urlId>`; split safely. If the shape is
-      // unexpected, fall back to the bare link without a preview.
-      const segments = portalRoute.split("/").filter(Boolean);
-      if (previewable && segments.length === 2) {
-        const [type, id] = segments as [string, string];
-        return (
-          <RFCPreviewCard type={type} id={id}>
-            {link}
-          </RFCPreviewCard>
-        );
-      }
-      return link;
     }
   }
 

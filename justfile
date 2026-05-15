@@ -72,18 +72,3 @@ gen-api:
 # CI drift check: regenerate the client twice and fail if outputs diverge
 gen-api-check:
     ./scripts/gen-api-check.sh
-
-# Local design-system workflow (CLAUDE.md §When iterating in parallel)
-ds-build:
-    cd ../design-system && mise exec -- pnpm build
-
-ds-link:
-    cd ../design-system && bun link
-    bun link @donaldgifford/design-system
-
-ds-unlink:
-    # `bun unlink @pkg` isn't implemented as of Bun 1.3 — remove the
-    # symlink directly so the next `bun install` resolves from the
-    # registry against the version pinned in package.json + bun.lock.
-    rm -f node_modules/@donaldgifford/design-system
-    bun install
