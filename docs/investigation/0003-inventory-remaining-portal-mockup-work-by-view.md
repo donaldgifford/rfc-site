@@ -324,37 +324,82 @@ Per §Context, the portal is RFC-only. Two paths to load the RFC directory:
 
 **Current portal state:** No route. `<Topbar>` shows an inert `API` nav placeholder.
 
-**Mockup expectations:** _(to survey — likely an OpenAPI surface viewer of some shape over rfc-api's `/api/v1/...` endpoints.)_
+**Mockup expectations** (mockup §1535-1900 CSS + §3731-3892 body markup): A Swagger/Redoc-style endpoint reference rendered against rfc-api's OpenAPI 3.1 spec.
+
+- **Layout** (`.api-layout`): `grid-template-columns: 260px minmax(0,1fr); max-width: 1400px`. Left = sticky `.api-sidebar` (`padding: 32px 20px 40px 32px; sticky top: 56px; max-height: calc(100vh - 56px); overflow-y: auto`) — same 260px brand-column-aligned width as the topbar.
+- **Sidebar brand** (`.api-sidebar-brand`): "Portal API" serif 22px 500 + `.api-version` mono 11px tertiary with a `.v-tag` accent chip (`v1 OpenAPI 3.1`).
+- **Endpoint groups** (`.api-group`): mono 10px uppercase tracked 0.14em group title (`RFCs`, `Search`, `Meta`, `Admin (v2+)`). Each `.api-endpoint` is a flex row: HTTP `.method` chip + truncated `.path` mono 12px. Active row: `bg: var(--accent-bg)`. Admin endpoints rendered with `opacity: 0.5` (semantic "future" treatment).
+- **HTTP method chip** (`.method`): `padding: 2px 6px; min-width: 44px; border: 1px solid currentColor; background: color-mix(in srgb, currentColor 12%, transparent); font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase`. Colors: `.get → --code-function`, `.post → --status-accepted`, `.put → --status-draft`, `.patch → --code-type`, `.delete → --status-rejected`.
+- **Endpoint header** (`.api-endpoint-header`): eyebrow (mono 10px uppercase tracked 0.14em) + serif 32px 400 h1 + `.path-line` (mono 13px chip with method + full path + `.copy-btn`). `.segment-var` is `--code-number` colored.
+- **Sections** (`.api-section`): "Path parameters", "Query parameters", "Responses", "Example request", "Example response". Each section has a mono uppercase title with a `.count` chip. Param rows (`.param-row`) carry `.p-name` / `.p-type` / `.p-desc` columns; `.required` is a red badge. Response rows have an `.r-code` chip (`.ok` for 2xx, `.err4` for 4xx, `.err5` for 5xx).
+- **Try-it band** (`.try-it`): horizontal callout with a `▶` icon, "Public read — no authentication required" caption, and a `.try-it-cta` ("send request →") on the right.
+- **Example tabs** (`.example-tabs`): tabbed switcher (`curl`, `go`, `typescript`) over a `<pre class="example-code">` Tokyo-Night code block.
+
+**Mockup's listed endpoints** (note: per rfc-api DESIGN-0002 + DESIGN-0003 these have largely been replaced):
+
+| Mockup path | rfc-api actual today | Match? |
+|-------------|---------------------|--------|
+| `GET /api/v1/rfcs` | `GET /api/v1/rfc` (per-type) or `/api/v1/docs?filter=type:rfc` (cross-type) | drifted — mockup pluralises and predates the type-aware split |
+| `GET /api/v1/rfcs/{id}` | `GET /api/v1/rfc/{id}` | drifted (path singular) |
+| `GET /api/v1/rfcs/{id}/links` | not in spec — `links[]` is part of the `Document` body | gap |
+| `GET /api/v1/rfcs/{id}/raw` | not in spec | gap |
+| `GET /api/v1/search` | `GET /api/v1/search` | matches |
+| `GET /api/v1/search/labels` | not in spec | gap (re-emerges with the search-facet rework, §Search) |
+| `GET /api/v1/search/authors` | not in spec | gap |
+| `GET /api/v1/sources` | not in spec | gap |
+| `GET /api/v1/stats` | not in spec | gap |
+| `GET /healthz` | typically exposed by Go services | likely present |
+| `POST /api/v1/admin/reindex` | not in spec (mockup tags as v2+) | future |
+| `POST /api/v1/admin/sources` | not in spec (mockup tags as v2+) | future |
 
 **Scope split:**
 
-- _(populated during audit)_
-- **Can ship now:** _(visual shell + chrome + placeholder content)_
-- **Gated on upstream:** _(data layer — rfc-api endpoint-listing surface, possibly OpenAPI fetch, etc.)_
+- **Visual surface — ship now (no upstream dependency):** route `/api` (or `/api/{group}/{endpoint}`), 3-col page (topbar + sidebar + content) reusing the design-system surfaces. The OpenAPI doc is already vendored at `api/openapi.yaml` per ADR-0001 — render it client-side. Two off-the-shelf options: (a) ship `@redocly/redoc` as a styled component (turnkey but heavy + opinionated CSS — would need overrides), or (b) parse the YAML at build-time and emit a custom portal-native renderer matching the mockup's chrome 1:1. **Recommend (b)** — the mockup's visual language differs enough from Redoc that overriding is more work than rendering ourselves; ADR-0001 already requires us to consume the spec, so the parse step is free. `#api` `#portal-new-routes`
+- **Try-it execution:** the "send request →" affordance needs to actually hit rfc-api. Today no CORS allowance, no in-portal-token capture surface. **Defer** the live-execution feature; ship the visual chrome as a read-only reference. `#api` `#design-decision`
+- **Path/contract drift:** all `/rfcs` paths in the mockup are pluralised + flat; rfc-api uses `/rfc` + per-type prefixes per DESIGN-0002. **The portal-side `/api` view must reflect rfc-api's actual spec, not the mockup's paths.** When implementing, hew to `api/openapi.yaml` as the source of truth and treat mockup-only endpoints (`/links`, `/raw`, `/sources`, `/stats`, `/search/labels`, `/search/authors`) as design intent to land in a later rfc-api RFC. `#api` `#rfc-api` `#rfc-only-scope`
+- **Sidebar grouping decision:** mockup groups by capability (RFCs / Search / Meta / Admin). OpenAPI's native grouping is by `tag` — if rfc-api's spec already tags endpoints (e.g. `docs`, `search`), use those tags as the group basis. Check `api/openapi.yaml` before assuming. `#api` `#design-decision`
+- **Severity / status chips for HTTP methods:** the method-chip pattern (`.method.get`, `.method.post`, etc.) is a small primitive — could promote as `<MethodChip method="GET">` ds-candidate or inline in the portal. **Recommend inline** for now; promote later if another view consumes it. `#api` `#design-decision`
 
 ### MCP view (`/mcp`) — not yet wired
 
 **Current portal state:** No route. `<Topbar>` shows an inert `MCP` nav placeholder.
 
-**Mockup expectations:** _(to survey — Model Context Protocol server discovery + downloads, per INV-0002 §Findings.)_
+**Mockup expectations** (mockup §1904-2165 CSS + §3897-4060 body markup): A marketing-style landing page for the portal's MCP server, with download links + a numbered setup walkthrough.
+
+- **Layout** (`.mcp-layout`): single column, `max-width: 880px; margin: 0 auto; padding: 56px 32px 80px 32px`. No sidebar (unlike API view).
+- **Hero** (`.mcp-hero`): eyebrow (mono 10px uppercase tracked 0.14em, `Model Context Protocol`), serif h1 (`Pull RFCs directly into your editor.`, ~32px / 400), descriptive paragraph (15.5px / 1.6 secondary).
+- **MCP cards** (`.mcp-cards`): 2-col grid of `.mcp-card` blocks. Each card: `.c-head` (`.c-title` mono 13px primary + `.c-tag` chip with variant treatment — `this server` is accent-tinted; `related` uses `--status-draft` color-mix), `.c-desc` 14px secondary, `.c-meta` mono 11px tertiary footer with `▸` glyph and `view source →` accent link aligned right.
+- **Setup sections** (`.mcp-section`): four numbered steps. h2 is `[step-chip 1] Install the server` — the `.step` chip is a small accent-bordered round/square with the step number. Step content varies:
+  - **Step 1 (Install):** `.download-grid` 2-col of `.download-item` rows. Each row: icon (`⌘` for macOS, `🐧` for Linux) + filename + size string + `download` link aligned right. Followed by a "build from source" `<pre class="example-code">`.
+  - **Step 2 (Configure):** `.example-tabs` (`Claude Code` / `Cursor` / `Claude Desktop`) over a Tokyo-Night JSON config snippet. Path comment shows the client-specific config location.
+  - **Step 3 (Available tools):** plain `<ul>` listing each tool with `<code>` name + one-line description.
+  - **Step 4 (Verify):** prose + a `<pre>` showing a sample prompt.
 
 **Scope split:**
 
-- _(populated during audit)_
-- **Can ship now:**
-- **Gated on upstream:** _(MCP server endpoints don't exist yet — at minimum a manifest endpoint that rfc-site can hit.)_
+- **Visual surface — ship now (no upstream dependency):** route `/mcp`, all four steps with content sourced from a portal-local Markdown file (or a const). The MCP server name (`rfcs-mcp`), version (`0.4.2`), download URLs, and config snippets are content the portal owns — not data fetched from rfc-api. **This view ships entirely on the rfc-site side once the visual chrome is built.** `#mcp` `#portal-new-routes`
+- **Download URLs:** the `rfcs-mcp` releases need a hosting target. Options: (a) GitHub Releases (recommended — already used for design-system 0.x.x), (b) an rfc-api endpoint that proxies. **Defer host decision** until the `rfcs-mcp` repo exists; the visual chrome can ship with placeholder hrefs first. `#mcp` `#design-decision`
+- **Per the RFC-only scope:** the tool surface stays "RFCs only" (`list_rfcs`, `get_rfc`, `search_rfcs`, `get_links`, `get_activity`) — match the rfc-api surface that this portal is built on. The mockup's `docs-mcp` "related" card is honest about scope: it's the *other* server for non-RFC docs and not part of this portal's surface. `#mcp` `#rfc-only-scope`
+- **Repeated primitives:** `.mcp-card` is a one-off layout; `.download-item` is a one-off layout — neither warrants a ds-candidate. The `.step` chip and `.example-tabs` switcher are both reused by the API view, so promote those (or share via portal-only helpers). `<Tabs>` (ds-candidate, Phase 4) already exists and would back the `.example-tabs` directly. `#mcp` `#api` `#ds-candidate`
 
 ### Frameworks view (`/frameworks`) — not yet wired
 
 **Current portal state:** No route. `<Topbar>` shows an inert `Frameworks` nav placeholder.
 
-**Mockup expectations:** _(to survey — compliance frameworks browser, with severity pills (`<Badge variant="severity">` already promoted in Phase 6 specifically for this view).)_
+**Mockup expectations** (mockup §2168-2820 CSS + §4065+ body markup): A nested tree-of-frameworks browser (CIS / OWASP / etc.) with per-section drilldown showing individual security controls and Wiz rule mappings.
+
+- **Layout** (`.fw-layout`): `grid-template-columns: 280px minmax(0,1fr)` — sidebar tree + main content.
+- **Sidebar tree** (`.fw-sidebar` + `.fw-tree`): nested `<ul>` with `.fw-node` (collapsible via `.expanded` class + `▸` caret rotation). Root: "Our Framework" (org-wide). Children: per-framework nodes (`AWS CIS Foundations v3.0`, `OWASP AI Top 10 2025`, `CIS Kubernetes Benchmark v1.9`). Expanded framework drills into per-section nodes (Account / IAM / Logging / Monitoring / ...).
+- **Content header** (`.fw-detail-header`): breadcrumb (`Our Framework / AWS CIS Foundations / IAM`), h1 with `.version` accent chip, paragraph description, `.fw-detail-meta` row with key/val pairs (`controls 52`, `sections 9`, `coverage 94%`, `wiz rules 49`, `last sync 3h ago`).
+- **Section blocks** (`.fw-section-block`): collapsible per-section (Account, IAM, Logging, …). Header row: caret + section title + meta (`18 controls · 3 findings` — findings in `--status-draft` color). Expanded body lists `.fw-rule-row` entries: `.fw-rule-num` (mono accent, like `1.4`) + `.fw-rule-title` (sans, primary) + `.sev-pill` severity badge (`Critical` / `High` / `Medium` / `Low` — each with color-mix tint + colored border) + `.fw-rule-wiz` (mono 11px tertiary, the Wiz rule ID).
 
 **Scope split:**
 
-- _(populated during audit)_
-- **Can ship now:**
-- **Gated on upstream:** _(framework registry — where does the data live? rfc-api extension? separate service?)_
+- **Per CLAUDE.md context:** `<Badge variant="severity">` was called out in INV-0004 / DESIGN-0001 as the design-system primitive for severity pills. Verify that variant exists in `@donaldgifford/design-system@0.4.0-pre` (CLAUDE.md says it's promoted but does not confirm the `severity` variant specifically). If absent, this is a design-system addition. `#frameworks` `#design-system-verify`
+- **Data source — fully upstream-blocked.** Frameworks data does **not** live in `rfc-api` today. The view requires a new data plane — either (a) extend `rfc-api` with framework endpoints, (b) build a sibling service (per DESIGN-0001 §Future, mentions a separate framework-sync system), or (c) load static JSON committed to the portal repo (least useful — defeats the "live sync from Wiz" hook in the mockup). **Decision deferred** — this view is the most heavily gated of the three. `#frameworks` `#rfc-api` `#new-service`
+- **Visual surface — ship-now is limited.** The hero + sidebar tree + section-collapse interactions can be built against a static fixture (the same way IMPL-0002 uses fixtures for the directory) to validate the visual chrome. But without a real data source, this would be a sample-data screenshot, not a usable feature. **Recommend deferring** the entire Frameworks view until the data source is decided. `#frameworks` `#design-decision`
+- **`.fw-rule-row` is the load-bearing primitive.** Not just for Frameworks — it could surface in the RFC body as a callout for "this RFC implements wiz:iam-root-key-01" or similar. Worth tracking even if Frameworks itself is deferred. `#frameworks` `#design-system-promote`
+- **Per the RFC-only scope:** Frameworks remains a portal surface, not a docz type. The data plane question is "where do Frameworks live?" — not "should we ingest a `framework` docz type into rfc-api". `#frameworks` `#rfc-only-scope`
 
 ## Conclusion
 
