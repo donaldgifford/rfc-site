@@ -403,13 +403,29 @@ Per §Context, the portal is RFC-only. Two paths to load the RFC directory:
 
 ## Conclusion
 
-_(to fill once findings populate. Expected shape: 1-2 paragraphs naming the cross-cutting primitives that block the most views, plus the recommended ordering — design-system primitives first, rfc-site visual rework second, not-yet-wired view shells third, upstream-data backfills last.)_
+**Answer:** The mockup is achievable, but not by "just polishing CSS". Three orthogonal kinds of work fell out of this audit, in roughly decreasing tractability:
 
-**Answer:** _(pending)_
+1. **Scope correction — pure deletion.** IMPL-0001 / IMPL-0002 / IMPL-0004 were built on the unstated assumption that the portal surfaces all 6 docz types. Per the RFC-only scope clarification (§Context, 2026-05-14), several surfaces are dead-on-arrival: the type filter pills + grouping in `<SearchModal>`, the canonical-ID `<DirectoryTable>` ID column, the 8-fixture multi-type MSW corpus, and the cross-type `listDocs` call backing `/`. These need to be removed or narrowed; doing so makes the subsequent visual work cleaner.
+
+2. **Visual chrome — design-system + portal rework.** The mockup diverges visually from the portal in five load-bearing ways: (a) a `--font-serif` token + serif h1 on the RFC page (and serif title on the preview pane); (b) a translucent-glass topbar (`rgba` + `backdrop-filter: blur(12px)`); (c) admonitions wired into the markdown pipeline (GFM alerts → tinted-surface `<Callout>` with circular icon chip); (d) the RFC page's 3-column layout (240px metadata-left + minmax(0,1fr) + 240px TOC-right) replacing the portal's current 2-column shape; (e) mono-uppercase nav / table-header / sidebar-label typography that is consistent across every mockup view. The cross-cutting primitives that block the most views are `<TableOfContents>`, `<Callout>`, `<Avatar>`, and a confirmed `<Badge variant="severity">`. The blocking token is `--font-serif`.
+
+3. **New view shells — gated heterogeneously.** The three not-yet-wired views split sharply on their data-source dependencies. **`/mcp`** ships entirely on the rfc-site side (content is portal-local). **`/api`** ships on the rfc-site side too, but only once we commit to a renderer (recommendation: parse `api/openapi.yaml` ourselves rather than adopt Redoc — fits the mockup's chrome with less CSS-override pain). **`/frameworks`** is fully data-plane-blocked — no `framework` content source exists in `rfc-api` today, and the right home for that data plane is an open question that probably warrants a separate RFC against `rfc-api`. The portal can ship visual chrome against fixtures but should not ship `/frameworks` as a real feature until the data source is decided.
+
+The single most consequential discovery is that the **portal's current cross-type Directory + `<SearchModal>` filter pills are wrong**, not just visually but architecturally — they encode a scope (cross-type aggregation) that the project does not have. The mockup is consistent and correct; the portal is the one that needs to narrow.
 
 ## Recommendation
 
-_(to fill once findings populate. Expected shape: one new DESIGN doc per non-trivial primitive (e.g. `<Popover>`), one IMPL doc that batches the primitive promotions + portal visual rework, one separate IMPL or PLAN doc per not-yet-wired view as the data layer becomes available.)_
+Work in four phases, each shippable on its own branch:
+
+1. **Scope-narrow + cleanup (small).** One PR against rfc-site. Rip the type filter pills out of `<SearchModal>` (and prepare the seat for content-scope facets when the rfc-api search contract extends), swap the directory loader from `listDocs` → `listDocsByType("rfc")` once rfc-api ships that contract change (or pin `filter=type:rfc` short-term per the Directory audit's Path B), narrow the MSW fixture corpus to RFC-only, swap canonical IDs (`RFC-0001`) for the numeric IDs (`0011`) in the DirectoryTable display surface. Run-in-parallel work item: file an RFC against rfc-api for the per-type-listing contract changes (sort param on `listDocsByType`, content-facet params on `searchDocs`).
+
+2. **Design-system additions (one DESIGN + one promotion IMPL).** **DESIGN-0003** "Mockup-parity primitives" capturing: `--font-serif` (and serif-h1 application surfaces), `<TableOfContents>` portal component, `<Callout>` primitive + GFM-alerts rehype plugin, `<Avatar>` primitive, `--color-bg-glass` + `--backdrop-blur-md` tokens, severity-Badge verification. Then an **IMPL** that ships the design-system additions + the rehype plugin. Land both in design-system 0.5.0 then bump rfc-site to consume.
+
+3. **Portal visual rework (one or two IMPLs).** Once 0.5.0 is consumed, an IMPL that rebuilds the RFC page as a 3-column layout (DocSidebar → metadata-left at 240px, new `<TableOfContents>` on the right at 240px, `<DocumentView>` centre), serif-h1 the article header, adopts the `.number-line` eyebrow, drops the Card chrome around metadata blocks, wires admonitions, derives `revision` from `source.commit`, reformats the metadata "Discussion" row as `PR: #412`, and adds the references footer (References from `links[]`, "Referenced by" empty-state for now). A second smaller IMPL handles Directory + Topbar visual reconciliation (3-element brand, translucent topbar, mono-uppercase typography, row-hover decision).
+
+4. **New view shells (one IMPL per view, sequenced).** Ship `/mcp` first (no upstream dependency, fastest), then `/api` (consume vendored OpenAPI), then defer `/frameworks` pending the data-plane decision. Each is a separate IMPL with its own scope.
+
+**Sequencing rationale.** Doing (1) before (2) avoids paying CSS-rework costs on surfaces we're about to delete. Doing (2) before (3) ensures the portal pulls finished primitives, not in-flight ones. Doing (3) before (4) means the new view shells are built against the corrected visual language from the start.
 
 ## References
 
