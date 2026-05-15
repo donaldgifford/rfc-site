@@ -34,17 +34,54 @@ describe("/ index loader", () => {
   });
 
   it("returns null cursors when the page fits in a single response", async () => {
-    // Default route loader requests limit=24; the fixture corpus is
-    // 8 docs, so the fixture-backed handler emits no Link header.
+    // Loader auto-pins filter=type:rfc when no filter is in the URL
+    // (RFC-only scope per RFC-0001). With limit=24 and 2 RFC fixtures,
+    // the page fits — no Link header.
     const result = await loader({
       request: new Request("http://localhost/"),
       params: {},
       context: {},
     } as Parameters<typeof loader>[0]);
 
-    expect(result.docs.length).toBe(8);
+    expect(result.docs.length).toBe(2);
     expect(result.cursors.next).toBeNull();
     expect(result.cursors.prev).toBeNull();
+  });
+
+  it("auto-pins filter=type:rfc when the URL omits filter (RFC-only scope)", async () => {
+    let observed: string[] = [];
+    server.use(
+      http.get("*/api/v1/docs", ({ request }) => {
+        observed = new URL(request.url).searchParams.getAll("filter");
+        return HttpResponse.json([], { status: 200 });
+      }),
+    );
+
+    await loader({
+      request: new Request("http://localhost/"),
+      params: {},
+      context: {},
+    } as Parameters<typeof loader>[0]);
+
+    expect(observed).toEqual(["type:rfc"]);
+  });
+
+  it("honours explicit filter[] in the URL without injecting the type:rfc default", async () => {
+    let observed: string[] = [];
+    server.use(
+      http.get("*/api/v1/docs", ({ request }) => {
+        observed = new URL(request.url).searchParams.getAll("filter");
+        return HttpResponse.json([], { status: 200 });
+      }),
+    );
+
+    await loader({
+      request: new Request("http://localhost/?filter=type:adr"),
+      params: {},
+      context: {},
+    } as Parameters<typeof loader>[0]);
+
+    expect(observed).toEqual(["type:adr"]);
   });
 
   it("forwards the cursor query param to listDocs", async () => {
@@ -115,15 +152,26 @@ describe("/ index loader", () => {
     expect(result.totalUnfiltered).toBe(8);
   });
 
-  it("returns totalUnfiltered=undefined when the response omits the header (no filter active)", async () => {
-    // Default fixture-backed handler: unfiltered request, 8 docs.
+  it("returns totalUnfiltered=undefined when the response omits the header", async () => {
+    // Synthesise a response without the X-Total-Count-Unfiltered header
+    // — rfc-api only emits it when at least one filter is active and
+    // the loader needs to distinguish that case from "header absent".
+    server.use(
+      http.get("*/api/v1/docs", () =>
+        HttpResponse.json([], {
+          status: 200,
+          headers: { "X-Total-Count": "5" },
+        }),
+      ),
+    );
+
     const result = await loader({
-      request: new Request("http://localhost/"),
+      request: new Request("http://localhost/?filter=type:rfc"),
       params: {},
       context: {},
     } as Parameters<typeof loader>[0]);
 
-    expect(result.totalCount).toBe(8);
+    expect(result.totalCount).toBe(5);
     expect(result.totalUnfiltered).toBeUndefined();
   });
 

@@ -1,9 +1,64 @@
 /*
- * Design tokens — populated in IMPL-0005 Phase 1 from the mockup's :root block
- * at design-system/rfc-portal-mockup_15.html.
- *
- * Phase 0 ships this file empty so src/root.tsx's `import "./styles/tokens.css"`
- * resolves and the build keeps passing during the wipe. Adding tokens here
- * without Phase 1's full extraction would skew the visual rebuild — leave empty
- * until the mockup is the source of truth.
+ * Design tokens — extracted from donaldgifford/design-system/rfc-portal-mockup_15.html
+ * §14-70 (the :root block). Single source of truth for color, typography, motion,
+ * and shape tokens. Per RFC-0001 + DESIGN-0003: the mockup is the visual spec; if
+ * the implementation diverges from the mockup, fix the implementation. If the
+ * mockup itself is wrong, fix the mockup (sibling repo).
  */
+:root {
+  /* Typography */
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  /* Dark theme — Arctic Wolf cool-blue background, Oxide-style status palette */
+  --bg-base: #0c1017;
+  --bg-raised: #121722;
+  --bg-elevated: #181e2b;
+  --bg-hover: #1e2635;
+  --bg-active: #252e40;
+
+  --border-hairline: #1b2230;
+  --border-default: #252e3f;
+  --border-strong: #34405a;
+
+  --fg-primary: #e8ebf0;
+  --fg-secondary: #afb6c2;
+  --fg-tertiary: #7a8396;
+  --fg-muted: #505867;
+
+  --accent: #7dcfff;
+  --accent-dim: #3d7fb8;
+  --accent-bg: rgba(125, 207, 255, 0.1);
+  --accent-border: rgba(125, 207, 255, 0.3);
+
+  /* Status colors — Tokyo Night palette */
+  --status-draft: #e0af68;
+  --status-proposed: #7aa2f7;
+  --status-accepted: #9ece6a;
+  --status-rejected: #f7768e;
+  --status-superseded: #bb9af7;
+  --status-abandoned: #565f89;
+
+  /* Tokyo Night code palette */
+  --code-bg: #161b28;
+  --code-border: #1f2638;
+  --code-fg: #c0caf5;
+  --code-comment: #565f89;
+  --code-keyword: #bb9af7;
+  --code-function: #7aa2f7;
+  --code-string: #9ece6a;
+  --code-number: #ff9e64;
+  --code-key: #f7768e;
+  --code-value: #c0caf5;
+  --code-punct: #89ddff;
+  --code-type: #73daca;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Corners — retrowave terminal: sharp, not rounded */
+  --r-sharp: 0;
+  --r-xs: 2px;
+  --r-sm: 3px;
+}

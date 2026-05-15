@@ -7,7 +7,9 @@ import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import "./styles/tokens.css";
+import "./styles/base.css";
 import { createQueryClient } from "./portal/api/queryClient";
+import { Topbar } from "./components/Topbar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -34,6 +36,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Topbar />
       <Outlet />
     </QueryClientProvider>
   );
