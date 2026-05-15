@@ -26,6 +26,11 @@ Thumbs.db
 # Claude Code loop state (per-session, not for VCS)
 .claude/donald-loop.local.md
 
+# Local-only personal trackers / notes — mirrors the mise.local.toml /
+# .env.*.local convention. Use *.local.md at the repo root for sticky
+# notes that should not leave the working copy.
+*.local.md
+
 # mise per-user overrides (mise.toml is committed; mise.local.toml is not)
 mise.local.toml
 
