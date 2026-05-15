@@ -34,4 +34,5 @@ docz create design "Your Design Title"
 |----|-------|--------|------|--------|------|
 | DESIGN-0001 | Portal architecture and ds-candidates promotion model | Draft | 2026-04-26 | Donald Gifford | [0001-portal-architecture-and-ds-candidates-promotion-model.md](0001-portal-architecture-and-ds-candidates-promotion-model.md) |
 | DESIGN-0002 | Markdown rendering pipeline | Draft | 2026-04-27 | Donald Gifford | [0002-markdown-rendering-pipeline.md](0002-markdown-rendering-pipeline.md) |
+| DESIGN-0003 | Rebuild rfc-site against the mockup | Draft | 2026-05-15 | Donald Gifford | [0003-rebuild-rfc-site-against-the-mockup.md](0003-rebuild-rfc-site-against-the-mockup.md) |
 <!-- END DOCZ AUTO-GENERATED -->
