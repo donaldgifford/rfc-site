@@ -20,6 +20,8 @@ created: 2026-05-13
 - [Approach](#approach)
 - [Environment](#environment)
 - [Findings](#findings)
+  - [Cross-cutting — over-engineered surfaces from the dropped cross-type assumption](#cross-cutting--over-engineered-surfaces-from-the-dropped-cross-type-assumption)
+  - [Cross-cutting — cross-doc reference policy](#cross-cutting--cross-doc-reference-policy)
   - [Cross-cutting — missing design-system primitives](#cross-cutting--missing-design-system-primitives)
   - [Cross-cutting — token / chrome gaps](#cross-cutting--token--chrome-gaps)
   - [Directory view (`/`)](#directory-view-)
@@ -57,6 +59,21 @@ The output is a structured inventory that lets us:
 [INV-0002](0002-inventory-components-needed-from-the-rfc-portal-mockup.md) inventoried what *components* needed to exist; IMPL-0004 then shipped them. This INV is the natural successor — *now* the components exist and the wiring is correct, but the visual treatment hasn't been audited end-to-end against the mockup. The closest single concrete divergence — `<DirectoryToolbar>` vs the mockup at `rfc-portal-mockup_15.html:354-513` — surfaced during the IMPL-0004 Phase 7b PR review and is the prompt for this audit.
 
 The mockup at `/Users/donaldgifford/code/design-system/rfc-portal-mockup_15.html` is ~4500 lines and contains six top-level views (per INV-0002 §Findings): Directory, RFC Page, Search, API, MCP, Frameworks. Three of those (Directory, RFC Page, Search) have live routes in the portal; three (API, MCP, Frameworks) are placeholders in the topbar with no route file yet.
+
+### Scope clarification (decided 2026-05-14 during INV-0003 review)
+
+The audit surfaced a structural question on first pass — the mockup's directory shows only RFCs (eyebrow `/ docs / rfcs`, brand `rfcs / portal`, topbar nav lists `Directory` rather than per-type entries) while the portal's current `/` renders a cross-type table. Confirmed with the author: **the rfc-site portal is RFC-only at the surface.** Other docz types (ADR / DESIGN / IMPL / PLAN / INV) are **repo-internal artifacts only** — they live in their owning repo's `docs/` tree and serve the engineering workflow (this very INV is one). They are *not* published to rfc-site. RFCs are the org-wide, cross-team docs that earn portal surface area.
+
+Two cross-repo consequences of this scope:
+
+- **rfc-api still indexes all 6 types** per [rfc-api DESIGN-0002](https://github.com/donaldgifford/rfc-api/blob/main/docs/design/0002-documenttype-extensibility-for-multiple-content-types.md) — its corpus is broader than the portal's. `/api/v1/docs` (cross-type) is reserved per that DESIGN for "activity feeds, cross-corpus MCP tooling, and any consumer that wants 'everything'". The portal is *not* one of those consumers and should narrow to RFCs at the consumer layer.
+- **Cross-doc references in RFC bodies** ("per ADR-0001", "see DESIGN-0002") refer to repo-internal artifacts the portal cannot resolve. Today our `<Anchor>` component renders unresolved internal-looking hrefs as `<span data-broken-link>`. A policy decision is needed — surfaced as a new finding under §Findings → cross-cutting.
+
+This scope clarification answers the largest open question raised by the first-pass Directory audit and is load-bearing for every other view in this inventory. **All §Findings below assume RFC-only scope unless explicitly tagged otherwise.**
+
+A new tag joins the conventions from §Approach:
+
+- `#rfc-only-scope` — applies to findings that exist today *only because* of the dropped cross-type assumption. These are over-engineered surfaces or fixtures that should be removed or narrowed.
 
 ## Approach
 
@@ -97,6 +114,30 @@ The mockup at `/Users/donaldgifford/code/design-system/rfc-portal-mockup_15.html
 > proposed resolution path. Tags use the convention from §Approach so the
 > end-of-doc summary tables can be assembled mechanically.
 
+### Cross-cutting — over-engineered surfaces from the dropped cross-type assumption
+
+Surfaces that exist today *only because* IMPL-0001 / IMPL-0002 / IMPL-0004 were built on the (now-disproven) assumption that the portal would surface all 6 docz types. Per §Context's RFC-only scope clarification, these need to be removed or narrowed.
+
+- **`<DirectoryToolbar>`'s Type filter is dead-on-arrival.** Phase 7b shipped a multi-select Type pill panel inside a `<details>` disclosure. With only one type to ever show, this control has nothing to filter. Mockup correctly shows the cascading filter menu's fields as **Authors** + **Labels** (no Type — implied by scope). Remove the Type filter from the toolbar; replace with Authors / Labels filters once their `?filter=author:` / `?filter=labels:` contracts land in rfc-api (DESIGN-0003 §Filter semantics already names them as Phase 2 extension targets). `#directory` `#rfc-only-scope` `#upstream-data` `#portal-visuals`
+- **`<SearchModal>`'s 6 filter pills are wrong scope.** Phase 9b shipped `All / RFC / ADR / Design / Impl / Plan / Inv` — the 6-type filter set was correct *only* under the cross-type assumption. Mockup's search section uses different filter axes (need to audit; likely Authors + Labels + status, similar to the directory). Remove the Type pills; replace with the mockup's filter shape. `#search` `#rfc-only-scope` `#portal-visuals` (audit will refine after the §Search section populates).
+- **`<SearchModal>`'s `?filter=type:...` payload narrowing** uses the Phase 9b filter pills to client-side narrow the rendered `SearchResult[]`. Once the pills go, this client-side filter goes with them; the modal's payload becomes whatever rfc-api's `searchDocs` returns under the implicit "RFC-only" narrowing (`?type=rfc` is already supported on `/api/v1/search` per the openapi spec, so this is just a parameter the portal pins). `#search` `#rfc-only-scope`
+- **MSW fixture corpus is over-broad.** `tests/examples/docs/<type>/` has 8 fixtures across all 6 types (1 IMPL, 1 DESIGN, 1 INV, 2 ADR, 1 PLAN, 2 RFC). Those non-RFC fixtures represent rfc-api's broader registry surface (valid for *its* corpus per DESIGN-0002) but mislead the portal-side dev mode — `just dev-msw` renders surfaces that won't exist in production. Two options: (a) drop the non-RFC fixtures, (b) keep them so MSW dev mode tests doc-page rendering for all types (since the `$type.$id.tsx` route does need to handle non-RFC types when reached via direct URL — see cross-doc reference policy below). Decision deferred to the spawning DESIGN doc. `#directory` `#search` `#rfc-only-scope` `#design-decision`
+- **`<DirectoryTable>` ID column shows canonical `RFC-0001`**, but the mockup expects bare numeric `0011` because type is implied by scope. Pure presentation change in `<DirectoryTable>`; URL form (`urlIdFromCanonical`) already strips to bare numeric and that's what `_index.tsx` routes against. `#directory` `#rfc-only-scope` `#portal-visuals`
+
+### Cross-cutting — cross-doc reference policy
+
+RFCs frequently reference repo-internal docz artifacts in their bodies — "per ADR-0001", "see DESIGN-0002", "tracked in IMPL-0003". Under the RFC-only scope, the portal cannot resolve these to portal routes (there's no `/adr/0001` page; ADR-0001 lives in some repo's `docs/adr/0001-...md`).
+
+Today's behavior: `<Anchor>` (IMPL-0003 Phase 4 — `src/portal/markdown/components/Anchor.tsx`) resolves doc links via `links[].target` → `links[].href` → external `<a target=_blank rel=noopener>` → `<span data-broken-link>` for unresolved internal-looking hrefs. With non-RFC links no longer resolvable through the portal, the third → fourth fallback is what fires for every "see ADR-0001"-style reference.
+
+Three policies to consider:
+
+1. **Surface as broken** (status quo) — `<span data-broken-link>` with some visual treatment. Honest but ugly; treats internal-only refs as bugs.
+2. **Resolve to GitHub source URL** — `links[].href` already carries the source-repo path for each doc; for non-RFC types we could render an external link to the source repo's `docs/<type>/<id>...md`. Requires rfc-api to expose the source URL even for non-portal-indexed types (it likely already does — `Document.source.repo` + `Document.source.path` are in the schema).
+3. **Hide entirely** — render the reference text but strip the link. Cleanest visually; loses the navigation affordance.
+
+Recommend (2) — keeps the reader's path to the referenced doc viable without claiming the portal can render it. `#rfc-only-scope` `#cross-doc-references` `#portal-visuals` `#design-decision`
+
 ### Cross-cutting — missing design-system primitives
 
 > Populated by the per-view findings below. Each entry: primitive name, the
@@ -118,7 +159,16 @@ The mockup at `/Users/donaldgifford/code/design-system/rfc-portal-mockup_15.html
 
 ### Directory view (`/`)
 
-**Current portal state:** `src/routes/_index.tsx` + `<DirectoryToolbar>` + `<DirectoryTable>`. IMPL-0004 Phase 7a + 7b. Loader forwards `?filter[]` + `?sort` to `listDocs`, captures `X-Total-Count` + `X-Total-Count-Unfiltered`, branches the empty state on the unfiltered header. URL state machine + cursor invalidation rules locked in. Renders all 6 doc types in a single cross-type table.
+**Current portal state:** `src/routes/_index.tsx` + `<DirectoryToolbar>` + `<DirectoryTable>`. IMPL-0004 Phase 7a + 7b. Loader forwards `?filter[]` + `?sort` to `listDocs`, captures `X-Total-Count` + `X-Total-Count-Unfiltered`, branches the empty state on the unfiltered header. URL state machine + cursor invalidation rules locked in. **Today** the loader hits `/api/v1/docs` (cross-type) and renders all 6 doc types — wrong scope per §Context.
+
+**Loader endpoint decision (was open, now decided in audit):**
+
+Per §Context, the portal is RFC-only. Two paths to load the RFC directory:
+
+- **Path A — `listDocsByType("rfc")`** (per-type endpoint, architecturally correct per rfc-api DESIGN-0002 — "`/api/v1/{type}` is the primary per-type list, `/api/v1/docs` is for everything-consumers"). **Cost:** loses Phase 7b's filter/sort URL-state machine — DESIGN-0003 OQ8 explicitly deferred extending `?filter=` / `?sort=` to per-type endpoints ("YAGNI"). Requires a rfc-api contract follow-up to extend DESIGN-0003 to `listDocsByType` before the toolbar's sort/filter can come along.
+- **Path B — `listDocs?filter=type:rfc` pinned in the loader** (cross-type endpoint, narrowed to RFC at the consumer). Keeps Phase 7b filter/sort working as-is. Slightly off-pattern relative to rfc-api DESIGN-0002 (the cross-type endpoint is intended for "everything"-consumers), but justifiable: rfc-api hasn't extended filter/sort to per-type yet, and `listDocs` is the only endpoint that has the contract we need.
+
+**Recommendation:** ship Path B in the visual-rework IMPL (no cross-repo gating); open a follow-up rfc-api issue to extend DESIGN-0003 contract to `listDocsByType` so we can migrate to Path A long-term. `#directory` `#rfc-only-scope` `#upstream-data`
 
 **Mockup expectations:** `rfc-portal-mockup_15.html` §268-516 (CSS) + §2848-end-of-directory-section (HTML body). Three sub-regions:
 
@@ -150,12 +200,7 @@ The mockup at `/Users/donaldgifford/code/design-system/rfc-portal-mockup_15.html
   - **Updated cell uses relative time ("2 hours ago")**, portal uses absolute (`Apr 29, 2026`). Decision needed: relative-only / absolute-only / relative-with-absolute-on-hover. The current `<time>` element preserves raw ISO via `dateTime` attribute, so adding relative-time formatting is a leaf change. `#directory` `#portal-visuals`
 - **Row hover effect.** Mockup: hover paints `--bg-raised` over the full row (cursor pointer on the entire row). Portal: single-clickable-cell pattern (only the title is a link, per WAI-ARIA sortable/filterable-table guidance). This is a deliberate accessibility/semantics tension — the mockup's "click anywhere on the row" is convenient but conflicts with sortable-table conventions. Decision needed: keep portal's single-clickable-cell or adopt mockup's full-row-click with appropriate landmark treatment. `#directory` `#design-decision`
 
-**Structural mismatch (worth flagging at the conclusion level):** the mockup's directory is **single-type — RFCs only** (eyebrow `/ docs / rfcs`, page title "Request for Comments", row IDs as bare numbers "0011"). The portal's `/` is **cross-type** (RFC + ADR + DESIGN + IMPL + PLAN + INV all mixed). Two interpretations:
-
-1. **Mockup is per-type:** every doc-type gets its own directory route (`/rfc`, `/adr`, `/design`, ...) with the hero + table shown above. The current cross-type `/` is then either replaced (the topbar nav lands you on one of the per-type routes) or kept as an unstyled "everything" surface. Implications: rfc-api's `listDocsByType` becomes the loader for these views; the cross-type `/api/v1/docs` endpoint is for search/filter aggregation only.
-2. **Mockup is one example — the design extends to all types:** the `/ docs / rfcs` eyebrow varies per route, "Request for Comments" → "Architecture Decision Records", etc. The portal's `/` could either become a "pick a type" landing page or stay as the cross-type table (with the mockup styling applied) and the per-type views layer on top.
-
-This decision shapes IMPL planning materially and is the largest open question in this audit. `#directory` `#design-decision` `#cross-cutting`
+**Structural mismatch — resolved.** First-pass audit raised two interpretations of the mockup's single-type directory; §Context's RFC-only scope clarification (2026-05-14) resolved this: the portal is RFC-only at the surface; `/` *is* the RFC directory. No per-type routes for ADR / DESIGN / etc. — those are repo-internal artifacts. The mockup's design is literal and correct; the portal's current cross-type `/` is the mistake.
 
 ### RFC page (`/$type/$id`)
 
