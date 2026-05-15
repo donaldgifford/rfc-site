@@ -77,32 +77,31 @@ Execute the hard cut + 5-phase rebuild plan from [DESIGN-0003](../design/0003-re
 
 ## Open Questions
 
-> Resolve before Phase 0 lands. Recommendations are non-binding starts; redirect any of them.
+> **All 8 resolved 2026-05-15.** Decisions below are binding for Phase 0. Reopen any of them by editing in place; don't add a parallel "actually" thread.
 
-1. **`useTheme` replacement strategy in `<MermaidBlock>`.** Today `src/portal/markdown/components/MermaidBlock.tsx:2` imports `useTheme` from `@donaldgifford/design-system/theme` and passes the result to mermaid's `theme` option. Post-cut, two options:
-   - **(recommended)** Hard-code `theme: "dark"` in MermaidBlock. The portal is dark-only post-cut; no light-theme path to support.
-   - Roll a 5-line local `useTheme()` reading `document.documentElement.dataset.theme`. Preserves the hook's API for a future light-theme addition.
+1. **`useTheme` replacement strategy in `<MermaidBlock>`.** Today `src/portal/markdown/components/MermaidBlock.tsx:2` imports `useTheme` from `@donaldgifford/design-system/theme` and passes the result to mermaid's `theme` option.
+   - **Resolved (2026-05-15): hard-code `theme: "dark"`** in MermaidBlock. The portal is dark-only post-cut; no light-theme path to support. The `useTheme` import is deleted in Phase 0.
 
-2. **CLAUDE.md rewrite scope.** Current file is ~500 lines, heavy with design-system / promotion / ds-candidate language. Two paths:
-   - **(recommended)** Full rewrite reflecting the new mockup-first model. ~200 lines target. Existing content stays as `CLAUDE.md.pre-rfc-0001.bak` in `.gitignore` for reference if needed.
-   - Surgical edits — strip only the dead sections, leave the rest. Faster but the file's structure will feel patchworked.
+2. **CLAUDE.md rewrite scope.** Current file is ~500 lines, heavy with design-system / promotion / ds-candidate language.
+   - **Resolved (2026-05-15): full rewrite.** ~200 lines target reflecting the mockup-first model. Existing content moves to `CLAUDE.md.pre-rfc-0001.bak` (gitignored) for reference if needed.
 
-3. **CI workflow cleanup.** `.github/workflows/ci.yml` has `NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}` env + `packages: read` permission, both for GitHub Packages auth. Both become unused after Phase 0. Strip or leave?
-   - **(recommended)** Strip both. Reduces surface area; clean signal that the design-system dep is truly gone. Workflow already passes without them once the dep is removed.
+3. **CI workflow cleanup.** `.github/workflows/ci.yml` has `NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}` env + `packages: read` permission, both for GitHub Packages auth. Both become unused after Phase 0.
+   - **Resolved (2026-05-15): strip both** in Phase 0. Clean signal that the design-system dep is truly gone.
 
-4. **`Skeleton` + `RouteErrorBoundary` — delete or keep?** Neither imports the design-system directly (only styled against design-system tokens). Strict reading of "delete everything we did" says delete. Pragmatic reading says keep — they're generic primitives (~50 + ~30 lines respectively).
-   - **(recommended)** Delete in Phase 0 for clean-slate strictness. Rebuild fresh in the phase that needs them (Phase 1 for Skeleton hydrate-fallbacks; Phase 1 for RouteErrorBoundary since it wraps all routes).
+4. **`Skeleton` + `RouteErrorBoundary` — delete or keep?** Neither imports the design-system directly (only styled against design-system tokens).
+   - **Resolved (2026-05-15): delete in Phase 0** for clean-slate strictness. Rebuild fresh in Phase 1 (Skeleton for hydrate-fallbacks; RouteErrorBoundary wraps all routes).
 
-5. **`inv-0003-followups.local.md` — keep gitignored or track?** File is gitignored (per `.gitignore` line 32). Phase 0 task says annotate F-3/4/5/6 as scrapped, F-2/F-9 as still relevant. But annotations to a gitignored file don't propagate.
-   - **(recommended)** Leave gitignored — the tracker was always meant to be Donald's personal notes. Sync state by hand in the local copy. If a tracked tracker is wanted, that's a separate decision.
+5. **`inv-0003-followups.local.md` — keep gitignored or track?** File is gitignored (per `.gitignore` line 32). Annotations to a gitignored file don't propagate.
+   - **Resolved (2026-05-15): leave gitignored.** Tracker was always meant to be Donald's personal notes. Sync state by hand in the local copy.
 
-6. **Phase 1 PR split — Topbar + Directory together or separate?** DESIGN-0003 bundles them. Topbar alone has no rendering target (it ships on every route); Directory always renders below Topbar.
-   - **(recommended)** Keep together as DESIGN-0003 specifies. Visually-coupled; single PR is the sane scope.
+6. **Phase 1 PR split — Topbar + Directory together or separate?** DESIGN-0003 bundles them. Topbar alone has no rendering target; Directory always renders below Topbar.
+   - **Resolved (2026-05-15): keep together** as DESIGN-0003 specifies. Visually-coupled; single PR is the sane scope.
 
-7. **`<DocCard>` is currently dead code** (no live route consumes it per CLAUDE.md). It still lives in `src/components/portal/`. Delete in Phase 0 with the rest, or call it out as a separate dead-code cleanup?
-   - **(recommended)** Delete in Phase 0. Phase 0 is the wipe; consistency over precision.
+7. **`<DocCard>` is currently dead code** (no live route consumes it per CLAUDE.md). It still lives in `src/components/portal/`.
+   - **Resolved (2026-05-15): delete in Phase 0** with the rest. Phase 0 is the wipe; consistency over precision.
 
-8. **Mermaid theme handling under SSR.** Even if we hard-code `theme: "dark"`, mermaid's dynamic-import + `useEffect` hydration pattern needs to keep working. Verify post-rewrite that the SSR fallback `<pre>` is still emitted and that hydration still swaps to the rendered SVG.
+8. **Mermaid theme handling under SSR.** Even if we hard-code `theme: "dark"`, mermaid's dynamic-import + `useEffect` hydration pattern needs to keep working.
+   - **Resolved (2026-05-15): verify post-rewrite** that the SSR fallback `<pre>` is still emitted and that hydration still swaps to the rendered SVG. Added as an explicit Phase 0 success-criteria item.
 
 ## Implementation Phases
 
@@ -203,6 +202,7 @@ Each phase builds on the previous one. A phase is complete when all its tasks ar
 - `src/root.tsx` has zero `@donaldgifford` imports; `<html data-theme="dark">` is hard-coded.
 - All three routes (`/`, `/$type/$id`, `/search`) render their stub markup in `bun run dev`.
 - Loader tests still pass against the stubbed routes (loaders are untouched).
+- `<MermaidBlock>` renders an SSR `<pre>` fallback and hydrates to an SVG on the client (manual smoke against a fixture with a mermaid block; per Q8 resolution).
 - CLAUDE.md reflects the new model.
 
 ---
