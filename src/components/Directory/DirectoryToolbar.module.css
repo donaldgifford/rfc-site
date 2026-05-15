@@ -1,0 +1,116 @@
+/* Mockup §354-515 — `.table-toolbar` + friends */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-hairline);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 60;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.filterTrigger {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-xs);
+  color: var(--fg-tertiary);
+  cursor: pointer;
+  transition: all 140ms var(--ease);
+}
+
+.filterTrigger:hover:not(:disabled) {
+  background: var(--bg-raised);
+  color: var(--fg-primary);
+}
+
+.filterTrigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.resultsCount {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--font-mono);
+}
+
+.rcLabel {
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+.rcValue {
+  color: var(--fg-primary);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sortControl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg-tertiary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.sortLabel {
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+.sortToggle {
+  display: flex;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-xs);
+  padding: 2px;
+  gap: 1px;
+}
+
+.sortOpt {
+  padding: 5px 10px;
+  border-radius: var(--r-xs);
+  color: var(--fg-tertiary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  transition: all 140ms var(--ease);
+  font-variant-numeric: tabular-nums;
+}
+
+.sortOpt:hover {
+  color: var(--fg-primary);
+}
+
+.sortOptActive {
+  composes: sortOpt;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  padding: 4px 9px;
+}
