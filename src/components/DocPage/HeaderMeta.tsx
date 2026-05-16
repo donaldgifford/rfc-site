@@ -49,7 +49,7 @@ export function HeaderMeta({ doc }: HeaderMetaProps) {
   );
 }
 
-function relativeFromNow(iso: string): string {
+export function relativeFromNow(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   const diff = Date.now() - date.getTime();
