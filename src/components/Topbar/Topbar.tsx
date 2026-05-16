@@ -108,9 +108,12 @@ export function Topbar() {
           <span className={styles.linkPlaceholder} aria-disabled="true" title="Coming soon">
             Frameworks
           </span>
-          <span className={styles.linkPlaceholder} aria-disabled="true" title="Coming soon">
+          <NavLink
+            to="/api"
+            className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
+          >
             API
-          </span>
+          </NavLink>
           <NavLink
             to="/mcp"
             className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}

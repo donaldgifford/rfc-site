@@ -38,7 +38,7 @@ describe("<Topbar>", () => {
 
   it("renders inert placeholders for still-unbuilt routes", () => {
     renderTopbar();
-    for (const label of ["Frameworks", "API", "About"]) {
+    for (const label of ["Frameworks", "About"]) {
       const placeholder = screen.getByText(label);
       expect(placeholder).toHaveAttribute("aria-disabled", "true");
     }
@@ -48,6 +48,12 @@ describe("<Topbar>", () => {
     renderTopbar();
     const mcp = screen.getByRole("link", { name: "MCP" });
     expect(mcp).toHaveAttribute("href", "/mcp");
+  });
+
+  it("renders the API NavLink as a real route, not a placeholder", () => {
+    renderTopbar();
+    const api = screen.getByRole("link", { name: "API" });
+    expect(api).toHaveAttribute("href", "/api");
   });
 
   it("binds ⌘K / Ctrl+K to open the search modal (?modal=1)", () => {

@@ -1,0 +1,437 @@
+/* Mockup §1537-1822 — VIEW 4: API DOCS layout */
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 56px);
+}
+
+/* Sidebar (mockup §1545-1622) */
+.sidebar {
+  border-right: 1px solid var(--border-hairline);
+  padding: 32px 20px 40px 32px;
+  position: sticky;
+  top: 56px;
+  align-self: start;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.sidebarBrand {
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.brandTitle {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--fg-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin: 0 0 6px 0;
+}
+
+.brandVersion {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  letter-spacing: 0.04em;
+}
+
+.versionTag {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  margin-right: 6px;
+}
+
+.group {
+  margin-bottom: 22px;
+}
+
+.groupTitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-tertiary);
+  margin: 0 0 8px 0;
+  padding: 0 0 0 8px;
+}
+
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-secondary);
+  transition: all 120ms var(--ease);
+  margin-bottom: 1px;
+  text-decoration: none;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.endpoint:hover {
+  background: var(--bg-raised);
+  color: var(--fg-primary);
+}
+
+.endpointActive {
+  background: var(--accent-bg);
+  color: var(--fg-primary);
+}
+
+.endpointPath {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Method chip (mockup §1624-1645) */
+.method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  min-width: 44px;
+  text-transform: uppercase;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.methodGet {
+  color: var(--code-function);
+}
+.methodPost {
+  color: var(--status-accepted);
+}
+.methodPut {
+  color: var(--status-draft);
+}
+.methodPatch {
+  color: var(--code-type);
+}
+.methodDelete {
+  color: var(--status-rejected);
+}
+
+/* Content (mockup §1647-1713) */
+.content {
+  padding: 40px 48px 80px 48px;
+  min-width: 0;
+}
+
+.endpointHeader {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border-hairline);
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin: 0 0 12px 0;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin: 0 0 16px 0;
+  color: var(--fg-primary);
+}
+
+.pathLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.fullPath {
+  color: var(--code-fg);
+  flex: 1;
+  overflow-x: auto;
+}
+
+.segmentVar {
+  color: var(--code-number);
+}
+
+.copyButton {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-tertiary);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border-hairline);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: all 120ms var(--ease);
+  background: none;
+}
+
+.copyButton:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.copyButtonCopied {
+  color: var(--status-accepted);
+  border-color: color-mix(in srgb, var(--status-accepted) 40%, transparent);
+}
+
+.description {
+  font-size: 15px;
+  color: var(--fg-secondary);
+  line-height: 1.65;
+  max-width: 72ch;
+  margin: 0;
+}
+
+/* Try-it band (mockup §1865-1895) */
+.tryIt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-raised));
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-sm);
+  margin: 24px 0;
+}
+
+.tryItLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tryItAuth {
+  font-size: 13px;
+  color: var(--fg-secondary);
+  flex: 1;
+}
+
+.tryItCta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  padding: 5px 10px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-xs);
+  letter-spacing: 0.06em;
+  cursor: not-allowed;
+}
+
+/* Sections (mockup §1715-1736) */
+.section {
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-tertiary);
+  margin: 0 0 14px 0;
+  padding: 0 0 8px 0;
+  border-bottom: 1px solid var(--border-hairline);
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sectionCount {
+  font-family: var(--font-mono);
+  color: var(--fg-muted);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* Parameter rows (mockup §1741-1790) */
+.paramRow {
+  display: grid;
+  grid-template-columns: 180px 110px 1fr;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 13px;
+}
+
+.paramRow:last-child {
+  border-bottom: none;
+}
+
+.paramName {
+  font-family: var(--font-mono);
+  color: var(--fg-primary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.requiredBadge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--status-rejected);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.paramType {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--code-type);
+}
+
+.paramDesc {
+  color: var(--fg-secondary);
+  line-height: 1.55;
+}
+
+.paramDefault {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-tertiary);
+}
+
+.paramDefault code {
+  color: var(--code-keyword);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+}
+
+.paramDesc code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+  color: var(--code-keyword);
+}
+
+/* Response rows (mockup §1793-1822) */
+.responseRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.responseRow:last-child {
+  border-bottom: none;
+}
+
+.responseCode {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--r-xs);
+  text-align: center;
+  letter-spacing: 0.04em;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  line-height: 1.3;
+}
+
+.responseCodeOk {
+  color: var(--status-accepted);
+}
+
+.responseCodeRedir {
+  color: var(--code-function);
+}
+
+.responseCodeErr4 {
+  color: var(--status-draft);
+}
+
+.responseCodeErr5 {
+  color: var(--status-rejected);
+}
+
+.responseDesc {
+  color: var(--fg-secondary);
+  font-size: 13px;
+}
+
+.empty {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-hairline);
+    padding: 24px 20px;
+  }
+  .content {
+    padding: 32px 20px 64px 20px;
+  }
+}

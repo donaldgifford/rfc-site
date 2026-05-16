@@ -494,72 +494,66 @@ Each phase builds on the previous one. A phase is complete when all its tasks ar
 
 **Spec loader:**
 
-- [ ] Create `src/portal/openapi/loader.ts` — reads `api/openapi.yaml` at build time (Vite `?raw` import + YAML parse) and exposes a typed `OpenApiSpec`
-- [ ] Choose a YAML parser: `yaml` package (recommend) or `js-yaml` — add as runtime dep
+- [x] `src/portal/openapi/loader.ts` — reads `api/openapi.yaml` via Vite `?raw` import (string at build time) + `yaml.parse()`. Exposes a typed `OpenApiSpec` subset (info / paths / components / parameters / responses). `loadSpec()` caches the parse; `listEndpoints()` flattens paths × methods, resolves `$ref` parameters through `components.parameters`, hoists path-level params into operation params, and resolves `$ref` responses through `components.responses`. `groupEndpointsByTag()` preserves first-appearance order.
+- [x] `yaml` added as a runtime dep (`yaml@2.9.0`). YAML module declaration in `src/env.d.ts`.
 
 **New route:**
 
-- [ ] Create `src/routes/api.tsx` — loader reads the spec via the loader module
-- [ ] Optional: `src/routes/api.$group.$endpoint.tsx` for deep-linking (e.g. `/api/rfcs/getDoc`) — Phase 4b can ship without this initially
+- [x] `src/routes/api.tsx` — loader-less; calls `loadSpec()` + `listEndpoints()` synchronously (Vite inlines the raw spec at build time).
+- [ ] ~~Deep-link route `api.$group.$endpoint.tsx`~~ — **simplified**: `?endpoint=<method>:<path>` query string preserves the active endpoint across refresh + sharing, without adding another route tree.
 
 **Layout (mockup §1537-1553):**
 
-- [ ] Create `src/components/ApiPage/ApiLayout.tsx` — 3-col grid `260px minmax(0,1fr)`, max-width 1400px
-- [ ] Sidebar sticky `top: 56px; max-height: calc(100vh - 56px); overflow-y: auto`
+- [x] `src/components/ApiPage/ApiPage.tsx` (+ `ApiPage.module.css`) — 2-col grid `260px minmax(0,1fr)`, max-width 1400px. Collapses to single column under 900px.
+- [x] Sidebar sticky `top: 56px; max-height: calc(100vh - 56px); overflow-y: auto`.
 
 **Sidebar (mockup §1546-1622):**
 
-- [ ] Create `src/components/ApiPage/ApiSidebar.tsx` — brand block (`Portal API` + version tag) + grouped endpoints
-- [ ] Group by OpenAPI `tag` if present; otherwise fall back to capability buckets
-- [ ] Each `.api-endpoint`: `<MethodChip>` + truncated path mono 12px
+- [x] `src/components/ApiPage/ApiSidebar.tsx` — `<h2>` brand title + accent version tag + OpenAPI version. One `<h3>` per OpenAPI tag with a list of endpoint `<button>`s.
+- [x] Each row: `<MethodChip>` + truncated `.endpointPath`, active row gets `--accent-bg` + `aria-current="page"`.
 
 **Method chip (mockup §1624-1645):**
 
-- [ ] Create `src/components/ApiPage/MethodChip.tsx` — `padding: 2px 6px; min-width: 44px; font-mono 9.5px / 600`; color-mix-tinted bg + colored border
-- [ ] Variants: GET (`--code-function`), POST (`--status-accepted`), PUT (`--status-draft`), PATCH (`--code-type`), DELETE (`--status-rejected`)
+- [x] `src/components/ApiPage/MethodChip.tsx` — variant classes for GET / POST / PUT / PATCH / DELETE, all `currentColor`-driven so the chip border + tinted bg track the variant colour.
 
 **Endpoint header (mockup §1652-1695):**
 
-- [ ] Create `src/components/ApiPage/EndpointHeader.tsx` — eyebrow (group tag) + serif h1 (summary) + `<PathLine>` (method chip + full path + copy button) + description paragraph
-- [ ] `<PathLine>` highlights `{paramName}` segments in `--code-number`
+- [x] `src/components/ApiPage/EndpointDetail.tsx` includes the header (eyebrow tag + serif h1 + `<PathLine>` + description) inline. Kept in one file to avoid over-decomposition for a 2-section page.
+- [x] `src/components/ApiPage/PathLine.tsx` — `{paramName}` segments split out as `<span class="segmentVar">` (rendered in `--code-number`). Copy button uses `navigator.clipboard` with a "copied" success flip (1500ms).
 
-**Try-it band (mockup §1700+):**
+**Try-it band (mockup §1865-1895):**
 
-- [ ] Create `src/components/ApiPage/TryItBand.tsx` — horizontal callout with `▶` icon + auth-note text + inert `send request →` CTA (visual only; defer live-execution)
+- [x] Inline in `EndpointDetail.tsx` (one component for one band). `▶` chevron icon + auth-note text + inert `send request →` CTA with `title` explaining the deferral. `cursor: not-allowed` on the CTA.
 
 **Sections (Path params / Query params / Responses):**
 
-- [ ] Create `src/components/ApiPage/ApiSection.tsx` — title with `.count` chip
-- [ ] Create `src/components/ApiPage/ParamRow.tsx` — `.p-name` / `.p-type` / `.p-desc` grid; `.required` red badge
-- [ ] Create `src/components/ApiPage/ResponseRow.tsx` — `.r-code` chip (ok / err4 / err5) + description
+- [x] All section primitives inlined in `EndpointDetail.tsx`: `ParamSection` (title + `.sectionCount` chip), `ParamRow` (`.paramName` / `.paramType` / `.paramDesc` grid, `.requiredBadge` for required), `ResponseRow` (`.responseCode` with `ok` / `redir` / `err4` / `err5` variants derived from the HTTP status code).
 
 **Example tabs / code:**
 
-- [ ] Reuse `<ExampleTabs>` + `<ExampleCode>` from Phase 4a if shared; otherwise port
-- [ ] Show curl / go / typescript variants (curl active by default)
-- [ ] Use the Shiki path from the markdown pipeline for code highlighting if convenient; or inline tokenisation for simplicity
+- [ ] ~~`<ExampleTabs>` for curl / go / typescript per endpoint~~ — **deferred**. The OpenAPI spec doesn't include example snippets per language, and generating them from the spec is a larger undertaking than the rest of Phase 4b. The `<ExampleTabs>` from Phase 4a can be re-used wholesale when those snippets land. Tracked as a follow-up.
 
 **Source-of-truth:**
 
-- [ ] Use `api/openapi.yaml` paths (e.g. `/api/v1/rfc/{id}`, NOT the mockup's `/api/v1/rfcs/{id}`)
-- [ ] Document the path drift in CLAUDE.md so future readers know why the rendered paths differ from the mockup
+- [x] Renders paths exactly as `api/openapi.yaml` declares them (e.g. `/api/v1/{type}/{id}` — the mockup uses `/api/v1/rfcs/{id}` which is wrong; the actual rfc-api is per-type).
+- [x] Documented the path drift in CLAUDE.md (Phase 4b notes).
 
 **Tests:**
 
-- [ ] `src/components/ApiPage/ApiPage.test.tsx` (renders against a fixture spec)
-- [ ] `tests/api/apiRouteRender.test.tsx` — full-render test
-- [ ] `tests/portal/openapi/loader.test.ts` — spec parsing
+- [x] `src/components/ApiPage/ApiPage.test.tsx` — 8 tests against a fixture spec (sidebar brand, group rendering, default selection, click-to-swap detail, path + query param sections with required badges, responses chip render, inert try-it band, path-segment var highlighting).
+- [x] `tests/api/apiRouteRender.test.tsx` — 4 tests against the real vendored spec (meta title, sidebar brand, default endpoint detail, multiple tag groups).
+- [x] `tests/portal/openapi/loader.test.ts` — 8 tests covering the loader (loads + caches the spec, flattens paths × methods, groups by tag, `findEndpoint` resolution, `$ref` resolution for path-level parameters, empty list handling, custom-spec injection).
 
 #### Success Criteria
 
-- `/api` renders the sidebar + endpoint header + sections for at least one endpoint.
-- Sidebar lists every endpoint from `api/openapi.yaml`, grouped by tag.
-- Selecting a sidebar endpoint navigates to that endpoint's detail (URL update + content swap).
-- Code-example tabs switch correctly.
-- Visual side-by-side against mockup §3731-3892 (View 4) confirms parity.
-- Topbar nav highlights `API` as the active route.
-- All tests pass; `just check` passes.
-- `bun run gen-api:check` still passes (the spec import is read-only).
+- [x] `/api` renders the sidebar + endpoint header + sections for at least one endpoint.
+- [x] Sidebar lists every endpoint from `api/openapi.yaml`, grouped by tag.
+- [x] Selecting a sidebar endpoint navigates to that endpoint's detail (URL update via `?endpoint=` + content swap, no scroll reset).
+- [ ] ~~Code-example tabs switch correctly.~~ Deferred (no example snippets in the spec — see Tasks).
+- [x] Visual side-by-side against mockup §3731-3892 (View 4) confirms parity — sidebar brand block, accent-bg active row, method chips, path-line with `{var}` highlighting + copy button, try-it band, parameter rows with required badge, response code chips. The mockup's `/api/v1/rfcs/{id}` paths are replaced with the actual `/api/v1/{type}/{id}` from the spec (mockup is wrong; the spec is the contract).
+- [x] Topbar nav highlights `API` as the active route — placeholder `<span>` replaced by `<NavLink to="/api">`.
+- [x] All tests pass (20 new: 8 ApiPage + 4 apiRouteRender + 8 loader + 1 reworked Topbar test for the API NavLink, total **219 across 36 files**); `just check` passes.
+- [x] `just gen-api-check` still passes (the spec import is read-only — no codegen drift).
 
 ---
 
