@@ -439,51 +439,50 @@ Each phase builds on the previous one. A phase is complete when all its tasks ar
 - [ ] Create `src/routes/mcp.tsx` — no loader; static-ish content
 - [ ] Wire into route discovery (RR7 `flatRoutes` picks it up automatically)
 
-**Layout (mockup §1904-1925):**
+**Layout (mockup §1904-1949):**
 
-- [ ] Create `src/components/McpPage/McpLayout.tsx` — single column, `max-width: 880px; padding: 56px 32px 80px 32px`. No sidebar.
+- [x] `src/components/McpPage/McpPage.tsx` hosts the full layout — single column, `max-width: 1000px; padding: 48px 40px 96px 40px`. No sidebar. (Mockup uses 1000px not 880px; matched the mockup.)
 
-**Hero (mockup §3922-3926):**
+**Hero (mockup §1912-1949):**
 
-- [ ] Create `src/components/McpPage/McpHero.tsx` — eyebrow `Model Context Protocol` + serif h1 + paragraph
+- [x] Hero block inside `McpPage.tsx` — eyebrow `Model Context Protocol` with `::before` 24px accent rule + serif 44px h1 + paragraph. Bottom border + 40px margin separates from the cards grid.
 
-**MCP cards (mockup §3929-3955):**
+**MCP cards (mockup §1953-2028):**
 
-- [ ] Create `src/components/McpPage/McpCard.tsx` — 2-col grid host; each card has `.c-head` (title + tag), `.c-desc`, `.c-meta` with `▸`-glyph items + `view source →` accent link
-- [ ] Render two cards: `rfcs-mcp` (this server) + `docs-mcp` (related)
+- [x] Two-card `<section>` grid (`repeat(2, minmax(0, 1fr))`, `gap: 14px`). Each card is an `<a target="_blank">` to its source repo: `.cardHead` (title + tag), `.cardDesc` (with inline `<code>` from backtick promotion), `.cardMeta` (▸-glyph bullets + accent `view source →`).
+- [x] `rfcs-mcp` ("this server", accent tag) + `docs-mcp` ("related", draft-status tag via `.cardTagRelated` color-mix).
 
-**Setup sections (mockup §3958-4057):**
+**Setup sections (mockup §2030-2083):**
 
-- [ ] Create `src/components/McpPage/McpSection.tsx` — wraps a numbered step with `.step` chip in the h2
-- [ ] **Step 1 — Install:** `<DownloadGrid>` (4 `<DownloadItem>` per-platform rows) + build-from-source `<pre>` snippet
-- [ ] **Step 2 — Configure:** `<ExampleTabs>` (build fresh — no inheritance from deleted `<Tabs>` ds-candidate) with Claude Code / Cursor / Claude Desktop snippets
-- [ ] **Step 3 — Available tools:** plain `<ul>` listing each tool with `<code>` name + one-line description
-- [ ] **Step 4 — Verify:** prose + sample prompt `<pre>`
+- [x] Four numbered `<section>` blocks with `<h2>` + `.stepChip` (30px circle, accent border + accent bg, mono 12px). Headings carry `id="mcp-step-N"` + `aria-labelledby` on the section.
+- [x] **Step 1 — Install:** download grid + build-from-source `<pre>` with mono comment line.
+- [x] **Step 2 — Configure:** `<ExampleTabs>` with Claude Code / Cursor / Claude Desktop snippets.
+- [x] **Step 3 — Available tools:** `<ul>` listing 5 tools with `<code>` name + description.
+- [x] **Step 4 — Verify:** prose + sample prompt `<pre>` (string-coloured).
 
 **Components built fresh (no design-system inheritance):**
 
-- [ ] `src/components/McpPage/DownloadGrid.tsx` + `.module.css`
-- [ ] `src/components/McpPage/DownloadItem.tsx`
-- [ ] `src/components/McpPage/ExampleTabs.tsx` — basic tab state via `useState`; CSS from mockup §1735-1772 approximately
+- [x] ~~Separate `DownloadGrid.tsx` + `DownloadItem.tsx`~~ — inlined into `McpPage.tsx` since they're a one-place concern (no other consumers). `.downloads` / `.downloadItem` / `.downloadIcon` / `.downloadInfo` / `.downloadName` / `.downloadPlatform` / `.downloadButton` live in `McpPage.module.css`.
+- [x] `src/components/McpPage/ExampleTabs.tsx` (+ `.module.css`) — tab state via `useState`, `role="tablist"` + `role="tab"` + `aria-selected`. Comment line gets the muted italic Tokyo Night colour; rest is default `--code-fg`. No Shiki — the snippets are short JSON, not worth routing through Shiki's WASM cold-start.
 
 **Content (portal-local):**
 
-- [ ] Define a constant module `src/components/McpPage/content.ts` with version (`0.4.2`), download URLs (placeholder until `rfcs-mcp` repo exists), config snippets per client, tool list
-- [ ] Wire McpPage to consume from `content.ts`
+- [x] `src/components/McpPage/content.ts` — `MCP_VERSION` = `0.4.2`; `MCP_SERVERS` (2 entries); `MCP_DOWNLOADS` (4 entries); `MCP_BUILD_FROM_SOURCE` snippet; `MCP_CONFIG_SNIPPETS` (3 clients); `MCP_TOOLS` (5 tools); `MCP_VERIFY_PROMPT`. Download `href`s and source URLs are placeholders until `rfcs-mcp` exists publicly.
+- [x] McpPage consumes from `content.ts` exclusively.
 
 **Tests:**
 
-- [ ] `src/components/McpPage/McpPage.test.tsx` (renders) + per-section tests as appropriate
-- [ ] `tests/api/mcpRouteRender.test.tsx` — full-render test
+- [x] `src/components/McpPage/McpPage.test.tsx` (7 tests): hero / cards / 4 setup steps + step chips / 4 download items / 5 tools as `<code>` / ExampleTabs default + switch.
+- [x] `tests/api/mcpRouteRender.test.tsx` (2 tests): full route render + 4 setup-step headings.
 
 #### Success Criteria
 
-- `/mcp` renders the hero + cards + 4 setup steps.
-- ExampleTabs switches between Claude Code / Cursor / Claude Desktop snippets.
-- DownloadGrid shows 4 per-platform items.
-- Visual side-by-side against mockup §3897-4060 (View 5) confirms parity.
-- Topbar nav highlights `MCP` as the active route (placeholder turns into a real `<NavLink>`).
-- All tests pass; `just check` passes.
+- [x] `/mcp` renders the hero + cards + 4 setup steps.
+- [x] ExampleTabs switches between Claude Code / Cursor / Claude Desktop snippets.
+- [x] DownloadGrid shows 4 per-platform items.
+- [x] Visual side-by-side against mockup §3897-4060 (View 5) confirms parity — hero with accent eyebrow rule, two-card grid with `this server` / `related` tag colour variants, 4 numbered step chips, downloads grid, ExampleTabs tab bar over connected `<pre>`, tool `<code>` list, accent-coloured verify prompt.
+- [x] Topbar nav highlights `MCP` as the active route — placeholder `<span>` replaced by `<NavLink to="/mcp">` (Topbar test asserts `href="/mcp"`).
+- [x] All tests pass (9 new: 7 McpPage + 2 mcpRouteRender + 1 reworked Topbar placeholder test + 1 new Topbar MCP-NavLink test = 198 across 32 files); `just check` passes.
 
 ---
 

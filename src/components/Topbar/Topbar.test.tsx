@@ -36,12 +36,18 @@ describe("<Topbar>", () => {
     expect(link).toHaveAttribute("aria-current", "page");
   });
 
-  it("renders inert placeholders for unbuilt routes", () => {
+  it("renders inert placeholders for still-unbuilt routes", () => {
     renderTopbar();
-    for (const label of ["Frameworks", "API", "MCP", "About"]) {
+    for (const label of ["Frameworks", "API", "About"]) {
       const placeholder = screen.getByText(label);
       expect(placeholder).toHaveAttribute("aria-disabled", "true");
     }
+  });
+
+  it("renders the MCP NavLink as a real route, not a placeholder", () => {
+    renderTopbar();
+    const mcp = screen.getByRole("link", { name: "MCP" });
+    expect(mcp).toHaveAttribute("href", "/mcp");
   });
 
   it("binds ⌘K / Ctrl+K to open the search modal (?modal=1)", () => {
