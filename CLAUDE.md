@@ -29,6 +29,12 @@ What's wired:
 
 IMPL-0005 is closed. Followups beyond IMPL-0005 are tracked per-phase under "Deferred from …" below.
 
+### IMPL-0006 — loader-side Markdown SSR (in progress)
+
+[INV-0004](docs/investigation/0004-eliminate-the-rfc-page-render-flash-on-hard-refresh.md) concluded that the article-area redraw on hard refresh is the client-side Markdown render in `<DocumentView>`. [DESIGN-0004](docs/design/0004-render-markdown-server-side-in-the-rfc-site-loader-with-per.md) is the plan; [IMPL-0006](docs/impl/0006-render-markdown-server-side-in-the-rfc-site-loader-per-design.md) is the 6-phase tracker.
+
+- **Phase 1 — Foundation (closed 2026-05-18)**: rehype chain split into `rehypePluginsCore` + `rehypeSanitizePlugin` exports from `src/portal/markdown/pipeline.ts` (combined `rehypePlugins` preserved so today's `<DocumentView>` stays unchanged). Sanitize schema extended to permit `target`/`rel`/`dataCrossDoc` on `<a>`, `dataBrokenLink` on `<span>`, `title` on `*`. `src/portal/markdown/plugins/resolve-anchor-links.ts` ports `<Anchor>`'s runtime resolution into a hast visitor with 4 branches (hash-only / cross-doc match via `target`-then-`href` / external `target=_blank` + `rel=noopener noreferrer` / broken-link `<span>` replacement); reads `documentLinks` from `file.data`. `src/portal/markdown/renderMarkdown.ts` exports `async function renderMarkdown(doc: Document): Promise<string>` over a module-scoped `unified()` processor: `remarkParse → remarkPlugins → remarkRehype({allowDangerousHtml: false}) → rehypePluginsCore → resolveAnchorLinks → rehypeSanitizePlugin → rehypeStringify`. `sanitize.test.ts > strips dangerous <a target=_blank>` inverted to "preserves" — the defence model moved upstream: `remark-rehype`'s `allowDangerousHtml: false` drops user-authored raw HTML at the mdast→hast boundary before sanitize sees it. **Test totals**: Phase 1 added 35 (10 resolve-anchor-links + 25 renderMarkdown) for **254 tests across 37 files** (was 219 across 36).
+
 Deferred from Phase 2 (tracked in IMPL-0005 §Phase 2 — not blocking phase close):
 
 - **`<RfcLink>` / `<RFCPreviewCard>` cross-RFC hover preview** (mockup §861-923). Substantial chunk requiring `useGetDoc` + popover orchestration + `classifyProblem` for 404s; folded into a future slice alongside SearchModal's preview pane and a likely `<Popover>` extraction. Today's `<Anchor>` still resolves cross-doc links and falls through to external / broken-link sentinels correctly — only the hover preview chrome is missing.

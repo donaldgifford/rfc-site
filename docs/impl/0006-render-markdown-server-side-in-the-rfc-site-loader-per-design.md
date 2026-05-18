@@ -117,15 +117,15 @@ Build the new server-side render path **alongside** the existing client-side pat
   - External `http(s)://` URLs that didn't match → add `target="_blank"` + `rel="noopener noreferrer"`.
   - Unmatched internal-looking href → replace the `<a>` node with a `<span data-broken-link>` carrying the original children + a `title` attribute (`"Unresolved link: <href>"`).
   - File data carries `documentLinks` via the `file.data` mechanism (set by the caller).
-- [ ] Create `src/portal/markdown/renderMarkdown.ts`. Compose unified pipeline: `remarkParse → ...remarkPlugins → remarkRehype({allowDangerousHtml: false}) → ...rehypePluginsCore → resolveAnchorLinks → rehypeSanitizePlugin → rehypeStringify`. Module-scoped `pipeline` constant. Export `async function renderMarkdown(doc: Document): Promise<string>` that calls `pipeline.process({ value: doc.body ?? "", data: { documentLinks: doc.links ?? [] }})` and returns `String(file)`.
-- [ ] Write `src/portal/markdown/plugins/resolve-anchor-links.test.ts`. Fixture cases:
+- [x] Create `src/portal/markdown/renderMarkdown.ts`. Compose unified pipeline: `remarkParse → ...remarkPlugins → remarkRehype({allowDangerousHtml: false}) → ...rehypePluginsCore → resolveAnchorLinks → rehypeSanitizePlugin → rehypeStringify`. Module-scoped `pipeline` constant. Export `async function renderMarkdown(doc: Document): Promise<string>` that calls `pipeline.process({ value: doc.body ?? "", data: { documentLinks: doc.links ?? [] }})` and returns `String(file)`.
+- [x] Write `tests/portal/markdown/plugins/resolve-anchor-links.test.ts`. Fixture cases:
   - Hash-only anchor passes through unchanged.
   - Cross-doc `target` match (canonical id form) → rewrites href + adds `data-cross-doc`.
   - Cross-doc `href` match (API URL form) → rewrites href + adds `data-cross-doc`.
   - External http(s) URL → adds `target`/`rel`.
   - Unmatched relative href → becomes `<span data-broken-link>`.
   - Anchor with no `href` → passes through unchanged.
-- [ ] Write `tests/portal/markdown/renderMarkdown.test.ts`. Fixture corpus per DESIGN-0004 §Testing Strategy:
+- [x] Write `tests/portal/markdown/renderMarkdown.test.ts`. Fixture corpus per DESIGN-0004 §Testing Strategy:
   - GFM table renders.
   - All 5 admonition variants (`NOTE/WARNING/TIP/CAUTION/IMPORTANT` → div class plus label span; `IMPORTANT` normalised to `note`).
   - Mermaid block emits `<pre data-mermaid-source="...">` placeholder (no Shiki on language-mermaid).
@@ -414,7 +414,14 @@ No new package dependencies. The full unified stack is already installed:
 
 ### Phase 1
 
-_pending_
+**Status:** ✅ Closed 2026-05-18.
+
+- **Pipeline split** (Task 1): `rehypePlugins` factored into `rehypePluginsCore` + `rehypeSanitizePlugin` + a recombined `rehypePlugins` export. The existing `<DocumentView>` consumes the recombined export unchanged.
+- **Sanitize allowlist extensions** (Task 2): `<a>` permits `target`, `rel`, `dataCrossDoc`; `<span>` permits `dataBrokenLink`; `*` permits `title`. The "strips `<a target=_blank>` from sanitize" test inverted to "preserves" — the defence model moved upstream to `remark-rehype`'s `allowDangerousHtml: false`. `renderMarkdown.test.ts` re-asserts the upstream defence with a fixture body containing raw `<a href="https://evil" target="_blank">`, confirming the markdown→hast boundary drops it before sanitize sees it.
+- **`resolveAnchorLinks` plugin** (Task 2): 4 branches — hash-only / cross-doc match / external / broken-link span. Reads `documentLinks` from `file.data` so the plugin stays file-agnostic. Target-priority matching mirrors `Anchor.tsx`'s historical `findLink` logic.
+- **`renderMarkdown(doc)`** (Task 3): module-scoped `unified()` processor cached at module load. Pipeline order: `remarkParse → remarkPlugins → remarkRehype({allowDangerousHtml: false}) → rehypePluginsCore → resolveAnchorLinks → rehypeSanitizePlugin → rehypeStringify`. Pure + isomorphic; takes any `Document` (doc-type-agnostic). Empty-body short-circuit returns `""`.
+- **Tests**: 25 new `renderMarkdown.test.ts` + 10 new `resolve-anchor-links.test.ts` = **254 tests across 37 files** (was 219 across 36).
+- **Phase 2 prerequisite surfaced**: today's Shiki config does not emit `data-language` on `<pre>` — the IMPL spec's claim that "today's pipeline already emits this" was aspirational. The Phase 2 task list already includes the work to confirm or add the attribute via Shiki transformer / addLanguageClass option. Test `renderMarkdown — code blocks` accordingly asserts only on `<pre.shiki>` + tokenised `<span>` shape for Phase 1.
 
 ### Phase 2
 
