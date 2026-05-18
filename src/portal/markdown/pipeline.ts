@@ -37,8 +37,11 @@ const aAttrsMergedClassName: PropertyDefinition[] = defaultATagAttrs.map((entry)
 //   - Shiki's inline `style` attributes on <pre>/<code>/<span>
 //   - Shiki's `tabIndex`, `class="shiki ..."`, `class="line"` on its output
 //   - heading anchor classes on <a> (prepended by rehype-autolink-headings)
-//   - `dataMermaidSource` on <pre> (set by Phase 3's mermaid-marker plugin)
-//   - <mark> for search-snippet rendering (Phase 6)
+//   - `dataMermaidSource` on <pre> (set by mermaid-marker plugin)
+//   - `dataCrossDoc` on <a>, `dataBrokenLink` + `title` on <span>
+//     (set by resolve-anchor-links — IMPL-0006 Phase 1)
+//   - `target` + `rel` on <a> (set by resolve-anchor-links for external links)
+//   - <mark> for search-snippet rendering
 //
 // `id` is removed from `clobber` so heading IDs render verbatim — they need
 // to match `SearchResult.section_slug` references coming from `rfc-api`.
@@ -51,11 +54,11 @@ export const sanitizeSchema: SanitizeOptions = {
   tagNames: [...defaultTagNames, "mark"],
   attributes: {
     ...defaultAttrs,
-    "*": [...defaultStarAttrs, "className", "id"],
-    a: [...aAttrsMergedClassName, "ariaHidden"],
+    "*": [...defaultStarAttrs, "className", "id", "title"],
+    a: [...aAttrsMergedClassName, "ariaHidden", "target", "rel", "dataCrossDoc"],
     code: [...defaultCodeAttrs, "style", "dataLanguage", "tabIndex"],
     pre: ["className", "tabIndex", "style", "dataLanguage", "dataMermaidSource"],
-    span: ["className", "style"],
+    span: ["className", "style", "dataBrokenLink"],
     // GFM alerts → admonition div (remark-github-alerts plugin).
     div: ["className"],
   },
