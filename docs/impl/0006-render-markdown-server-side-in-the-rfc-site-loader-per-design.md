@@ -110,7 +110,7 @@ Build the new server-side render path **alongside** the existing client-side pat
 
 #### Tasks
 
-- [ ] Refactor `src/portal/markdown/pipeline.ts`: split `rehypePlugins` into `rehypePluginsCore` (everything **before** sanitize) and `rehypeSanitizePlugin` (the configured `[rehypeSanitize, sanitizeSchema]` entry). Keep the existing `rehypePlugins` export as `[...rehypePluginsCore, rehypeSanitizePlugin]` so the current client-side path still works unchanged.
+- [x] Refactor `src/portal/markdown/pipeline.ts`: split `rehypePlugins` into `rehypePluginsCore` (everything **before** sanitize) and `rehypeSanitizePlugin` (the configured `[rehypeSanitize, sanitizeSchema]` entry). Keep the existing `rehypePlugins` export as `[...rehypePluginsCore, rehypeSanitizePlugin]` so the current client-side path still works unchanged.
 - [ ] Create `src/portal/markdown/plugins/resolve-anchor-links.ts`. Port `Anchor.tsx`'s semantics into a hast visitor:
   - Hash-only `href` (`#section-slug`) → leave alone.
   - Match `href` against `documentLinks[].target` then `documentLinks[].href` (`findLink` logic from Anchor.tsx:15-26). On match, rewrite `href` to `apiHrefToPortalRoute(link.href)` and add `data-cross-doc="1"`.

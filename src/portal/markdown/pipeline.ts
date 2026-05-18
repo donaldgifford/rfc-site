@@ -80,16 +80,23 @@ function elementText(node: Element): string {
 // `remark-github-alerts` runs after GFM so the blockquote tokens exist.
 export const remarkPlugins: PluggableList = [remarkGfm, stripDoczBoilerplate, remarkGithubAlerts];
 
-// Plugins consumed by `react-markdown`'s `rehypePlugins` prop.
-// Order is load-bearing:
+// Rehype plugin chain split across two exports so callers that need to
+// insert their own pass (e.g. `renderMarkdown.ts` injecting a hast
+// `<a>`-rewrite plugin before sanitize) can compose them with a custom
+// middle. The combined `rehypePlugins` export below preserves the
+// chain shape react-markdown consumed before the split.
+//
+// Order within `rehypePluginsCore` is load-bearing:
 //   slug → autolink (so the anchor sees the id)
 //   → mermaid-marker (tags `language-mermaid` blocks before Shiki, so Shiki
 //     doesn't touch them)
 //   → shiki (syntax highlighting for everything else)
 //   → normalize-hast-properties (Shiki emits raw HTML attr names; convert
 //     back to hast camelCase so `rehype-sanitize` recognises them)
-//   → sanitize (last line of defence).
-export const rehypePlugins: PluggableList = [
+//
+// `rehypeSanitizePlugin` is the LAST line of defence and must always
+// run last in any chain that uses these exports.
+export const rehypePluginsCore: PluggableList = [
   rehypeSlug,
   [
     rehypeAutolinkHeadings,
@@ -109,5 +116,12 @@ export const rehypePlugins: PluggableList = [
     },
   ],
   normalizeHastProperties,
-  [rehypeSanitize, sanitizeSchema],
 ];
+
+export const rehypeSanitizePlugin: PluggableList = [[rehypeSanitize, sanitizeSchema]];
+
+// Combined chain — preserves the shape react-markdown's `<MarkdownHooks>`
+// has consumed since DESIGN-0002. Kept stable so the existing
+// `<DocumentView>` client-side path stays unchanged while IMPL-0006
+// Phase 1 builds the server-side render path alongside it.
+export const rehypePlugins: PluggableList = [...rehypePluginsCore, ...rehypeSanitizePlugin];
