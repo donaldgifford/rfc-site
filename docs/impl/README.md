@@ -37,4 +37,5 @@ docz create impl "Your Implementation Title"
 | IMPL-0003 | Wire up the Markdown rendering pipeline per DESIGN-0002 | Draft | 2026-04-30 | Donald Gifford | [0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md](0003-wire-up-the-markdown-rendering-pipeline-per-design-0002.md) |
 | IMPL-0004 | Build rfc-portal components per INV-0002 inventory | Draft | 2026-05-11 | Donald Gifford | [0004-build-rfc-portal-components-per-inv-0002-inventory.md](0004-build-rfc-portal-components-per-inv-0002-inventory.md) |
 | IMPL-0005 | Execute the rfc-site rebuild per DESIGN-0003 | Draft | 2026-05-15 | Donald Gifford | [0005-execute-the-rfc-site-rebuild-per-design-0003.md](0005-execute-the-rfc-site-rebuild-per-design-0003.md) |
+| IMPL-0006 | Render Markdown server-side in the rfc-site loader per DESIGN-0004 | Draft | 2026-05-18 | Donald Gifford | [0006-render-markdown-server-side-in-the-rfc-site-loader-per-design.md](0006-render-markdown-server-side-in-the-rfc-site-loader-per-design.md) |
 <!-- END DOCZ AUTO-GENERATED -->

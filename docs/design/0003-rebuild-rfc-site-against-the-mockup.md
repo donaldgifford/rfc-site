@@ -41,7 +41,10 @@ created: 2026-05-15
   - [Phase 1 — mockup tokens + Topbar + Directory (1 PR)](#phase-1--mockup-tokens--topbar--directory-1-pr)
   - [Phase 2 — RFC page (1 PR)](#phase-2--rfc-page-1-pr)
   - [Phase 3 — SearchModal + /search (1 PR)](#phase-3--searchmodal--search-1-pr)
-  - [Phase 4 — `/mcp` + `/api` view shells (2 PRs, sequenced)](#phase-4--mcp--api-view-shells-2-prs-sequenced)
+  - [Phase 4 — /mcp + /api view shells (2 PRs, sequenced)](#phase-4--mcp--api-view-shells-2-prs-sequenced)
+    - [Phase 4a — /mcp (1 PR)](#phase-4a--mcp-1-pr)
+    - [Phase 4b — /api (1 PR)](#phase-4b--api-1-pr)
+    - [/frameworks — deferred](#frameworks--deferred)
 - [Open Questions](#open-questions)
 - [References](#references)
 <!--toc:end-->
