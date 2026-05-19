@@ -1,7 +1,7 @@
 ---
 id: IMPL-0006
 title: "Render Markdown server-side in the rfc-site loader per DESIGN-0004"
-status: Draft
+status: Completed
 author: Donald Gifford
 created: 2026-05-18
 ---
@@ -9,7 +9,7 @@ created: 2026-05-18
 
 # IMPL 0006: Render Markdown server-side in the rfc-site loader per DESIGN-0004
 
-**Status:** Draft
+**Status:** Completed (2026-05-19)
 **Author:** Donald Gifford
 **Date:** 2026-05-18
 
@@ -272,22 +272,24 @@ Bolt the cache onto the working pipeline. Independent of everything before — P
 
 #### Tasks
 
-- [ ] Create `src/portal/markdown/renderCache.ts` per DESIGN-0004 §4:
-  - Module-scoped `Map<string, CacheEntry>`.
+- [x] Create `src/portal/markdown/renderCache.ts` per DESIGN-0004 §4:
+  - Module-scoped `Map<string, CacheEntry>` with `CacheEntry = { html: string; lastAccess: number }`.
   - `MAX_ENTRIES = 256`, `ENTRY_TTL_MS = 60 * 60_000`.
-  - `cacheKey(doc)` returns `${doc.id}@${doc.source.commit}` or `null` if commit is missing.
-  - `renderMarkdownCached(doc)` returns cache hit (with `lastAccess` bump) or computes + stores + returns.
-  - LRU eviction on `MAX_ENTRIES` overflow.
-  - Test-only `_clearRenderCache()` export.
-- [ ] Wire `renderMarkdownCached` into the `$type.$id.tsx` loader (replacing the direct `renderMarkdown` call from Phase 4).
-- [ ] Write `tests/portal/markdown/renderCache.test.ts`:
-  - Hit on second call with same `(id, commit)`.
-  - Miss on different `commit` even with same `id`.
-  - Eviction when `MAX_ENTRIES` exceeded — oldest entry is dropped.
-  - TTL backstop: an entry past `ENTRY_TTL_MS` triggers a fresh render.
-  - `null` key bypass: doc with no `source.commit` renders every call (no cache).
-  - Concurrent calls for the same key produce one render (optional — depends on Phase 4 implementation; if not naturally handled, document and defer).
-- [ ] Add manual cache instrumentation guidance to the IMPL §Findings. Suggested approach: a one-line `console.time` wrapper around `renderMarkdown` inside `renderMarkdownCached`, plus a `console.log("[render-cache] hit", key)` / `"miss"` line. Strip before merging or leave behind a `DEBUG_RENDER_CACHE` env flag.
+  - `cacheKey(doc)` returns `${doc.id}@${doc.source.commit}` or `null` if commit is missing or empty.
+  - `renderMarkdownCached(doc)` returns cache hit (with `lastAccess` bump via `Map.delete` + `Map.set` to re-promote in insertion order) or computes + stores + returns.
+  - LRU eviction on `MAX_ENTRIES` overflow — pops `Map.keys().next()` (oldest insertion).
+  - Test-only exports: `_clearRenderCache()`, `_renderCacheSize()`, `_RENDER_CACHE_LIMITS` (so tests don't hardcode the cap).
+- [x] Wired `renderMarkdownCached` into the `$type.$id.tsx` loader (replaces the direct `renderMarkdown` call from Phase 4). One-line import swap + one-line call swap.
+- [x] Wrote `tests/portal/markdown/renderCache.test.ts` — 9 tests:
+  - `cacheKey`: `${id}@${commit}` shape; null for missing/empty commit.
+  - Hit on second call with same `(id, commit)` (identity assertion + size = 1).
+  - Miss on different `commit` for same `id` (two entries, both bodies survive).
+  - `null` key bypass: cache size stays unchanged.
+  - LRU eviction at `MAX_ENTRIES` boundary: oldest falls out; re-render the evicted id confirms it's a miss.
+  - TTL backstop: `vi.useFakeTimers()` + `vi.setSystemTime` advances past `ENTRY_TTL_MS`; same key re-renders.
+  - LRU bump: re-accessing an old entry promotes it past newer ones on eviction.
+  - Concurrent-call coalescing **deferred** — not handled by this implementation (two simultaneous misses produce two renders, second overwrites first; both consumers get correct output). Per the original IMPL note: "depends on Phase 4 implementation; if not naturally handled, document and defer." Documented in §Findings.
+- [x] **Cache instrumentation guidance** in §Findings — `console.time` / `console.log` wrappers around the hit/miss branches are the simplest debug path; a `DEBUG_RENDER_CACHE` env flag is a clean way to leave them merged.
 
 #### Success Criteria
 
@@ -453,7 +455,25 @@ No new package dependencies. The full unified stack is already installed:
 
 ### Phase 6 — cache instrumentation
 
-_pending_
+**Status:** ✅ Closed 2026-05-19.
+
+- **Module shape**: `src/portal/markdown/renderCache.ts` is a small (~75 LOC) wrapper around `renderMarkdown`. Module-scoped `Map<string, { html, lastAccess }>`. `MAX_ENTRIES = 256` (a reasonable upper bound for an active reader's working set; today's content corpus is much smaller), `ENTRY_TTL_MS = 60 * 60_000` (1 hour belt-and-braces against accidental commit reuse / stale entries on long-lived processes).
+- **LRU semantics**: `Map` preserves insertion order. On a hit we `cache.delete(key)` then `cache.set(key, entry)` to bump the entry to the back; on eviction we pop `cache.keys().next()` (the front-most, i.e. oldest). The TTL check happens at the hit branch — a stale entry falls through to the miss path, triggering a re-render, and the rewrite naturally bumps it to the back again.
+- **Bypass for missing commit**: `cacheKey()` returns `null` for `Document.source.commit === undefined / ""`. The cached path skips entirely; we just call through to `renderMarkdown(doc)`. Better to pay the render cost than serve stale HTML keyed by a non-unique identifier (e.g. legacy fixtures, in-flight uploads).
+- **Concurrent-call coalescing**: NOT handled. If two requests for the same key arrive simultaneously and both miss, both call `renderMarkdown(doc)` and both store their result (the second overwrite is idempotent — same key, same HTML). Both consumers get correct output; the cost is one extra render. Coalescing would require an in-flight promise map (`Map<string, Promise<string>>` checked before the miss branch). Deferred — the cost is small (one redundant render in a rare race), the benefit is small (existing fix is dropping a redundant request, not preventing a bug).
+- **Cache instrumentation** (if needed for debugging):
+  ```ts
+  // Inside renderMarkdownCached, around the hit/miss branches:
+  if (process.env.DEBUG_RENDER_CACHE) {
+    console.log(`[render-cache] ${hit ? "hit" : "miss"} ${key}`);
+  }
+  ```
+  Run with `DEBUG_RENDER_CACHE=1 just dev-msw` to see hit/miss in the server log. Not merged because it adds runtime overhead even when the flag is off (env lookup); enable on demand for debugging.
+- **Manual verification sequence** (matches the IMPL success criterion):
+  - Hit `/rfc/0001` first time → miss → render → cache populated.
+  - Hit `/rfc/0001` again → hit → no render.
+  - `make work` in rfc-api re-ingests; `Document.source.commit` changes → next hit is a miss with a new key. Old entry stays in cache (LRU will eventually evict it).
+- **Test totals**: 9 new `renderCache.test.ts` tests for **267 tests across 38 files** (was 258 across 37).
 
 ## Open Questions
 

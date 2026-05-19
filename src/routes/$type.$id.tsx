@@ -4,7 +4,7 @@ import { getDoc } from "../portal/api/__generated__/docs/docs";
 import type { Document } from "../portal/api/__generated__/model";
 import { throwIfProblem } from "../portal/api/errors";
 import { DocumentView } from "../portal/markdown";
-import { renderMarkdown } from "../portal/markdown/renderMarkdown";
+import { renderMarkdownCached } from "../portal/markdown/renderCache";
 import {
   DocHeader,
   DocPage,
@@ -32,8 +32,11 @@ export async function loader({ params }: Route.LoaderArgs): Promise<LoaderData> 
   const doc = response.data;
   // Render the Markdown body server-side (IMPL-0006). The article HTML
   // lands in the initial response payload so hard refreshes don't
-  // flash a redraw of the article column.
-  const bodyHtml = await renderMarkdown(doc);
+  // flash a redraw of the article column. `renderMarkdownCached` keys
+  // on `${doc.id}@${doc.source.commit}` so warm reads short-circuit;
+  // a new ingest in rfc-api changes the commit and invalidates the
+  // cache automatically.
+  const bodyHtml = await renderMarkdownCached(doc);
   return { doc, bodyHtml };
 }
 
