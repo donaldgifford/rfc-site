@@ -16,8 +16,11 @@ describe("$type.$id loader", () => {
       context: {},
     } as Parameters<typeof loader>[0]);
 
-    expect(result.id).toBe("RFC-0001");
-    expect(result.title).toBe("Adopt MSW-backed dev mode for the portal");
+    expect(result.doc.id).toBe("RFC-0001");
+    expect(result.doc.title).toBe("Adopt MSW-backed dev mode for the portal");
+    // Post-IMPL-0006: the loader server-side renders the Markdown body
+    // and returns the HTML alongside the doc. Non-empty for the fixture.
+    expect(result.bodyHtml.length).toBeGreaterThan(0);
   });
 
   it("throws a 404 Response with the problem+json payload for ErrNotFound", async () => {

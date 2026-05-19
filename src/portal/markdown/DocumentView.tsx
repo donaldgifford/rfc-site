@@ -1,53 +1,55 @@
-import { createContext, Suspense, useContext, useMemo } from "react";
-import { MarkdownHooks, type Components } from "react-markdown";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router";
 
-import type { Document } from "../api/__generated__/model";
-import type { Link as DocLink } from "../api/__generated__/model";
-import { Anchor } from "./components/Anchor";
-import { Pre } from "./components/Code";
-import { remarkPlugins, rehypePlugins } from "./pipeline";
+import { attachCrossDocClickHandler } from "./cross-doc-nav";
+import { hydrateMermaid } from "./mermaid-hydrate";
 
 import "./styles.css";
 
-const LinksContext = createContext<readonly DocLink[]>([]);
+interface DocumentViewProps {
+  bodyHtml: string;
+}
 
 /**
- * Used by `<Anchor>` to resolve markdown anchor `href`s against the
- * document's `links[]` array (per DESIGN-0002 §Cross-document link
- * resolution and CLAUDE.md §Hard rules).
+ * Server-rendered Markdown body (IMPL-0006 Phase 4).
+ *
+ * The loader calls `renderMarkdown(doc)` and hands us the resulting HTML
+ * string. We inject it via `dangerouslySetInnerHTML` (already sanitized
+ * by the pipeline's `rehype-sanitize` step) so the article paints in the
+ * initial HTML response — no client-side render flash on hard refresh,
+ * which was the original motivation for INV-0004.
+ *
+ * Two post-mount effects, both keyed on `bodyHtml` so they re-run on
+ * route change:
+ *
+ *   1. Cross-doc click delegation. The pipeline's `resolveAnchorLinks`
+ *      plugin tagged cross-doc anchors with `data-cross-doc="1"`; the
+ *      delegated handler intercepts those clicks and dispatches via
+ *      RR7's `useNavigate` so we don't pay a full-page reload.
+ *
+ *   2. Mermaid hydration. `pre[data-mermaid-source]` placeholders get
+ *      replaced with rendered SVG. Lazy `await import("mermaid")` only
+ *      fires on pages that actually contain a mermaid block.
  */
-export function useDocumentLinks(): readonly DocLink[] {
-  return useContext(LinksContext);
-}
+export function DocumentView({ bodyHtml }: DocumentViewProps) {
+  const articleRef = useRef<HTMLElement | null>(null);
+  const navigate = useNavigate();
 
-const components: Components = {
-  a: Anchor,
-  pre: Pre,
-};
+  useEffect(() => {
+    const node = articleRef.current;
+    if (node === null) return;
+    return attachCrossDocClickHandler(node, navigate);
+  }, [bodyHtml, navigate]);
 
-interface DocumentViewProps {
-  document: Document;
-}
+  useEffect(() => {
+    void hydrateMermaid();
+  }, [bodyHtml]);
 
-export function DocumentView({ document }: DocumentViewProps) {
-  const links = useMemo(() => document.links ?? [], [document.links]);
-
-  // `@shikijs/rehype` does async work (theme/lang loading), so we use
-  // `MarkdownHooks` (React 19 `use()`-backed) and wrap in Suspense so SSR
-  // streams the rendered HTML once the highlighter has resolved.
   return (
-    <LinksContext.Provider value={links}>
-      <article className="markdown-body">
-        <Suspense fallback={null}>
-          <MarkdownHooks
-            remarkPlugins={remarkPlugins}
-            rehypePlugins={rehypePlugins}
-            components={components}
-          >
-            {document.body ?? ""}
-          </MarkdownHooks>
-        </Suspense>
-      </article>
-    </LinksContext.Provider>
+    <article
+      ref={articleRef}
+      className="markdown-body"
+      dangerouslySetInnerHTML={{ __html: bodyHtml }}
+    />
   );
 }

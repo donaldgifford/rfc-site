@@ -160,16 +160,27 @@
   font-family: inherit;
 }
 
-/* Shiki dual-theme — keep the dark theme colours under data-theme="dark" */
-[data-theme="dark"] .markdown-body .shiki,
-[data-theme="dark"] .markdown-body .shiki span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
+/* Language-badge chip on syntax-highlighted code blocks (mockup §812-823).
+   Shiki's `tokens-to-css-variables` transformer sets `data-language="<lang>"`
+   on the <pre>; the badge is a pure-CSS ::before. Mermaid blocks aren't
+   highlighted by Shiki so they don't carry `data-language` — the
+   exclusion is defensive. */
+.markdown-body pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--code-type);
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.markdown-body pre,
-.markdown-body pre code {
-  background: var(--code-bg) !important;
+.markdown-body pre[data-language="mermaid"]::before {
+  content: none;
 }
 
 /* Blockquote — quiet, no left bar, raised bg + serif quote glyph, mockup §837-859 */
@@ -374,7 +385,31 @@
   color: currentColor;
 }
 
-/* Mermaid diagram container, mockup §1156-1178 */
+/* Mermaid diagram container (post-IMPL-0006 hydration), mockup §1157-1167.
+   `.mermaid-diagram` is added by the `hydrateMermaid` helper after it
+   swaps the <pre>'s textContent for the rendered SVG.
+
+   The transient `<pre data-mermaid-source>` placeholder also matches
+   this rule via `pre.markdown-body, .mermaid-block` below — keeps the
+   raw-source view (pre-hydration / SSR / no-JS) visually consistent
+   with the hydrated state so there's no layout jump. */
+.markdown-body .mermaid-diagram,
+.markdown-body pre[data-mermaid-source] {
+  margin: 24px 0;
+  padding: 32px 24px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+}
+
+.markdown-body .mermaid-diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/* Legacy MermaidBlock component (pre-IMPL-0006), kept until Phase 4. */
 .markdown-body .mermaid-block {
   margin: 24px 0;
   padding: 32px 24px;

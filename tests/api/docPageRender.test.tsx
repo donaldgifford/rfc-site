@@ -44,15 +44,28 @@ function mountDocPage(initial = "/rfc/0001") {
   );
 }
 
+// Post-IMPL-0006 the loader runs the full Shiki pipeline server-side,
+// which has a one-time WASM cold-start cost. Locally ~2s; on GitHub
+// Actions runners ~8s (the perf test logs `cold=8040ms`). Bumping
+// waitFor's polling timeout so the first test in the file doesn't
+// race the warmup. Stays comfortably under vitest's testTimeout=15s.
+const WAITFOR_TIMEOUT = 12000;
+
 describe("/$type/$id route render", () => {
   it("renders the NumberLine eyebrow + serif h1 from the loader data", async () => {
     mountDocPage();
-    await waitFor(() => {
-      expect(screen.getByText(/RFC \/ 0001/)).toBeInTheDocument();
-    });
-    expect(
-      screen.getByRole("heading", { level: 1, name: /Adopt MSW-backed dev mode/ }),
-    ).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(screen.getByText(/RFC \/ 0001/)).toBeInTheDocument();
+      },
+      { timeout: WAITFOR_TIMEOUT },
+    );
+    // Post-IMPL-0006: the rendered Markdown body now lives in the same
+    // tree as the <DocHeader>, so two h1s exist (one from <DocHeader>,
+    // one from the Markdown body's `# Title`). The DocHeader h1 is the
+    // first match — getAllByRole returns DOM order.
+    const titles = screen.getAllByRole("heading", { level: 1, name: /Adopt MSW-backed dev mode/ });
+    expect(titles.length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders the metadata sidebar with the status colour mapped from doc.status", async () => {
@@ -76,11 +89,22 @@ describe("/$type/$id route render", () => {
 
   it("renders the rendered Markdown body inside the article column", async () => {
     mountDocPage();
-    // The default fixture body has Motivation / Proposal / Alternatives
-    // headings. They should land in the article — the TOC harvests them
-    // via the MutationObserver/effect on the first paint.
+    // Post-IMPL-0006: the loader server-side renders Markdown to HTML
+    // and DocumentView injects it via dangerouslySetInnerHTML. Headings
+    // are present in the very first paint — no Suspense fallback flash.
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 2, name: /Motivation/i })).toBeInTheDocument();
+    });
+  });
+
+  it("renders the article HTML with the markdown-body class (SSR'd via dangerouslySetInnerHTML)", async () => {
+    const { container } = mountDocPage();
+    await waitFor(() => {
+      const article = container.querySelector("article.markdown-body");
+      expect(article).not.toBeNull();
+      // The article element should have actual content (the rendered HTML),
+      // not just be an empty Suspense placeholder.
+      expect(article?.innerHTML.length ?? 0).toBeGreaterThan(0);
     });
   });
 });
