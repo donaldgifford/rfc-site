@@ -176,33 +176,22 @@ Replace the in-tree `<MermaidBlock>` component with a post-mount hydration pass 
 
 #### Tasks
 
-- [ ] Create `src/portal/markdown/mermaid-hydrate.ts`. Exports `async function hydrateMermaid(): Promise<void>`:
-  - Query `[data-mermaid-source]` on the document. Early-return if empty.
+- [x] Create `src/portal/markdown/mermaid-hydrate.ts`. Exports `async function hydrateMermaid(): Promise<void>`:
+  - Query `pre[data-mermaid-source]` on the document. Early-return if empty (no `mermaid` import).
   - Dynamic `import("mermaid")` so the lib only ships when needed.
-  - `mermaid.initialize({ startOnLoad: false, theme: "base", themeVariables: mermaidThemeFromTokens() })`.
-  - For each block: read `data-mermaid-source`, render via `mermaid.render`, replace `innerHTML` with the resulting SVG, add the `.mermaid-diagram` class to the placeholder.
-  - On render error: set `textContent` to a fallback message + `console.error`.
-- [ ] Implement `mermaidThemeFromTokens()` helper. Read `getComputedStyle(document.documentElement).getPropertyValue("--bg-raised")` etc. and return a `themeVariables` object with `primaryColor`, `primaryTextColor`, `primaryBorderColor`, `lineColor`, `fontFamily`. Start with the minimal set for flowchart (the only diagram type our fixtures currently use) — extend if other types appear.
-- [ ] Add `.mermaid-diagram` styling to `src/portal/markdown/styles.css` per mockup §1157-1167:
-  ```css
-  .markdown-body .mermaid-diagram {
-    margin: 24px 0;
-    padding: 32px 24px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border-hairline);
-    border-radius: var(--r-sm);
-  }
-  .markdown-body .mermaid-diagram svg {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-  }
-  ```
-- [ ] Write `tests/portal/markdown/mermaid-hydrate.test.tsx`. JSDOM environment:
-  - Mock `mermaid.render` to return a known SVG string.
-  - Render a fixture document containing one mermaid block via the (still-current) `<DocumentView>` path (or build a minimal harness — the goal is to test the hydrate helper).
-  - Call `hydrateMermaid()`. Assert the placeholder now contains the mocked SVG and has `.mermaid-diagram` class.
-  - Second test: `hydrateMermaid()` with no `[data-mermaid-source]` elements — must not import `mermaid`.
+  - `mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", themeVariables: mermaidThemeFromTokens() })`.
+  - For each block: read `textContent` (the mermaid source, set by `mermaid-marker`), render via `mermaid.render`, replace `innerHTML` with the resulting SVG, add `.mermaid-diagram` class, strip the `data-mermaid-source` marker (idempotency).
+  - On render error: `console.error`, leave the source text in place — `data-mermaid-source` stays so a future hydrate retry can have another go.
+- [x] Implement `mermaidThemeFromTokens()` helper. Reads `getComputedStyle(document.documentElement).getPropertyValue("--bg-raised")` etc. and returns a `themeVariables` object: `primaryColor`, `primaryTextColor`, `primaryBorderColor`, `lineColor`, `secondaryColor`, `tertiaryColor`, `fontFamily`, `fontSize`. Each token has a hardcoded fallback so jsdom (where `getComputedStyle` returns `""` for unset custom props) produces a valid theme.
+- [x] Add `.mermaid-diagram` styling to `src/portal/markdown/styles.css` per mockup §1157-1167. Also added the same rules to `pre[data-mermaid-source]` so the pre-hydration / SSR / no-JS view has matching dimensions and there's no layout jump on hydrate. Legacy `.mermaid-block` rules (from the pre-IMPL-0006 React component) kept until Phase 4 cleanup.
+- [x] Write `tests/portal/markdown/mermaid-hydrate.test.tsx`. 8 tests, jsdom environment via `vi.mock("mermaid")`:
+  - No blocks → no `mermaid` import (initialize/render never called).
+  - Single block → SVG replaces innerHTML; `.mermaid-diagram` added; `data-mermaid-source` removed.
+  - Multiple blocks → each one hydrated independently with its own `mermaid.render` call.
+  - Theme variables: `primaryColor` reads `--bg-raised`; `lineColor` reads `--accent`.
+  - `mermaid.render` rejection → `console.error`; block retains source; no `.mermaid-diagram` class (so reader still sees the raw code).
+  - Whitespace-only block → no render call; `data-mermaid-source` stripped.
+  - `mermaidThemeFromTokens` directly: reads custom props when set; falls back to hardcoded dark defaults when missing.
 
 #### Success Criteria
 
@@ -409,7 +398,14 @@ No new package dependencies. The full unified stack is already installed:
 
 ### Phase 3
 
-_pending_
+**Status:** ✅ Closed 2026-05-18 (helper + tests + styles). The wire-up into `<DocumentView>` lands in Phase 4 along with the rest of the cutover.
+
+- **`hydrateMermaid()`** — module exports an `async` no-op-friendly helper. Lazy `await import("mermaid")` only fires when at least one `pre[data-mermaid-source]` is present. Import wrapped in `try/catch` so a CDN / chunk failure logs + bails rather than crashing the page. Each block reads its own `textContent` (the source set by the existing `mermaid-marker` plugin), renders to SVG with a random `mermaid-${rand}` id, and replaces innerHTML in place. `removeAttribute("data-mermaid-source")` after success → calling the helper again on the same node is a no-op (matters once Phase 4 wires it into a `useEffect` on `bodyHtml` change).
+- **`mermaidThemeFromTokens()`** — flowchart-targeted minimal set. The function is SSR-safe (`typeof document === "undefined"` returns the default theme), and individual token reads have hardcoded fallbacks so jsdom's empty `getComputedStyle` returns still produce a valid theme. Cooperates with `data-theme="dark"`; future light-theme support (if ever) is purely a token-value change.
+- **`mermaid-marker` clarification**: confirmed (and now documented in IMPL Phase 3 task) that the plugin sets `data-mermaid-source=""` (empty marker) and leaves the source as the `<pre>`'s child `<code>` text content. The hydration helper reads `block.textContent`, not the attribute value. The previous DESIGN draft suggested reading `data-mermaid-source` — that was wrong.
+- **CSS** — `.mermaid-diagram` styling per mockup §1157-1167 (24px margin, 32×24 padding, `--bg-raised` background, `--border-hairline` border, `--r-sm` radius, `overflow-x: auto`). Also applied to `pre[data-mermaid-source]` so the pre-hydration / SSR view has the same dimensions — no layout jump on hydrate. Legacy `.mermaid-block` rules kept until Phase 4 deletes the React component.
+- **Tests added**: 8 new in `mermaid-hydrate.test.tsx`. Mocking `mermaid` via `vi.mock(...)` + `await import(...)` after the mock so the module's lazy import resolves to the stub. Test totals: 258 → 266 (38 files).
+- **Bundle verification deferred** — the IMPL §Phase 3 success criterion "`mermaid` chunk-splits and isn't in the entry chunk" is verifiable only after Phase 4 wires the helper into `<DocumentView>` (today nothing imports it, so the chunk graph doesn't yet exercise the lazy import). Will verify alongside the cutover.
 
 ### Phase 4
 
