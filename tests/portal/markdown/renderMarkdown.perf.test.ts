@@ -64,7 +64,6 @@ describe("renderMarkdown — OQ-1 highlighter singleton", () => {
     await renderMarkdown(fixture(codeBody, "RFC-0003"));
     const warm2 = performance.now() - t3;
 
-    // eslint-disable-next-line no-console
     console.log(
       `[OQ-1] cold=${cold.toFixed(0)}ms warm1=${warm1.toFixed(0)}ms warm2=${warm2.toFixed(0)}ms ratio=${(cold / warm2).toFixed(1)}x`,
     );
