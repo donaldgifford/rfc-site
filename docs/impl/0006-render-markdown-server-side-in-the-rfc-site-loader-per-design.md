@@ -208,23 +208,27 @@ The user-visible flip. Modify the route loader to call `renderMarkdown`, thin `<
 
 #### Tasks
 
-- [ ] Modify `src/routes/$type.$id.tsx`. Loader returns `{ doc: Document, bodyHtml: string }` instead of bare `Document`. Loader calls `await renderMarkdown(doc)` (cache integration lands in Phase 6). Update the `meta` function + the default export's `loaderData` shape accordingly.
-- [ ] Replace `<DocumentView document={doc} />` in `$type.$id.tsx` with `<DocumentView bodyHtml={loaderData.bodyHtml} />`. The `articleRef` div + `<DocPage>` shell stay.
-- [ ] Rewrite `src/portal/markdown/DocumentView.tsx`:
-  - Props become `{ bodyHtml: string }`.
-  - Body becomes `<article className="markdown-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />`.
-  - Add `useEffect(() => { void hydrateMermaid(); }, [bodyHtml])`.
-  - Delete `LinksContext` + `useDocumentLinks` exports (no longer needed).
-  - Delete `MarkdownHooks` + `Suspense` imports.
-- [ ] Wire up cross-doc click navigation. **Pending OQ-2 resolution** — see §Open Questions. Tentative: delegated `onClick` on `document.documentElement` that intercepts `<a data-cross-doc="1">` clicks and dispatches via RR7's `useNavigate()`. Lives in a small `src/portal/markdown/cross-doc-nav.ts` helper + a `useEffect` hook attached in `<DocumentView>`.
-- [ ] Delete `src/portal/markdown/components/Anchor.tsx` + `tests/portal/markdown/components/Anchor.test.tsx` (coverage already in `resolve-anchor-links.test.ts`).
-- [ ] Delete `src/portal/markdown/components/Code.tsx` + `tests/portal/markdown/components/Code.test.tsx` (Shiki output ships directly via SSR'd HTML; mermaid handled by `mermaid-hydrate`).
-- [ ] Delete `src/portal/markdown/components/MermaidBlock.tsx` (functionality moved into `mermaid-hydrate`).
-- [ ] Remove the now-orphaned `src/portal/markdown/components/` directory if it's empty after the deletes above.
-- [ ] Update `tests/api/docPageRender.test.tsx`:
-  - The renderRoute helper's loader now produces `{ doc, bodyHtml }`; tests assert against `bodyHtml` (rendered HTML string), not `doc.body` (raw markdown).
-  - Add a test confirming a fixture with cross-doc links has portal routes in the rendered HTML.
-- [ ] Spot-check the TOC behaviour. `<TableOfContents>` walks the article ref via `MutationObserver` + `IntersectionObserver`. After the cutover, headings still exist with their `id` attributes — confirm the TOC populates and the scroll-spy still highlights the current section.
+- [x] Modify `src/routes/$type.$id.tsx`. Loader now returns `{ doc: Document, bodyHtml: string }`. Loader calls `await renderMarkdown(doc)` (cache integration lands in Phase 6). `meta` function reads `loaderData.doc`; default export destructures `{ doc, bodyHtml }`.
+- [x] Replace `<DocumentView document={doc} />` with `<DocumentView bodyHtml={loaderData.bodyHtml} />`. The `articleRef` div + `<DocPage>` shell stay.
+- [x] Rewrite `src/portal/markdown/DocumentView.tsx`:
+  - Props are `{ bodyHtml: string }`.
+  - Body is `<article ref={…} className="markdown-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />`.
+  - Two `useEffect`s keyed on `bodyHtml`: `attachCrossDocClickHandler(articleRef, navigate)` (returns the detach fn for cleanup) and `void hydrateMermaid()`.
+  - `LinksContext` + `useDocumentLinks` removed (server-side `resolveAnchorLinks` now owns link resolution).
+  - `MarkdownHooks` + `Suspense` imports removed.
+- [x] Cross-doc click navigation via `src/portal/markdown/cross-doc-nav.ts` (OQ-2 resolution): article-scoped delegated handler. `closest("a[data-cross-doc='1']")` traversal, skips modifier-key clicks (meta/ctrl/shift/alt), middle/right clicks, empty hrefs, and `defaultPrevented` events. 8 unit tests under `tests/portal/markdown/cross-doc-nav.test.tsx` cover all bypass paths.
+- [x] Deleted `src/portal/markdown/components/Anchor.tsx` + `tests/portal/markdown/components/Anchor.test.tsx` (coverage in `resolve-anchor-links.test.ts`).
+- [x] Deleted `src/portal/markdown/components/Code.tsx` + `tests/portal/markdown/components/Code.test.tsx` (Shiki output ships directly via SSR'd HTML).
+- [x] Deleted `src/portal/markdown/components/MermaidBlock.tsx` (functionality in `mermaid-hydrate`).
+- [x] `src/portal/markdown/components/` directory removed (empty after deletes). `tests/portal/markdown/components/` likewise.
+- [x] Deleted `tests/portal/markdown/pipeline.test.tsx` — it asserted against `<DocumentView document={fixture}>` output, which no longer exists. Two unique assertions (GFM autolinks, heading-anchor class survival) migrated to `renderMarkdown.test.ts`.
+- [x] Updated `tests/api/docPageRender.test.tsx`:
+  - First test (NumberLine + h1) uses `getAllByRole` because the rendered Markdown body's `# Title` heading now appears alongside `<DocHeader>`'s title h1.
+  - `WAITFOR_TIMEOUT = 5000` to ride out the first-call Shiki WASM cold start.
+  - New test: `article.markdown-body` exists in the DOM with non-empty innerHTML.
+- [x] Updated `tests/api/docPage.test.ts` loader assertion: `result.doc.id` / `result.doc.title` / `result.bodyHtml.length > 0`.
+- [x] TOC spot-check (OQ-5 resolution): `tests/api/docPageRender.test.tsx > renders the rendered Markdown body inside the article column` confirms `<h2>Motivation</h2>` is in the DOM after the SSR'd article HTML lands — the `<TableOfContents>` walks the article ref + finds it. The MutationObserver fires once when React's reconciliation queues the article element with its content; no observer-timing fallback needed.
+- [x] **Bundle verification (Phase 3 success criterion retroactively met)**: `bun run build` confirmed `mermaid` chunk-splits to a separate `mermaid.core-*.js` file; the `_type._id-*.js` route bundle only references mermaid by import path (the lazy `await import("mermaid")` resolver), not by inlining the library.
 
 #### Success Criteria
 
@@ -409,7 +413,29 @@ No new package dependencies. The full unified stack is already installed:
 
 ### Phase 4
 
-_pending_
+**Status:** ✅ Closed 2026-05-18.
+
+- **Loader cutover**: `src/routes/$type.$id.tsx` now returns `{ doc, bodyHtml }`. The loader is now async-await on `renderMarkdown(doc)` after `getDoc`/`throwIfProblem`. `meta` reads `loaderData.doc.id` / `loaderData.doc.title`. Default export destructures both.
+- **`<DocumentView>` thin shell**: 60 LOC → 50 LOC. The component now consists of one `<article ref className="markdown-body" dangerouslySetInnerHTML />` plus two `useEffect` hooks keyed on `bodyHtml`. `MarkdownHooks` / `Suspense` / `LinksContext` / `useDocumentLinks` / `Components` all gone.
+- **Cross-doc click delegation** (OQ-2 resolution): `attachCrossDocClickHandler(articleRef.current, navigate)` returns a detach function; the `useEffect` cleanup tears down the listener on unmount or `bodyHtml` change. Skips ctrl/meta/shift/alt-clicks and middle/right buttons so "open in new tab" etc. remain user-controlled.
+- **Legacy deletions** (5 files + 2 directories):
+  - `src/portal/markdown/components/Anchor.tsx` + `.test.tsx`
+  - `src/portal/markdown/components/Code.tsx` + `.test.tsx`
+  - `src/portal/markdown/components/MermaidBlock.tsx`
+  - `tests/portal/markdown/pipeline.test.tsx` (`<DocumentView document>` test surface gone)
+  - Both empty `components/` directories removed.
+- **TOC spot-check** (OQ-5 resolution): no MutationObserver-timing bug. The existing `<TableOfContents>` test path (via `docPageRender.test.tsx > renders the rendered Markdown body inside the article column`) confirms the heading walker finds the article content after SSR HTML injection. The `useEffect(() => walk(articleRef.current), [bodyHtml])` fallback path in `<TableOfContents>` was not needed.
+- **Test count change**:
+  - Removed: 20 tests (5 Anchor + 5 Code + 10 pipeline.test.tsx).
+  - Added: 11 tests (1 GFM autolink + 1 heading-anchor class migrated to renderMarkdown.test.ts; 1 article markdown-body class assertion in docPageRender.test.tsx; 8 cross-doc-nav.test.tsx).
+  - Net: 266 → 257 (-9 tests, +1 file from `cross-doc-nav.test.tsx`, -1 file from deleting `pipeline.test.tsx`; total 36 files).
+- **Build verification**: `bun run build` runs clean. Bundle topology confirms `mermaid.core-*.js` is its own chunk; the route bundle (`_type._id-*.js`) only references mermaid by import name (the lazy `import("mermaid")` resolver), not by including the library.
+- **Phase 4 success criteria sweep**:
+  - `just check` passes (257 tests across 36 files).
+  - Build runs clean.
+  - Mermaid lazy-chunks.
+  - `src/portal/markdown/components/` no longer exists.
+  - Visual / hard-refresh smoke deferred to Phase 5 (which the IMPL plan reserves for OQ verification + visual diff). Phase 4's invariants are unit-tested in this commit.
 
 ### Phase 5 — OQ verification
 

@@ -55,6 +55,12 @@ describe("renderMarkdown — happy path", () => {
     const html = await renderMarkdown(fixture("~~struck~~"));
     expect(html).toContain("<del>struck</del>");
   });
+
+  it("renders GFM autolinks as anchor tags", async () => {
+    const html = await renderMarkdown(fixture("Visit https://example.com for info."));
+    expect(html).toContain('href="https://example.com"');
+    expect(html).toContain("https://example.com");
+  });
 });
 
 describe("renderMarkdown — heading anchors", () => {
@@ -68,6 +74,14 @@ describe("renderMarkdown — heading anchors", () => {
     expect(html).toContain('class="heading-anchor"');
     expect(html).toContain('aria-label="Permalink to Section Two"');
     expect(html).toContain('href="#section-two"');
+  });
+
+  it("preserves the heading-anchor class through sanitize", async () => {
+    // Sanitize allowlist defaults strip <a class>; we extended it for
+    // `heading-anchor` and `data-footnote-backref` in pipeline.ts. This
+    // is a regression guard.
+    const html = await renderMarkdown(fixture("# Hello"));
+    expect(html).toContain('<a class="heading-anchor"');
   });
 });
 
