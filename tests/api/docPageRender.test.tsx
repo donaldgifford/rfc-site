@@ -45,10 +45,11 @@ function mountDocPage(initial = "/rfc/0001") {
 }
 
 // Post-IMPL-0006 the loader runs the full Shiki pipeline server-side,
-// which has a one-time WASM cold-start cost (~2s in CI). Bumping
+// which has a one-time WASM cold-start cost. Locally ~2s; on GitHub
+// Actions runners ~8s (the perf test logs `cold=8040ms`). Bumping
 // waitFor's polling timeout so the first test in the file doesn't
-// race the warmup.
-const WAITFOR_TIMEOUT = 5000;
+// race the warmup. Stays comfortably under vitest's testTimeout=15s.
+const WAITFOR_TIMEOUT = 12000;
 
 describe("/$type/$id route render", () => {
   it("renders the NumberLine eyebrow + serif h1 from the loader data", async () => {
