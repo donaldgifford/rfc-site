@@ -151,51 +151,15 @@ Switch `@shikijs/rehype` to emit CSS-variable references instead of inline hex c
 
 #### Tasks
 
-- [ ] Research `@shikijs/rehype` CSS-variables mode. Options to evaluate:
-  - Pass `theme: 'css-variables'` (Shiki's built-in CSS-variables theme — emits `style="color: var(--shiki-token-...)"`).
-  - Use `@shikijs/transformers`' `transformerStyleToCssVariables` or write a small custom transformer if the built-in theme's token names don't cover our palette.
-- [ ] Switch `pipeline.ts`'s `rehypeShiki` config from `themes: { light: "github-light", dark: "github-dark" }` to the CSS-variables approach chosen above. Drop the light-theme entry (dark only per CLAUDE.md §Hard rules).
-- [ ] Update `sanitizeSchema` if Shiki's CSS-variables mode emits any new attributes the schema doesn't already permit (it already permits `style`, `className`, `tabIndex`, `dataLanguage` on `pre`/`code`/`span`).
-- [ ] Add `--shiki-token-*` → `--code-*` alias block in `src/portal/markdown/styles.css`. Initial mapping per DESIGN-0004 §7:
-  ```css
-  .markdown-body {
-    --shiki-token-keyword:   var(--code-keyword);
-    --shiki-token-function:  var(--code-function);
-    --shiki-token-string:    var(--code-string);
-    --shiki-token-number:    var(--code-number);
-    --shiki-token-comment:   var(--code-comment);
-    --shiki-token-type:      var(--code-type);
-    --shiki-token-constant:  var(--code-number);
-    --shiki-token-parameter: var(--code-fg);
-  }
-  ```
-  Verify and extend after running the actual fixtures — Shiki's full token-name list is theme-driven.
-- [ ] **Language-badge chip on code blocks** (mockup §812-823). Per OQ-3 resolution, this lands in this migration since it's the canonical reading experience for `` ```go / ```bash / ```yaml `` etc. Implementation:
-  - Confirm `<pre>` carries `data-language="<lang>"` after the pipeline runs. (Today's pipeline already emits this — sanitize schema permits `dataLanguage` on `pre`.)
-  - Confirm `mermaid-marker` plugin still strips `data-language` from mermaid blocks (or ensure the badge selector excludes `data-language="mermaid"`).
-  - Add to `src/portal/markdown/styles.css`:
-    ```css
-    .markdown-body pre[data-language] {
-      position: relative;
-    }
-    .markdown-body pre[data-language]::before {
-      content: attr(data-language);
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--code-type);
-      opacity: 0.7;
-    }
-    .markdown-body pre[data-language="mermaid"]::before {
-      content: none; /* mermaid container has its own caption affordance */
-    }
-    ```
-- [ ] Update `renderMarkdown.test.ts` code-block assertions: spans inside `<pre class="shiki ...">` must use `style="color: var(...)"` rather than `style="color: #..."`; `<pre>` carries `data-language="<lang>"`.
-- [ ] Update `tests/portal/markdown/components/Code.test.tsx` for the new output format (or delete if Phase 4 deletes the component — defer that decision to Phase 4).
+- [x] Research `@shikijs/rehype` CSS-variables mode. Outcome (Findings §Phase 2):
+  - Built-in `theme: 'css-variables'` no longer ships in Shiki v3+; the modern path is `defaultColor: false` (multi-theme CSS-var output) or a custom transformer.
+  - `@shikijs/transformers` isn't installed and adding it for one helper isn't worth the dep weight — written inline as `codeColorsToCssVariables` in `pipeline.ts`.
+- [x] Switch `pipeline.ts`'s `rehypeShiki` config to single-theme `theme: "tokyo-night"` (matches the mockup's `--code-*` palette family) + the custom `codeColorsToCssVariables` transformer. Light theme entry removed per CLAUDE.md §Hard rules.
+- [x] Sanitize schema unchanged — `dataLanguage` on `<pre>` was already permitted (it was added in Phase 1 ahead of this work). The transformer sets the canonical hast property name `dataLanguage` so the property→attribute roundtrip emits `data-language="<lang>"` verbatim.
+- [x] Skipped the `--shiki-token-*` alias block — the transformer rewrites Shiki's hex colors directly to `var(--code-*)` references in the inline `style`, so token-name CSS variables aren't needed.
+- [x] **Language-badge chip on code blocks** (mockup §812-823). Transformer sets `dataLanguage` on `<pre>`; CSS `.markdown-body pre[data-language]::before { content: attr(data-language); … }` renders the badge. `pre[data-language="mermaid"]::before { content: none }` is defensive (mermaid blocks bypass Shiki via `mermaid-marker` and never carry `data-language` anyway). Dead dual-theme CSS (`[data-theme="dark"] .markdown-body .shiki, span` rules) removed.
+- [x] `renderMarkdown.test.ts` code-block assertions extended: `data-language="<lang>"` is present on highlighted blocks (skipped for `text`/`plain`/no-lang fences); zero inline hex colors on tokens; every span carries `color:var(--code-*)`; `<pre>` no longer has inline `background-color`.
+- [x] `Code.test.tsx` untouched — it tests the React `<Pre>` component's pass-through behavior, which is unaffected by the Shiki-internal output shape change. Deletion still planned for Phase 4.
 
 #### Success Criteria
 
@@ -425,7 +389,23 @@ No new package dependencies. The full unified stack is already installed:
 
 ### Phase 2
 
-_pending_
+**Status:** ✅ Closed 2026-05-18.
+
+- **CSS-variables strategy**: investigated three options. (a) Shiki's built-in `theme: 'css-variables'` — gone in Shiki v3+; the modern equivalent is `defaultColor: false` with multi-theme CSS-var output. (b) `@shikijs/transformers` — not installed; pulling it for one helper isn't worth the dep weight. (c) Inline transformer — chosen. Wrote `codeColorsToCssVariables` in `pipeline.ts` (≈80 LOC with the color map). It runs inside `rehypeShiki`'s transformer chain.
+- **Theme**: switched from `themes: { light: github-light, dark: github-dark }` (dual-theme dark-mode-only via inline overrides) to single `theme: "tokyo-night"`. tokyo-night's palette family matches the mockup's `--code-*` tokens by design — every observed token color maps cleanly into a `--code-*` bucket (keyword/function/string/number/type/punct/key/comment/fg).
+- **Transformer behavior**:
+  1. On `<pre>`: strips inline `background-color:#…` + `color:#…` (CSS owns these via `--code-bg` / `--code-fg`); sets `dataLanguage` to the source language (skipping `text`/`plain`/no-lang fences).
+  2. On token `<span>`: replaces `color:#XXX` with the corresponding `var(--code-*)` reference. Unknown hexes fall back to `var(--code-fg)`. Verified empirically: a 4-language render sweep (go, sql, yaml, typescript) emits **zero** inline hex colors.
+- **CSS**:
+  - Added `.markdown-body pre[data-language]::before { content: attr(data-language); … }` per mockup §812-823. `top: 10px / right: 14px`, 10px mono uppercase, `--code-type` colour, `opacity: 0.7`, `pointer-events: none`.
+  - Defensive `pre[data-language="mermaid"]::before { content: none }` (never triggers in practice — mermaid blocks bypass Shiki — but documents the intent).
+  - Deleted the now-dead `[data-theme="dark"] .markdown-body .shiki { … !important }` block. The `--shiki-dark` / `--shiki-dark-bg` CSS vars were only emitted by the dual-theme config.
+- **Tests added** (4 new in `renderMarkdown.test.ts`):
+  - `data-language="<lang>"` is present on highlighted blocks.
+  - `data-language` is NOT set for no-language fenced blocks.
+  - Zero inline hex colors on `<span>`s.
+  - `<pre>` has no inline `background-color`.
+- **Test totals**: 254 → 258 (4 new code-block assertions). All other tests unchanged.
 
 ### Phase 3
 

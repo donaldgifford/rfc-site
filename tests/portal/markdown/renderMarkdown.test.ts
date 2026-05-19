@@ -115,6 +115,35 @@ describe("renderMarkdown — code blocks", () => {
     }
   });
 
+  it("annotates highlighted <pre> with data-language for the badge CSS selector", async () => {
+    for (const lang of ["go", "sql", "yaml", "typescript", "rust"] as const) {
+      const html = await renderMarkdown(fixture(["```" + lang, "x = 1", "```"].join("\n")));
+      expect(html).toMatch(new RegExp(`<pre[^>]*data-language="${lang}"`));
+    }
+  });
+
+  it("does NOT set data-language for plain/text/no-lang blocks", async () => {
+    const html = await renderMarkdown(fixture(["```", "some text", "```"].join("\n")));
+    expect(html).not.toMatch(/data-language=/);
+  });
+
+  it("emits CSS variables instead of inline hex colors on Shiki <span>s (Phase 2)", async () => {
+    const html = await renderMarkdown(fixture(["```ts", 'const x = "hi";', "```"].join("\n")));
+    // The tokens-to-css-variables transformer rewrites every color:#XXX to
+    // a var(--code-*) reference. Zero hexes is the IMPL-0006 §Phase 2
+    // success criterion.
+    expect(html).not.toMatch(/color:\s*#[0-9a-fA-F]/);
+    // At least one token should carry a --code-* reference.
+    expect(html).toMatch(/color:var\(--code-/);
+  });
+
+  it("strips the inline background-color from <pre> (CSS owns code-bg)", async () => {
+    const html = await renderMarkdown(fixture(["```ts", "const x = 1;", "```"].join("\n")));
+    // The transformer drops `background-color:#…` from the <pre>; the
+    // `.markdown-body pre { background: var(--code-bg) }` rule wins.
+    expect(html).not.toMatch(/<pre[^>]*background-color/);
+  });
+
   it("preserves inline code without wrapping it in <pre>", async () => {
     const html = await renderMarkdown(fixture("Some `inline` text."));
     expect(html).toContain("<code>inline</code>");
