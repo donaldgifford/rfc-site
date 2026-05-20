@@ -12,7 +12,7 @@ vi.mock("mermaid", () => ({
 
 // Import AFTER vi.mock so the hydrate module's lazy `import("mermaid")`
 // resolves to the mocked module.
-const { hydrateMermaid, mermaidThemeFromTokens } =
+const { hydrateMermaid, mermaidThemeFromTokens, _clearMermaidCache } =
   await import("../../../src/portal/markdown/mermaid-hydrate");
 
 function makeBlock(source: string): HTMLPreElement {
@@ -27,10 +27,12 @@ describe("hydrateMermaid", () => {
   beforeEach(() => {
     renderMock.mockReset();
     initializeMock.mockReset();
+    _clearMermaidCache();
     document.body.innerHTML = "";
   });
 
   afterEach(() => {
+    _clearMermaidCache();
     document.body.innerHTML = "";
   });
 
@@ -113,6 +115,27 @@ describe("hydrateMermaid", () => {
     await hydrateMermaid();
     expect(renderMock).not.toHaveBeenCalled();
     expect(block.hasAttribute("data-mermaid-source")).toBe(false);
+  });
+
+  it("hits the SVG cache on a second hydrate of the same source (no second mermaid.render)", async () => {
+    const source = "graph TD; A-->B;";
+    renderMock.mockResolvedValueOnce({ svg: '<svg id="cached"></svg>' });
+
+    // First hydrate populates the cache.
+    const blockA = makeBlock(source);
+    await hydrateMermaid();
+    expect(renderMock).toHaveBeenCalledTimes(1);
+    expect(blockA.innerHTML).toContain('<svg id="cached">');
+
+    // StrictMode-style scenario: React resets the article children;
+    // a fresh placeholder appears with the same source. The cache
+    // should serve it without calling mermaid.render again.
+    blockA.remove();
+    const blockB = makeBlock(source);
+    await hydrateMermaid();
+    expect(renderMock).toHaveBeenCalledTimes(1); // still 1, not 2
+    expect(blockB.innerHTML).toContain('<svg id="cached">');
+    expect(blockB.classList.contains("mermaid-diagram")).toBe(true);
   });
 });
 

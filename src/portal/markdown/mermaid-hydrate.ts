@@ -28,11 +28,44 @@ import type MermaidModule from "mermaid";
 
 const MERMAID_SELECTOR = "pre[data-mermaid-source]";
 
+// Module-scoped cache of rendered SVG keyed by source text. The
+// `<DocumentView>` MutationObserver pattern (and React.StrictMode's
+// dev-mode double-mount) cause `hydrateMermaid` to run multiple times
+// against the same diagram source. Without a cache each call paid the
+// full `mermaid.render` cost, producing a visible flash of the source
+// text before the second render landed.
+const SVG_CACHE = new Map<string, string>();
+
+function applySvgToBlock(block: HTMLPreElement, svg: string): void {
+  block.innerHTML = svg;
+  block.classList.add("mermaid-diagram");
+  block.removeAttribute("data-mermaid-source");
+}
+
 export async function hydrateMermaid(): Promise<void> {
   if (typeof document === "undefined") return;
 
   const blocks = Array.from(document.querySelectorAll<HTMLPreElement>(MERMAID_SELECTOR));
   if (blocks.length === 0) return;
+
+  // Cache-hit synchronous path: serve any block whose source we've
+  // already rendered before this turn yields to mermaid's async
+  // import — avoids the flash.
+  const pendingBlocks: Array<{ block: HTMLPreElement; source: string }> = [];
+  for (const block of blocks) {
+    const source = block.textContent.trim();
+    if (source.length === 0) {
+      block.removeAttribute("data-mermaid-source");
+      continue;
+    }
+    const cached = SVG_CACHE.get(source);
+    if (cached !== undefined) {
+      applySvgToBlock(block, cached);
+      continue;
+    }
+    pendingBlocks.push({ block, source });
+  }
+  if (pendingBlocks.length === 0) return;
 
   let mermaid: typeof MermaidModule;
   try {
@@ -55,18 +88,12 @@ export async function hydrateMermaid(): Promise<void> {
     themeVariables: mermaidThemeFromTokens(),
   });
 
-  for (const block of blocks) {
-    const source = block.textContent.trim();
-    if (source.length === 0) {
-      block.removeAttribute("data-mermaid-source");
-      continue;
-    }
+  for (const { block, source } of pendingBlocks) {
     try {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       const { svg } = await mermaid.render(id, source);
-      block.innerHTML = svg;
-      block.classList.add("mermaid-diagram");
-      block.removeAttribute("data-mermaid-source");
+      SVG_CACHE.set(source, svg);
+      applySvgToBlock(block, svg);
     } catch (err) {
       console.error("[mermaid-hydrate] render failed:", err);
       // Leave the source text in place so the diagram code is still
@@ -74,6 +101,11 @@ export async function hydrateMermaid(): Promise<void> {
       // stays on the element so a future hydrate call can try again.
     }
   }
+}
+
+/** Test-only — flush the SVG cache between runs. */
+export function _clearMermaidCache(): void {
+  SVG_CACHE.clear();
 }
 
 /**

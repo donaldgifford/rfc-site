@@ -440,23 +440,21 @@
    treatment. Pin them here so the rendered diagram reads consistently
    with the rest of the prose chrome. */
 .markdown-body .mermaid-diagram svg .nodeLabel,
-.markdown-body .mermaid-diagram svg .label,
-.markdown-body .mermaid-diagram svg .edgeLabel {
+.markdown-body .mermaid-diagram svg .label {
   font-family: var(--font-mono);
-  font-size: 12.5px;
   color: var(--fg-primary);
   fill: var(--fg-primary);
 }
 
-.markdown-body .mermaid-diagram svg .edgeLabel {
-  background: var(--bg-base);
+/* Edge labels live in a <foreignObject> with HTML inside (mermaid's
+   shape). Style the inner span; the wrapper rect is left to mermaid's
+   `edgeLabelBackground` theme variable. */
+.markdown-body .mermaid-diagram svg .edgeLabel,
+.markdown-body .mermaid-diagram svg .edgeLabel span,
+.markdown-body .mermaid-diagram svg .edgeLabel p {
+  font-family: var(--font-mono);
   color: var(--fg-secondary);
   fill: var(--fg-secondary);
-  padding: 0 4px;
-}
-
-.markdown-body .mermaid-diagram svg .edgeLabel rect {
-  fill: var(--bg-base);
 }
 
 /* Mermaid caption — rendered as a sibling of the diagram pre when the
