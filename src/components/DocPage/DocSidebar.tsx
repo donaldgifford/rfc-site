@@ -93,12 +93,13 @@ function statusColor(status: string): string {
     published: "var(--status-accepted)",
     discussion: "var(--status-superseded)",
   };
-  return palette[status] ?? "var(--fg-primary)";
+  return palette[status.toLowerCase()] ?? "var(--fg-primary)";
 }
 
 function capitalize(s: string): string {
   if (s.length === 0) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const lower = s.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
 }
 
 function toDateOnly(iso: string): string {

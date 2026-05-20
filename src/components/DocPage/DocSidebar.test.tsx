@@ -82,4 +82,11 @@ describe("<DocSidebar>", () => {
     const val = container.querySelector("[style*='--status-accepted']");
     expect(val).not.toBeNull();
   });
+
+  it("normalises title-cased rfc-api status to the right token + label", () => {
+    const { container } = render(<DocSidebar doc={fixture({ status: "Accepted" })} />);
+    const val = container.querySelector("[style*='--status-accepted']");
+    expect(val).not.toBeNull();
+    expect(screen.getByText("Accepted")).toBeInTheDocument();
+  });
 });
