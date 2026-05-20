@@ -83,7 +83,7 @@ describe("hydrateMermaid", () => {
       expect.objectContaining({
         startOnLoad: false,
         theme: "base",
-        securityLevel: "strict",
+        securityLevel: "loose",
         themeVariables: expect.objectContaining({
           primaryColor: "#181e2b",
           lineColor: "#7a8396",

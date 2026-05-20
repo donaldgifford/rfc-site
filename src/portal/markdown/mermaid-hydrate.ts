@@ -45,10 +45,15 @@ export async function hydrateMermaid(): Promise<void> {
     return;
   }
 
+  // `securityLevel: "loose"` renders the SVG inline. The previous "strict"
+  // value wraps the SVG in a sandboxed iframe whose `srcdoc` HTML doesn't
+  // surface visibly when assigned to `innerHTML` on a `<pre>`. The mermaid
+  // source comes from rfc-api's already-sanitised markdown body, so the
+  // extra iframe sandbox doesn't buy us anything.
   mermaid.initialize({
     startOnLoad: false,
     theme: "base",
-    securityLevel: "strict",
+    securityLevel: "loose",
     themeVariables: mermaidThemeFromTokens(),
   });
 
@@ -63,7 +68,12 @@ export async function hydrateMermaid(): Promise<void> {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       const { svg } = await mermaid.render(id, source);
       console.info("[mermaid-hydrate] rendered, svg bytes:", svg.length);
+      console.info("[mermaid-hydrate] svg prefix:", svg.slice(0, 200));
       block.innerHTML = svg;
+      console.info(
+        "[mermaid-hydrate] post-set, block.innerHTML prefix:",
+        block.innerHTML.slice(0, 200),
+      );
       block.classList.add("mermaid-diagram");
       block.removeAttribute("data-mermaid-source");
     } catch (err) {
