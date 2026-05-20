@@ -160,27 +160,52 @@
   font-family: inherit;
 }
 
-/* Language-badge chip on syntax-highlighted code blocks (mockup §812-823).
-   Shiki's `tokens-to-css-variables` transformer sets `data-language="<lang>"`
-   on the <pre>; the badge is a pure-CSS ::before. Mermaid blocks aren't
-   highlighted by Shiki so they don't carry `data-language` — the
-   exclusion is defensive. */
-.markdown-body pre[data-language]::before {
-  content: attr(data-language);
-  position: absolute;
-  top: 10px;
-  right: 14px;
+/* Code block chrome — `<pre data-language="X">` is wrapped by the
+   `wrap-codeblock` rehype plugin in a `<div class="codeblock">` with a
+   header bar carrying the language label (top-left) and an optional
+   caption (top-right). Mockup §930-973. */
+.markdown-body .codeblock {
+  margin: 24px 0;
+  border: 1px solid var(--code-border);
+  border-radius: var(--r-sm);
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.markdown-body .codeblock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  background: color-mix(in srgb, var(--code-bg) 80%, black);
+  border-bottom: 1px solid var(--code-border);
   font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--code-type);
-  opacity: 0.7;
-  pointer-events: none;
+  letter-spacing: 0.1em;
+  color: var(--fg-tertiary);
 }
 
-.markdown-body pre[data-language="mermaid"]::before {
-  content: none;
+.markdown-body .codeblock-header .lang {
+  color: var(--code-type);
+  letter-spacing: 0.14em;
+  font-weight: 500;
+}
+
+.markdown-body .codeblock-header .caption {
+  color: var(--fg-tertiary);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.markdown-body .codeblock pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 18px 22px;
 }
 
 /* Blockquote — quiet, no left bar, raised bg + serif quote glyph, mockup §837-859 */

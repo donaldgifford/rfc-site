@@ -173,6 +173,35 @@ describe("renderMarkdown — code blocks", () => {
     expect(html).not.toMatch(/<pre[^>]*class="[^"]*shiki[^"]*"[^>]*data-language="mermaid"/);
     expect(html).toContain("graph TD");
   });
+
+  it("wraps highlighted code blocks in a .codeblock with a .codeblock-header (mockup §930-973)", async () => {
+    const html = await renderMarkdown(fixture(["```go", "package main", "```"].join("\n")));
+    expect(html).toMatch(/<div class="codeblock">/);
+    expect(html).toMatch(/<div class="codeblock-header">/);
+    expect(html).toMatch(/<span class="lang">go<\/span>/);
+  });
+
+  it("renders the code-fence meta string as the .caption in the header", async () => {
+    const body = ["```go internal/ingest/parse.go", "package main", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).toMatch(/<span class="caption">internal\/ingest\/parse\.go<\/span>/);
+  });
+
+  it("omits the .caption span when the code fence has no meta", async () => {
+    const html = await renderMarkdown(fixture(["```go", "package main", "```"].join("\n")));
+    expect(html).not.toMatch(/<span class="caption">/);
+  });
+
+  it("does NOT wrap mermaid blocks in a .codeblock (they own their own container)", async () => {
+    const body = ["```mermaid", "graph TD; A-->B;", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).not.toMatch(/<div class="codeblock">[\s\S]*data-mermaid-source/);
+  });
+
+  it("does NOT wrap plain (no-language) code blocks", async () => {
+    const html = await renderMarkdown(fixture(["```", "some text", "```"].join("\n")));
+    expect(html).not.toMatch(/<div class="codeblock">/);
+  });
 });
 
 describe("renderMarkdown — anchor resolution (resolve-anchor-links integration)", () => {
