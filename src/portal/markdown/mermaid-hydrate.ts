@@ -32,12 +32,14 @@ export async function hydrateMermaid(): Promise<void> {
   if (typeof document === "undefined") return;
 
   const blocks = Array.from(document.querySelectorAll<HTMLPreElement>(MERMAID_SELECTOR));
+  console.info("[mermaid-hydrate] called, blocks found:", blocks.length);
   if (blocks.length === 0) return;
 
   let mermaid: typeof MermaidModule;
   try {
     const mod = await import("mermaid");
     mermaid = mod.default;
+    console.info("[mermaid-hydrate] mermaid module loaded, version:", mermaid.version?.());
   } catch (err) {
     console.error("[mermaid-hydrate] failed to load mermaid:", err);
     return;
@@ -52,6 +54,7 @@ export async function hydrateMermaid(): Promise<void> {
 
   for (const block of blocks) {
     const source = block.textContent.trim();
+    console.info("[mermaid-hydrate] rendering block:", source.slice(0, 60));
     if (source.length === 0) {
       block.removeAttribute("data-mermaid-source");
       continue;
@@ -59,6 +62,7 @@ export async function hydrateMermaid(): Promise<void> {
     try {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       const { svg } = await mermaid.render(id, source);
+      console.info("[mermaid-hydrate] rendered, svg bytes:", svg.length);
       block.innerHTML = svg;
       block.classList.add("mermaid-diagram");
       block.removeAttribute("data-mermaid-source");
