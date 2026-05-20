@@ -140,7 +140,6 @@ describe("mermaidThemeFromTokens", () => {
     expect(theme.primaryColor).toBe("#abcdef");
     expect(theme.mainBkg).toBe("#abcdef");
     expect(theme.lineColor).toBe("#001122");
-    expect(theme.defaultLinkColor).toBe("#001122");
   });
 
   it("falls back to defaults when a token is empty", () => {
@@ -158,16 +157,25 @@ describe("mermaidThemeFromTokens", () => {
     // Previously lineColor read from --accent which produced the bright
     // cyan arrows we wanted to move away from.
     expect(theme.lineColor).toBe("#7a8396");
-    expect(theme.arrowheadColor).toBe("#7a8396");
   });
 
-  it("sets the flowchart-specific aliases (mainBkg / nodeBorder / nodeTextColor)", () => {
+  it("sets the flowchart-specific aliases (mainBkg / nodeBorder)", () => {
     document.documentElement.style.setProperty("--bg-elevated", "#111");
     document.documentElement.style.setProperty("--border-strong", "#222");
-    document.documentElement.style.setProperty("--fg-primary", "#fff");
     const theme = mermaidThemeFromTokens();
     expect(theme.mainBkg).toBe("#111");
     expect(theme.nodeBorder).toBe("#222");
-    expect(theme.nodeTextColor).toBe("#fff");
+  });
+
+  it("pins fontFamily to a plain monospace keyword (no CSS quotes/commas that break SVG attrs)", () => {
+    document.documentElement.style.setProperty(
+      "--font-mono",
+      '"IBM Plex Mono", ui-monospace, monospace',
+    );
+    const theme = mermaidThemeFromTokens();
+    // The full CSS font stack contains quotes + commas which broke
+    // mermaid.render when forwarded into SVG font-family attributes.
+    // We pin a safe value regardless of the token.
+    expect(theme.fontFamily).toBe("monospace");
   });
 });

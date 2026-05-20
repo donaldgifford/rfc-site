@@ -91,48 +91,38 @@ export function mermaidThemeFromTokens(): Record<string, string> {
     return value.length > 0 ? value : fallback;
   };
 
-  const bgBase = read("--bg-base", "#0c1017");
   const bgRaised = read("--bg-raised", "#121722");
   const bgElevated = read("--bg-elevated", "#181e2b");
   const borderStrong = read("--border-strong", "#34405a");
   const fgPrimary = read("--fg-primary", "#e8ebf0");
-  const fgSecondary = read("--fg-secondary", "#afb6c2");
   const fgTertiary = read("--fg-tertiary", "#7a8396");
-  const fontMono = read("--font-mono", "monospace");
 
-  // mermaid's `base` theme derives many colours from `primaryColor` when
-  // we don't override them — that's how we ended up with bright accent-
-  // blue borders + arrows + text in the prior pass. Set every flowchart-
-  // relevant slot explicitly so the rendered diagram matches mockup
-  // §1157-1167: dark fills, visible-but-quiet borders, light text,
-  // muted (not accent) line colour.
+  // Stick to the documented mermaid v11 theme variables. Earlier we
+  // experimented with extras (`nodeTextColor`, `arrowheadColor`,
+  // `labelTextColor`, plus passing the full CSS font-mono stack with
+  // embedded quotes); that broke `mermaid.render` silently and left
+  // the source text visible. Minimal set, ASCII font name.
+  //
+  // The contrast goal (mockup §1157-1167): dark node fill, visible-but-
+  // quiet borders, light text, muted (not accent) arrows. The previous
+  // bright-cyan-everywhere rendering came from `lineColor: --accent`
+  // plus mermaid deriving `nodeBorder` from `primaryColor` for lack of
+  // an explicit override.
   return {
     primaryColor: bgElevated,
     primaryBorderColor: borderStrong,
     primaryTextColor: fgPrimary,
     secondaryColor: bgRaised,
     secondaryBorderColor: borderStrong,
-    secondaryTextColor: fgPrimary,
-    tertiaryColor: bgBase,
+    tertiaryColor: bgRaised,
     tertiaryBorderColor: borderStrong,
-    tertiaryTextColor: fgPrimary,
-    // Flowchart-specific aliases — some mermaid versions read these
-    // rather than the primary slots above.
     mainBkg: bgElevated,
     nodeBorder: borderStrong,
-    nodeTextColor: fgPrimary,
-    // Lines + arrows: muted grey, not the bright accent.
     lineColor: fgTertiary,
-    defaultLinkColor: fgTertiary,
-    arrowheadColor: fgTertiary,
-    // Edge labels: readable mono on the page bg.
-    edgeLabelBackground: bgBase,
-    labelTextColor: fgSecondary,
-    // Subgraph cluster.
     clusterBkg: bgRaised,
     clusterBorder: borderStrong,
     titleColor: fgPrimary,
-    fontFamily: fontMono,
+    fontFamily: "monospace",
     fontSize: "13px",
   };
 }
@@ -144,18 +134,11 @@ function defaultMermaidTheme(): Record<string, string> {
     primaryTextColor: "#e8ebf0",
     secondaryColor: "#121722",
     secondaryBorderColor: "#34405a",
-    secondaryTextColor: "#e8ebf0",
-    tertiaryColor: "#0c1017",
+    tertiaryColor: "#121722",
     tertiaryBorderColor: "#34405a",
-    tertiaryTextColor: "#e8ebf0",
     mainBkg: "#181e2b",
     nodeBorder: "#34405a",
-    nodeTextColor: "#e8ebf0",
     lineColor: "#7a8396",
-    defaultLinkColor: "#7a8396",
-    arrowheadColor: "#7a8396",
-    edgeLabelBackground: "#0c1017",
-    labelTextColor: "#afb6c2",
     clusterBkg: "#121722",
     clusterBorder: "#34405a",
     titleColor: "#e8ebf0",
