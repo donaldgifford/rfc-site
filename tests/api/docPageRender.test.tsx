@@ -84,7 +84,7 @@ describe("/$type/$id route render", () => {
       expect(screen.getByText("References")).toBeInTheDocument();
     });
     expect(screen.getByText("Referenced by")).toBeInTheDocument();
-    expect(screen.getByText(/back-references arrive once rfc-api/i)).toBeInTheDocument();
+    expect(screen.getByText(/no other RFCs reference this one/i)).toBeInTheDocument();
   });
 
   it("renders the rendered Markdown body inside the article column", async () => {
