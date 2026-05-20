@@ -75,9 +75,15 @@ export async function hydrateMermaid(): Promise<void> {
         block.innerHTML.slice(0, 200),
       );
       setTimeout(() => {
+        const liveCount = document.querySelectorAll("pre[data-mermaid-source]").length;
+        const liveSvgCount = document.querySelectorAll(".mermaid-diagram svg").length;
         console.info(
-          "[mermaid-hydrate] +500ms, block.innerHTML prefix:",
-          block.innerHTML.slice(0, 200),
+          "[mermaid-hydrate] +500ms, isConnected:",
+          block.isConnected,
+          "live placeholders in DOM:",
+          liveCount,
+          "live svg containers:",
+          liveSvgCount,
         );
       }, 500);
       block.classList.add("mermaid-diagram");

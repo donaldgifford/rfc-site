@@ -42,7 +42,24 @@ export function DocumentView({ bodyHtml }: DocumentViewProps) {
   }, [bodyHtml, navigate]);
 
   useEffect(() => {
+    const node = articleRef.current;
+    if (node === null) return;
     void hydrateMermaid();
+    // Self-healing: if React (during hydration commit or a downstream
+    // re-render of `dangerouslySetInnerHTML`) recreates the article's
+    // children, the `pre[data-mermaid-source]` placeholder comes back —
+    // detaching our previously-mutated `<pre>` and leaving the source
+    // text visible. Watch for that and re-run `hydrateMermaid` on the
+    // freshly-mounted placeholder.
+    const observer = new MutationObserver(() => {
+      if (node.querySelector("pre[data-mermaid-source]") !== null) {
+        void hydrateMermaid();
+      }
+    });
+    observer.observe(node, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+    };
   }, [bodyHtml]);
 
   return (
