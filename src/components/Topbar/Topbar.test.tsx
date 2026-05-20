@@ -14,12 +14,29 @@ function renderTopbar(initial = "/") {
 }
 
 describe("<Topbar>", () => {
-  it("renders the 3-element brand composite", () => {
+  it("renders the 3-element brand composite (mark + name + sub) on /", () => {
     renderTopbar();
     expect(screen.getByText("R")).toBeInTheDocument();
     expect(screen.getByText("rfcs")).toBeInTheDocument();
-    expect(screen.getByText(/portal/)).toBeInTheDocument();
+    expect(screen.getByText(/directory/)).toBeInTheDocument();
   });
+
+  it.each([
+    ["/", "R", "rfcs", /directory/],
+    ["/search", "R", "rfcs", /search/],
+    ["/rfc/0001", "R", "rfcs", /0001/],
+    ["/api", "A", "api", /reference/],
+    ["/mcp", "M", "mcps", /setup/],
+  ])(
+    "adapts the brand to the route: %s → %s / %s / %s",
+    (initial, mark, name, subPattern) => {
+      const { unmount } = renderTopbar(initial);
+      expect(screen.getByText(mark)).toBeInTheDocument();
+      expect(screen.getByText(name)).toBeInTheDocument();
+      expect(screen.getByText(subPattern as RegExp)).toBeInTheDocument();
+      unmount();
+    },
+  );
 
   it("renders the search trigger with ⌘K affordance", () => {
     renderTopbar();
