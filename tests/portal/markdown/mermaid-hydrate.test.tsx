@@ -71,8 +71,8 @@ describe("hydrateMermaid", () => {
   });
 
   it("passes theme variables derived from the document's CSS tokens", async () => {
-    document.documentElement.style.setProperty("--bg-raised", "#1a1d28");
-    document.documentElement.style.setProperty("--accent", "#7aa2f7");
+    document.documentElement.style.setProperty("--bg-elevated", "#181e2b");
+    document.documentElement.style.setProperty("--fg-tertiary", "#7a8396");
     makeBlock("graph TD; A-->B;");
     renderMock.mockResolvedValueOnce({ svg: "<svg></svg>" });
 
@@ -85,8 +85,8 @@ describe("hydrateMermaid", () => {
         theme: "base",
         securityLevel: "strict",
         themeVariables: expect.objectContaining({
-          primaryColor: "#1a1d28",
-          lineColor: "#7aa2f7",
+          primaryColor: "#181e2b",
+          lineColor: "#7a8396",
         }) as unknown,
       }),
     );
@@ -119,28 +119,55 @@ describe("hydrateMermaid", () => {
 describe("mermaidThemeFromTokens", () => {
   beforeEach(() => {
     // Reset every documented token so each test starts from a clean slate.
-    document.documentElement.style.removeProperty("--bg-raised");
-    document.documentElement.style.removeProperty("--fg-primary");
-    document.documentElement.style.removeProperty("--border-hairline");
-    document.documentElement.style.removeProperty("--accent");
-    document.documentElement.style.removeProperty("--bg-elevated");
-    document.documentElement.style.removeProperty("--bg-base");
-    document.documentElement.style.removeProperty("--font-mono");
+    for (const name of [
+      "--bg-base",
+      "--bg-raised",
+      "--bg-elevated",
+      "--border-strong",
+      "--fg-primary",
+      "--fg-secondary",
+      "--fg-tertiary",
+      "--font-mono",
+    ]) {
+      document.documentElement.style.removeProperty(name);
+    }
   });
 
-  it("reads the current --bg-raised etc. when set", () => {
-    document.documentElement.style.setProperty("--bg-raised", "#abcdef");
-    document.documentElement.style.setProperty("--accent", "#001122");
+  it("reads the current tokens when set (bg-elevated → primary, fg-tertiary → line)", () => {
+    document.documentElement.style.setProperty("--bg-elevated", "#abcdef");
+    document.documentElement.style.setProperty("--fg-tertiary", "#001122");
     const theme = mermaidThemeFromTokens();
     expect(theme.primaryColor).toBe("#abcdef");
+    expect(theme.mainBkg).toBe("#abcdef");
     expect(theme.lineColor).toBe("#001122");
+    expect(theme.defaultLinkColor).toBe("#001122");
   });
 
   it("falls back to defaults when a token is empty", () => {
     // jsdom returns "" for unset custom properties.
     const theme = mermaidThemeFromTokens();
-    expect(theme.primaryColor).toBe("#1a1d28");
-    expect(theme.lineColor).toBe("#7aa2f7");
+    expect(theme.primaryColor).toBe("#181e2b");
+    expect(theme.lineColor).toBe("#7a8396");
     expect(theme.fontFamily).toBe("monospace");
+  });
+
+  it("uses the muted fg-tertiary token for arrows (not the bright accent)", () => {
+    document.documentElement.style.setProperty("--fg-tertiary", "#7a8396");
+    document.documentElement.style.setProperty("--accent", "#7dcfff");
+    const theme = mermaidThemeFromTokens();
+    // Previously lineColor read from --accent which produced the bright
+    // cyan arrows we wanted to move away from.
+    expect(theme.lineColor).toBe("#7a8396");
+    expect(theme.arrowheadColor).toBe("#7a8396");
+  });
+
+  it("sets the flowchart-specific aliases (mainBkg / nodeBorder / nodeTextColor)", () => {
+    document.documentElement.style.setProperty("--bg-elevated", "#111");
+    document.documentElement.style.setProperty("--border-strong", "#222");
+    document.documentElement.style.setProperty("--fg-primary", "#fff");
+    const theme = mermaidThemeFromTokens();
+    expect(theme.mainBkg).toBe("#111");
+    expect(theme.nodeBorder).toBe("#222");
+    expect(theme.nodeTextColor).toBe("#fff");
   });
 });

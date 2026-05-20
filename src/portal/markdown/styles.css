@@ -434,6 +434,31 @@
   max-width: 100%;
 }
 
+/* Defensive overrides for mermaid's SVG output — `themeVariables` sets the
+   bulk of the styling, but a few internal classes pick up inline colours
+   or inherit a sans-serif font that drifts from the mockup's mono
+   treatment. Pin them here so the rendered diagram reads consistently
+   with the rest of the prose chrome. */
+.markdown-body .mermaid-diagram svg .nodeLabel,
+.markdown-body .mermaid-diagram svg .label,
+.markdown-body .mermaid-diagram svg .edgeLabel {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--fg-primary);
+  fill: var(--fg-primary);
+}
+
+.markdown-body .mermaid-diagram svg .edgeLabel {
+  background: var(--bg-base);
+  color: var(--fg-secondary);
+  fill: var(--fg-secondary);
+  padding: 0 4px;
+}
+
+.markdown-body .mermaid-diagram svg .edgeLabel rect {
+  fill: var(--bg-base);
+}
+
 /* Mermaid caption — rendered as a sibling of the diagram pre when the
    code fence has a meta string (e.g. ```mermaid Fig 1. The flow.).
    Mockup §1170-1179. */
