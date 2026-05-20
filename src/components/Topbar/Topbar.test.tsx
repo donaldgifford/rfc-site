@@ -27,16 +27,13 @@ describe("<Topbar>", () => {
     ["/rfc/0001", "R", "rfcs", /0001/],
     ["/api", "A", "api", /reference/],
     ["/mcp", "M", "mcps", /setup/],
-  ])(
-    "adapts the brand to the route: %s → %s / %s / %s",
-    (initial, mark, name, subPattern) => {
-      const { unmount } = renderTopbar(initial);
-      expect(screen.getByText(mark)).toBeInTheDocument();
-      expect(screen.getByText(name)).toBeInTheDocument();
-      expect(screen.getByText(subPattern as RegExp)).toBeInTheDocument();
-      unmount();
-    },
-  );
+  ])("adapts the brand to the route: %s → %s / %s / %s", (initial, mark, name, subPattern) => {
+    const { unmount } = renderTopbar(initial);
+    expect(screen.getByText(mark)).toBeInTheDocument();
+    expect(screen.getByText(name)).toBeInTheDocument();
+    expect(screen.getByText(subPattern)).toBeInTheDocument();
+    unmount();
+  });
 
   it("renders the search trigger with ⌘K affordance", () => {
     renderTopbar();

@@ -133,9 +133,7 @@ describe("visual parity — codeblock chrome (mockup §930-973)", () => {
 
   it("renders the language label + caption inside a `.codeblock-header` bar", () => {
     expect(stylesCss).toMatch(/\.codeblock-header\s*\{/);
-    expect(stylesCss).toMatch(
-      /\.codeblock-header[^}]*justify-content:\s*space-between/,
-    );
+    expect(stylesCss).toMatch(/\.codeblock-header[^}]*justify-content:\s*space-between/);
   });
 
   it("colours the language label with --code-type per mockup", () => {

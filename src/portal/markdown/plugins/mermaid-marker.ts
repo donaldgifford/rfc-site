@@ -67,6 +67,7 @@ const mermaidMarker: Plugin<[], Root> = () => {
         // Skip past the inserted sibling so visit doesn't re-enter.
         return [SKIP, index + 2];
       }
+      return undefined;
     });
   };
 };

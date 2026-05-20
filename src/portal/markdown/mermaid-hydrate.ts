@@ -51,7 +51,7 @@ export async function hydrateMermaid(): Promise<void> {
   // Cache-hit synchronous path: serve any block whose source we've
   // already rendered before this turn yields to mermaid's async
   // import — avoids the flash.
-  const pendingBlocks: Array<{ block: HTMLPreElement; source: string }> = [];
+  const pendingBlocks: { block: HTMLPreElement; source: string }[] = [];
   for (const block of blocks) {
     const source = block.textContent.trim();
     if (source.length === 0) {

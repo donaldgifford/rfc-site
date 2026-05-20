@@ -63,7 +63,10 @@ export function Topbar() {
     <>
       <header className={styles.topbar}>
         <Link to="/" className={styles.brand} aria-label={`${brand.name} ${brand.sub}`}>
-          <span className={styles.brandMark} style={{ color: brand.color, borderColor: brand.color }}>
+          <span
+            className={styles.brandMark}
+            style={{ color: brand.color, borderColor: brand.color }}
+          >
             {brand.mark}
           </span>
           <span className={styles.brandName}>{brand.name}</span>

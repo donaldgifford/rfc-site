@@ -211,9 +211,7 @@ describe("renderMarkdown — code blocks", () => {
     ].join("\n");
     const html = await renderMarkdown(fixture(body));
     expect(html).toContain("data-mermaid-source");
-    expect(html).toMatch(
-      /<span class="mermaid-caption">Fig 1\. Reconcile loop\.[^<]*<\/span>/,
-    );
+    expect(html).toMatch(/<span class="mermaid-caption">Fig 1\. Reconcile loop\.[^<]*<\/span>/);
     // Caption is a sibling of the pre, not nested inside it.
     expect(html).toMatch(/<\/pre>\s*<span class="mermaid-caption">/);
   });

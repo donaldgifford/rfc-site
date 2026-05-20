@@ -60,14 +60,7 @@ export const sanitizeSchema: SanitizeOptions = {
     "*": [...defaultStarAttrs, "className", "id", "title"],
     a: [...aAttrsMergedClassName, "ariaHidden", "target", "rel", "dataCrossDoc"],
     code: [...defaultCodeAttrs, "style", "dataLanguage", "tabIndex"],
-    pre: [
-      "className",
-      "tabIndex",
-      "style",
-      "dataLanguage",
-      "dataCaption",
-      "dataMermaidSource",
-    ],
+    pre: ["className", "tabIndex", "style", "dataLanguage", "dataCaption", "dataMermaidSource"],
     span: ["className", "style", "dataBrokenLink"],
     // GFM alerts → admonition div (remark-github-alerts plugin).
     div: ["className"],
