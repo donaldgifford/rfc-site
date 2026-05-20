@@ -434,6 +434,20 @@
   max-width: 100%;
 }
 
+/* Mermaid caption — rendered as a sibling of the diagram pre when the
+   code fence has a meta string (e.g. ```mermaid Fig 1. The flow.).
+   Mockup §1170-1179. */
+.markdown-body .mermaid-caption {
+  display: block;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  margin-top: -12px;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
+
 /* Legacy MermaidBlock component (pre-IMPL-0006), kept until Phase 4. */
 .markdown-body .mermaid-block {
   margin: 24px 0;

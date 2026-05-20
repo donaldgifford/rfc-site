@@ -202,6 +202,27 @@ describe("renderMarkdown — code blocks", () => {
     const html = await renderMarkdown(fixture(["```", "some text", "```"].join("\n")));
     expect(html).not.toMatch(/<div class="codeblock">/);
   });
+
+  it("emits a sibling mermaid-caption span when the mermaid fence has a meta string (mockup §1170-1179)", async () => {
+    const body = [
+      "```mermaid Fig 1. Reconcile loop. Webhook pushes trigger the same flow out-of-schedule.",
+      "graph TD; A-->B;",
+      "```",
+    ].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).toContain("data-mermaid-source");
+    expect(html).toMatch(
+      /<span class="mermaid-caption">Fig 1\. Reconcile loop\.[^<]*<\/span>/,
+    );
+    // Caption is a sibling of the pre, not nested inside it.
+    expect(html).toMatch(/<\/pre>\s*<span class="mermaid-caption">/);
+  });
+
+  it("does NOT emit a mermaid-caption when the mermaid fence has no meta string", async () => {
+    const body = ["```mermaid", "graph TD; A-->B;", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).not.toMatch(/mermaid-caption/);
+  });
 });
 
 describe("renderMarkdown — anchor resolution (resolve-anchor-links integration)", () => {

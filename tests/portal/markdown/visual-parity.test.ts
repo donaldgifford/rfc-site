@@ -114,6 +114,12 @@ describe("visual parity — mermaid container styling (mockup §1157-1167)", () 
     // No layout jump between SSR/no-JS view and the hydrated state.
     expect(stylesCss).toMatch(/pre\[data-mermaid-source\][^}]*background:\s*var\(--bg-raised\)/);
   });
+
+  it("styles .mermaid-caption per mockup §1170-1179 (mono, centered, fg-tertiary)", () => {
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*text-align:\s*center/);
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*color:\s*var\(--fg-tertiary\)/);
+  });
 });
 
 describe("visual parity — codeblock chrome (mockup §930-973)", () => {
