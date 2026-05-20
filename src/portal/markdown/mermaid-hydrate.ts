@@ -74,6 +74,12 @@ export async function hydrateMermaid(): Promise<void> {
         "[mermaid-hydrate] post-set, block.innerHTML prefix:",
         block.innerHTML.slice(0, 200),
       );
+      setTimeout(() => {
+        console.info(
+          "[mermaid-hydrate] +500ms, block.innerHTML prefix:",
+          block.innerHTML.slice(0, 200),
+        );
+      }, 500);
       block.classList.add("mermaid-diagram");
       block.removeAttribute("data-mermaid-source");
     } catch (err) {

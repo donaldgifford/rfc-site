@@ -49,6 +49,14 @@ export function DocumentView({ bodyHtml }: DocumentViewProps) {
     <article
       ref={articleRef}
       className="markdown-body"
+      // `suppressHydrationWarning` tells React not to compare or touch this
+      // element's children during hydration — load-bearing because
+      // `hydrateMermaid` mutates `innerHTML` (replacing the
+      // `<pre data-mermaid-source>` placeholder with the rendered SVG).
+      // Without this flag React 19 was re-applying `dangerouslySetInnerHTML`
+      // on the hydration path and clobbering the SVG injection, producing
+      // the "hard refresh shows raw source, SPA nav works" symptom.
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: bodyHtml }}
     />
   );
