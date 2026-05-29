@@ -173,6 +173,54 @@ describe("renderMarkdown — code blocks", () => {
     expect(html).not.toMatch(/<pre[^>]*class="[^"]*shiki[^"]*"[^>]*data-language="mermaid"/);
     expect(html).toContain("graph TD");
   });
+
+  it("wraps highlighted code blocks in a .codeblock with a .codeblock-header (mockup §930-973)", async () => {
+    const html = await renderMarkdown(fixture(["```go", "package main", "```"].join("\n")));
+    expect(html).toMatch(/<div class="codeblock">/);
+    expect(html).toMatch(/<div class="codeblock-header">/);
+    expect(html).toMatch(/<span class="lang">go<\/span>/);
+  });
+
+  it("renders the code-fence meta string as the .caption in the header", async () => {
+    const body = ["```go internal/ingest/parse.go", "package main", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).toMatch(/<span class="caption">internal\/ingest\/parse\.go<\/span>/);
+  });
+
+  it("omits the .caption span when the code fence has no meta", async () => {
+    const html = await renderMarkdown(fixture(["```go", "package main", "```"].join("\n")));
+    expect(html).not.toMatch(/<span class="caption">/);
+  });
+
+  it("does NOT wrap mermaid blocks in a .codeblock (they own their own container)", async () => {
+    const body = ["```mermaid", "graph TD; A-->B;", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).not.toMatch(/<div class="codeblock">[\s\S]*data-mermaid-source/);
+  });
+
+  it("does NOT wrap plain (no-language) code blocks", async () => {
+    const html = await renderMarkdown(fixture(["```", "some text", "```"].join("\n")));
+    expect(html).not.toMatch(/<div class="codeblock">/);
+  });
+
+  it("emits a sibling mermaid-caption span when the mermaid fence has a meta string (mockup §1170-1179)", async () => {
+    const body = [
+      "```mermaid Fig 1. Reconcile loop. Webhook pushes trigger the same flow out-of-schedule.",
+      "graph TD; A-->B;",
+      "```",
+    ].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).toContain("data-mermaid-source");
+    expect(html).toMatch(/<span class="mermaid-caption">Fig 1\. Reconcile loop\.[^<]*<\/span>/);
+    // Caption is a sibling of the pre, not nested inside it.
+    expect(html).toMatch(/<\/pre>\s*<span class="mermaid-caption">/);
+  });
+
+  it("does NOT emit a mermaid-caption when the mermaid fence has no meta string", async () => {
+    const body = ["```mermaid", "graph TD; A-->B;", "```"].join("\n");
+    const html = await renderMarkdown(fixture(body));
+    expect(html).not.toMatch(/mermaid-caption/);
+  });
 });
 
 describe("renderMarkdown — anchor resolution (resolve-anchor-links integration)", () => {

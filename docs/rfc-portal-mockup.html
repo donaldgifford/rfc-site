@@ -1,0 +1,4503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFC Portal — Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+    /* Typography */
+    --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --font-serif: "Source Serif 4", Georgia, serif;
+
+    /* Dark theme — Arctic Wolf cool-blue background, Oxide-style status palette */
+    --bg-base:       #0C1017;
+    --bg-raised:    #121722;
+    --bg-elevated:  #181E2B;
+    --bg-hover:     #1E2635;
+    --bg-active:    #252E40;
+
+    --border-hairline: #1B2230;
+    --border-default:  #252E3F;
+    --border-strong:   #34405A;
+
+    --fg-primary:   #E8EBF0;
+    --fg-secondary: #AFB6C2;
+    --fg-tertiary:  #7A8396;
+    --fg-muted:     #505867;
+
+    --accent:        #7DCFFF;
+    --accent-dim:    #3D7FB8;
+    --accent-bg:     rgba(125, 207, 255, 0.10);
+    --accent-border: rgba(125, 207, 255, 0.30);
+
+    /* Status colors — Tokyo Night palette */
+    --status-draft:      #E0AF68;
+    --status-proposed:   #7AA2F7;
+    --status-accepted:   #9ECE6A;
+    --status-rejected:   #F7768E;
+    --status-superseded: #BB9AF7;
+    --status-abandoned:  #565F89;
+
+    /* Tokyo Night code palette */
+    --code-bg:        #161B28;
+    --code-border:    #1F2638;
+    --code-fg:        #C0CAF5;
+    --code-comment:   #565F89;
+    --code-keyword:   #BB9AF7;
+    --code-function:  #7AA2F7;
+    --code-string:    #9ECE6A;
+    --code-number:    #FF9E64;
+    --code-key:       #F7768E;
+    --code-value:     #C0CAF5;
+    --code-punct:     #89DDFF;
+    --code-type:      #73DACA;
+
+    /* Motion */
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* Corners — retrowave terminal: sharp, not rounded */
+    --r-sharp: 0;
+    --r-xs:    2px;
+    --r-sm:    3px;
+}
+
+/* ============================================================
+   RESET + BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--fg-primary);
+    background: var(--bg-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+a { color: inherit; text-decoration: none; }
+input { font: inherit; color: inherit; }
+mark {
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 0 3px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* ============================================================
+   MOCKUP TAB SWITCHER (meta — not part of the actual app)
+   ============================================================ */
+.mockup-switcher {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+}
+.mockup-switcher button {
+    padding: 6px 14px;
+    border-radius: var(--r-xs);
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+    transition: all 160ms var(--ease);
+}
+.mockup-switcher button:hover { color: var(--fg-primary); }
+.mockup-switcher button.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    padding: 5px 13px;
+}
+.mockup-switcher .label {
+    padding: 6px 10px 6px 8px;
+    color: var(--fg-muted);
+    border-right: 1px solid var(--border-hairline);
+    margin-right: 4px;
+}
+
+.view { display: none; min-height: 100vh; }
+.view.active { display: block; }
+
+/* ============================================================
+   TOP BAR — shared across views
+   ============================================================ */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 56px;
+    display: grid;
+    grid-template-columns: 260px 1fr auto;
+    align-items: center;
+    padding: 0 32px;
+    background: rgba(11, 14, 13, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-hairline);
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+.brand-mark {
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--accent);
+    border-radius: var(--r-xs);
+    display: grid;
+    place-items: center;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+}
+.brand-name {
+    color: var(--fg-primary);
+}
+.brand-sub {
+    color: var(--fg-tertiary);
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.topbar-search {
+    justify-self: center;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    color: var(--fg-tertiary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 160ms var(--ease);
+}
+.topbar-search:hover {
+    border-color: var(--border-default);
+    background: var(--bg-elevated);
+}
+.topbar-search .kbd-group {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.topbar-nav a {
+    color: var(--fg-tertiary);
+    transition: color 160ms var(--ease);
+}
+.topbar-nav a:hover { color: var(--fg-primary); }
+.topbar-nav a.active { color: var(--fg-primary); }
+.topbar-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--bg-base);
+}
+
+.kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-bottom-width: 2px;
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-secondary);
+    letter-spacing: 0;
+}
+
+/* ============================================================
+   VIEW 1: RFC DIRECTORY
+   ============================================================ */
+.page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.directory {
+    padding-top: 8px;
+    padding-bottom: 80px;
+}
+
+/* Hero with centered title + live filter — grid pattern bg */
+.directory-hero {
+    padding: 48px 0 40px 0;
+    text-align: center;
+    position: relative;
+    margin-bottom: 24px;
+}
+.directory-hero::before {
+    content: '';
+    position: absolute;
+    inset: -16px -48px 24px -48px;
+    background-image:
+        linear-gradient(to right, var(--border-hairline) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--border-hairline) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 0;
+}
+.directory-hero > * { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.06em;
+    margin-bottom: 18px;
+}
+.hero-title {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 32px 0;
+    color: var(--fg-primary);
+}
+
+.live-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 620px;
+    padding: 0 16px;
+    height: 46px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    transition: all 160ms var(--ease);
+}
+.live-filter:focus-within {
+    border-color: var(--accent-border);
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg-raised));
+    box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.live-filter .lf-icon {
+    color: var(--fg-tertiary);
+    flex-shrink: 0;
+}
+.live-filter:focus-within .lf-icon { color: var(--accent); }
+.live-filter .lf-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--fg-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    letter-spacing: -0.005em;
+}
+.live-filter .lf-input::placeholder { color: var(--fg-tertiary); }
+.live-filter .kbd {
+    min-width: 22px;
+    height: 22px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+/* Toolbar above the table — filter icon + sort + results */
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-hairline);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.toolbar-left { position: relative; display: flex; align-items: center; gap: 16px; z-index: 60; }
+.toolbar-right { display: flex; align-items: center; gap: 24px; }
+
+.filter-trigger {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-xs);
+    color: var(--fg-tertiary);
+    cursor: pointer;
+    transition: all 140ms var(--ease);
+}
+.filter-trigger:hover {
+    background: var(--bg-raised);
+    color: var(--fg-primary);
+}
+.filter-trigger.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* Filter menu — positioned relative to the trigger */
+.filter-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 160px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+    padding: 5px;
+    z-index: 100;
+    display: none;
+}
+.filter-menu.open { display: block; }
+.filter-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--r-xs);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    transition: all 120ms var(--ease);
+    text-align: left;
+}
+.filter-menu-item:hover,
+.filter-menu-item.active {
+    background: var(--bg-hover);
+    color: var(--fg-primary);
+}
+.filter-menu-item .arrow {
+    color: var(--fg-muted);
+    font-size: 9px;
+}
+
+/* Submenu — opens to the right of the parent menu item on hover */
+.filter-submenu {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 6px);
+    min-width: 200px;
+    max-height: 380px;
+    overflow-y: auto;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+    padding: 5px;
+    display: none;
+}
+.filter-submenu.open { display: block; }
+.submenu-item {
+    padding: 7px 10px;
+    border-radius: var(--r-xs);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    transition: all 120ms var(--ease);
+}
+.submenu-item:hover {
+    background: var(--bg-hover);
+    color: var(--fg-primary);
+}
+
+.results-count {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-family: var(--font-mono);
+}
+.results-count .rc-label {
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+}
+.results-count .rc-value {
+    color: var(--fg-primary);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.sort-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--fg-tertiary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.sort-control .sort-label {
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+}
+.sort-toggle {
+    display: flex;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-xs);
+    padding: 2px;
+    gap: 1px;
+}
+.sort-toggle .sort-opt {
+    padding: 5px 10px;
+    border-radius: var(--r-xs);
+    color: var(--fg-tertiary);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    transition: all 140ms var(--ease);
+    font-variant-numeric: tabular-nums;
+}
+.sort-toggle .sort-opt:hover { color: var(--fg-primary); }
+.sort-toggle .sort-opt.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 4px 9px;
+}
+
+/* RFC table */
+.rfc-table {
+    margin-top: 4px;
+}
+.rfc-row {
+    display: grid;
+    grid-template-columns: 72px 1fr 120px 160px 100px;
+    align-items: center;
+    gap: 24px;
+    padding: 18px 8px;
+    border-bottom: 1px solid var(--border-hairline);
+    cursor: pointer;
+    transition: background 120ms var(--ease);
+    position: relative;
+}
+.rfc-row:hover {
+    background: var(--bg-raised);
+}
+
+.rfc-number {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+}
+.rfc-title-cell {
+    min-width: 0;
+}
+.rfc-title-cell .title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+}
+.rfc-title-cell .labels {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.label-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: var(--r-xs);
+    background: var(--bg-elevated);
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border-hairline);
+}
+
+.status-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* Outlined status badge — Oxide rfd-site style */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+}
+/* Small variant — for compact rows like search results */
+.status-badge.sm {
+    font-size: 9.5px;
+    padding: 2px 6px 1px 6px;
+    letter-spacing: 0.09em;
+}
+.status-badge.draft      { color: var(--status-draft); }
+.status-badge.proposed   { color: var(--status-proposed); }
+.status-badge.accepted,
+.status-badge.published  { color: var(--status-accepted); }
+.status-badge.rejected,
+.status-badge.abandoned  { color: var(--status-rejected); }
+.status-badge.superseded,
+.status-badge.discussion { color: var(--status-superseded); }
+
+/* Keep status-dot available for small inline indicators in dropdowns / preview cards */
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--fg-muted);
+    flex-shrink: 0;
+}
+.status-dot.draft      { background: var(--status-draft); }
+.status-dot.proposed   { background: var(--status-proposed); }
+.status-dot.accepted   { background: var(--status-accepted); }
+.status-dot.rejected   { background: var(--status-rejected); }
+.status-dot.superseded { background: var(--status-superseded); }
+
+.authors-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.updated-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   VIEW 2: SINGLE RFC
+   ============================================================ */
+.rfc-view {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 240px;
+    gap: 56px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 40px 96px 40px;
+}
+
+.rfc-sidebar-left {
+    position: sticky;
+    top: 88px;
+    align-self: start;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.sidebar-section { margin-bottom: 32px; }
+.sidebar-heading {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    gap: 12px;
+}
+.meta-row .key { color: var(--fg-tertiary); }
+.meta-row .val { color: var(--fg-primary); text-align: right; }
+
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-list li { padding: 4px 0; }
+.toc-list a {
+    color: var(--fg-secondary);
+    display: block;
+    padding-left: 10px;
+    border-left: 2px solid transparent;
+    transition: all 140ms var(--ease);
+    font-size: 12px;
+}
+.toc-list a:hover {
+    color: var(--fg-primary);
+    border-left-color: var(--border-strong);
+}
+.toc-list a.current {
+    color: var(--accent);
+    border-left-color: var(--accent);
+}
+.toc-list li.nested { padding-left: 14px; font-size: 11.5px; }
+
+/* RFC content column */
+.rfc-content {
+    min-width: 0;
+}
+.rfc-content-header {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border-hairline);
+    margin-bottom: 40px;
+}
+.rfc-content-header .number-line {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.rfc-content-header .number-line::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--accent-border), transparent);
+}
+.rfc-content-header h1 {
+    font-family: var(--font-serif);
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin: 0 0 20px 0;
+    color: var(--fg-primary);
+}
+.rfc-header-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    align-items: center;
+}
+.rfc-header-meta .divider { color: var(--fg-muted); }
+
+/* RFC prose */
+.rfc-prose { font-size: 15.5px; line-height: 1.72; color: var(--fg-primary); }
+.rfc-prose h2 {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    margin: 56px 0 18px 0;
+    color: var(--fg-primary);
+    padding-top: 8px;
+    scroll-margin-top: 80px;
+}
+.rfc-prose h2:first-child { margin-top: 0; }
+.rfc-prose h2 .hash {
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-size: 18px;
+    margin-right: 10px;
+    opacity: 0;
+    transition: opacity 160ms var(--ease);
+}
+.rfc-prose h2:hover .hash { opacity: 1; }
+.rfc-prose h3 {
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    margin: 36px 0 12px 0;
+    color: var(--fg-primary);
+}
+.rfc-prose p { margin: 0 0 18px 0; color: var(--fg-secondary); }
+.rfc-prose p strong { color: var(--fg-primary); font-weight: 500; }
+.rfc-prose ul, .rfc-prose ol { padding-left: 24px; margin: 0 0 20px 0; }
+.rfc-prose li { margin-bottom: 6px; color: var(--fg-secondary); }
+.rfc-prose li::marker { color: var(--fg-muted); }
+/* Inline code — subtle terminal chip, neutral color */
+.rfc-prose code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 6px;
+    border-radius: var(--r-xs);
+    color: var(--fg-primary);
+}
+
+/* Code blocks — Tokyo Night */
+.rfc-prose pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.65;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 18px 22px;
+    border-radius: var(--r-sm);
+    overflow-x: auto;
+    margin: 24px 0;
+    color: var(--code-fg);
+    position: relative;
+}
+.rfc-prose pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+/* Language badge — appears in top-right of code blocks */
+.rfc-prose pre[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--code-type);
+    opacity: 0.7;
+}
+
+/* Tokyo Night syntax tokens */
+.tok-kw  { color: var(--code-keyword); }                            /* keyword */
+.tok-fn  { color: var(--code-function); }                           /* function / method */
+.tok-str { color: var(--code-string); }                             /* string */
+.tok-num { color: var(--code-number); }                             /* number literal */
+.tok-cm  { color: var(--code-comment); font-style: italic; }        /* comment */
+.tok-key { color: var(--code-key); }                                /* yaml/json key */
+.tok-v   { color: var(--code-value); }                              /* value */
+.tok-p   { color: var(--code-punct); }                              /* punctuation */
+.tok-ty  { color: var(--code-type); }                               /* type */
+
+/* Blockquote — quiet, no left bar, just softer text on raised bg */
+.rfc-prose blockquote {
+    margin: 24px 0;
+    padding: 16px 22px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    color: var(--fg-secondary);
+    font-style: italic;
+    position: relative;
+}
+.rfc-prose blockquote::before {
+    content: '"';
+    position: absolute;
+    top: 2px;
+    left: 10px;
+    font-family: var(--font-serif);
+    font-size: 34px;
+    line-height: 1;
+    color: var(--fg-muted);
+    opacity: 0.6;
+    font-style: normal;
+}
+.rfc-prose blockquote p { margin: 0; padding-left: 18px; }
+
+/* Cross-RFC link with hover preview */
+.rfc-link {
+    color: var(--accent);
+    border-bottom: 1px dotted var(--accent-dim);
+    cursor: pointer;
+    position: relative;
+}
+.rfc-link:hover .preview-card { opacity: 1; visibility: visible; transform: translate(-50%, -8px); }
+.preview-card {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, 4px);
+    width: 320px;
+    padding: 14px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 180ms var(--ease);
+    z-index: 10;
+    color: var(--fg-primary);
+    font-style: normal;
+    font-weight: 400;
+}
+.preview-card .pc-num {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+.preview-card .pc-title {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 15px;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    border-bottom: none;
+    color: var(--fg-primary);
+}
+.preview-card .pc-meta {
+    display: flex;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.preview-card .pc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.preview-card .pc-dot {
+    color: var(--fg-muted);
+}
+
+/* ============================================================
+   RICH PROSE ELEMENTS — tables, admonitions, diagrams, codeblocks
+   ============================================================ */
+
+/* Code blocks with language tag & caption — Tokyo Night */
+.rfc-prose .codeblock {
+    margin: 24px 0;
+    border: 1px solid var(--code-border);
+    border-radius: var(--r-sm);
+    background: var(--code-bg);
+    overflow: hidden;
+}
+.rfc-prose .codeblock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 16px;
+    background: color-mix(in srgb, var(--code-bg) 80%, black);
+    border-bottom: 1px solid var(--code-border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-tertiary);
+}
+.rfc-prose .codeblock-header .lang {
+    color: var(--code-type);
+    letter-spacing: 0.14em;
+    font-weight: 500;
+}
+.rfc-prose .codeblock-header .caption {
+    color: var(--fg-tertiary);
+    text-transform: none;
+    letter-spacing: 0.01em;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+.rfc-prose .codeblock pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 18px 22px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--code-fg);
+    overflow-x: auto;
+}
+.rfc-prose .codeblock pre::before { content: none; }
+
+/* Tokyo Night syntax tokens — scoped to prose so they override generic */
+.rfc-prose .tok-kw  { color: var(--code-keyword); }
+.rfc-prose .tok-str { color: var(--code-string); }
+.rfc-prose .tok-num { color: var(--code-number); }
+.rfc-prose .tok-fn  { color: var(--code-function); }
+.rfc-prose .tok-cm  { color: var(--code-comment); font-style: italic; }
+.rfc-prose .tok-ty  { color: var(--code-type); }
+.rfc-prose .tok-pn  { color: var(--code-punct); }
+.rfc-prose .tok-key { color: var(--code-key); }
+
+/* ASCII diagram (narrow code-block variant, no language tag) */
+.rfc-prose .ascii-diagram {
+    margin: 24px 0;
+    padding: 20px 24px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--code-fg);
+    white-space: pre;
+    overflow-x: auto;
+    font-weight: 400;
+}
+.rfc-prose .ascii-diagram .hl { color: var(--accent); }
+.rfc-prose .ascii-diagram .dim { color: var(--fg-tertiary); }
+
+/* Tables */
+.rfc-prose .table-caption {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.04em;
+    padding: 6px 0;
+    margin-top: 24px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.rfc-prose .table-caption::before {
+    content: '▸ ';
+    color: var(--accent);
+    margin-right: 4px;
+}
+.rfc-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px 0;
+    font-size: 13.5px;
+    color: var(--fg-secondary);
+}
+.rfc-prose table + .table-caption { margin-top: 32px; }
+.rfc-prose table th,
+.rfc-prose table td {
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.rfc-prose table th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px 14px 10px 14px;
+    border-bottom: 1px solid var(--border-default);
+    background: var(--bg-raised);
+}
+.rfc-prose table tr:last-child td { border-bottom: 1px solid var(--border-default); }
+.rfc-prose table td code {
+    font-size: 12px;
+    padding: 1px 5px;
+}
+
+/* Admonitions — Oxide-style: saturated tint, colored body, sharp corners */
+.rfc-prose .admonition {
+    margin: 24px 0;
+    padding: 16px 20px 16px 56px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    position: relative;
+}
+.rfc-prose .admonition .adm-label {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    margin-right: 8px;
+}
+/* Circular icon chip floated absolutely on the left */
+.rfc-prose .admonition::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 17px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.rfc-prose .admonition p { margin: 0; display: inline; }
+.rfc-prose .admonition p + p { display: block; margin-top: 10px; }
+
+/* Color variants — saturated background, colored text */
+.rfc-prose .admonition.note {
+    background: color-mix(in srgb, var(--status-proposed) 16%, var(--bg-base));
+    color: color-mix(in srgb, var(--status-proposed) 70%, var(--fg-primary));
+}
+.rfc-prose .admonition.note .adm-label { color: var(--status-proposed); }
+.rfc-prose .admonition.note p { color: color-mix(in srgb, var(--status-proposed) 50%, var(--fg-primary)); }
+.rfc-prose .admonition.note::before {
+    content: 'i';
+    background: var(--status-proposed);
+    color: var(--bg-base);
+    font-style: italic;
+    font-family: var(--font-serif);
+    font-size: 14px;
+}
+
+.rfc-prose .admonition.warning {
+    background: color-mix(in srgb, var(--status-draft) 16%, var(--bg-base));
+    color: color-mix(in srgb, var(--status-draft) 70%, var(--fg-primary));
+}
+.rfc-prose .admonition.warning .adm-label { color: var(--status-draft); }
+.rfc-prose .admonition.warning p { color: color-mix(in srgb, var(--status-draft) 50%, var(--fg-primary)); }
+.rfc-prose .admonition.warning::before {
+    content: '!';
+    background: var(--status-draft);
+    color: var(--bg-base);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.rfc-prose .admonition.tip {
+    background: color-mix(in srgb, var(--status-accepted) 16%, var(--bg-base));
+    color: color-mix(in srgb, var(--status-accepted) 70%, var(--fg-primary));
+}
+.rfc-prose .admonition.tip .adm-label { color: var(--status-accepted); }
+.rfc-prose .admonition.tip p { color: color-mix(in srgb, var(--status-accepted) 50%, var(--fg-primary)); }
+.rfc-prose .admonition.tip::before {
+    content: '✓';
+    background: var(--status-accepted);
+    color: var(--bg-base);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.rfc-prose .admonition.caution {
+    background: color-mix(in srgb, var(--status-rejected) 16%, var(--bg-base));
+    color: color-mix(in srgb, var(--status-rejected) 70%, var(--fg-primary));
+}
+.rfc-prose .admonition.caution .adm-label { color: var(--status-rejected); }
+.rfc-prose .admonition.caution p { color: color-mix(in srgb, var(--status-rejected) 50%, var(--fg-primary)); }
+.rfc-prose .admonition.caution::before {
+    content: '✕';
+    background: var(--status-rejected);
+    color: var(--bg-base);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Links inside admonitions pick up the accent's hue */
+.rfc-prose .admonition a { text-decoration: underline; text-underline-offset: 3px; }
+.rfc-prose .admonition code {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    border-color: color-mix(in srgb, currentColor 20%, transparent);
+    color: currentColor;
+}
+
+/* Mermaid-style diagram container */
+.rfc-prose .mermaid-diagram {
+    margin: 24px 0;
+    padding: 32px 24px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    overflow-x: auto;
+}
+.rfc-prose .mermaid-diagram svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+}
+.rfc-prose .mermaid-caption {
+    display: block;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    margin-top: -12px;
+    margin-bottom: 24px;
+    letter-spacing: 0.02em;
+}
+
+/* Right sidebar — TOC only */
+.rfc-sidebar-right {
+    position: sticky;
+    top: 88px;
+    align-self: start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+/* RFC article footer — references & referenced-by at the bottom */
+.rfc-footer {
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-hairline);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+}
+.rfc-footer-heading {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.rfc-footer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.rfc-footer-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.rfc-footer-list li:last-child { border-bottom: none; }
+.rfc-footer-ref {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 120ms var(--ease);
+}
+.rfc-footer-ref .r-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    min-width: 72px;
+}
+.rfc-footer-ref .r-title {
+    font-size: 14px;
+    color: var(--fg-secondary);
+    transition: color 120ms var(--ease);
+}
+.rfc-footer-ref:hover .r-title { color: var(--fg-primary); }
+.rfc-footer-empty {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+}
+
+@media (max-width: 800px) {
+    .rfc-footer { grid-template-columns: 1fr; gap: 32px; }
+}
+
+/* ============================================================
+   VIEW 3: SEARCH
+   ============================================================ */
+.search-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    padding-top: 96px;
+}
+
+.search-modal {
+    width: 780px;
+    max-width: calc(100vw - 48px);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-sm);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 192px);
+}
+
+.search-input-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.search-input-row svg { flex-shrink: 0; }
+.search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 17px;
+    color: var(--fg-primary);
+    font-family: var(--font-sans);
+    letter-spacing: -0.005em;
+}
+.search-input::placeholder { color: var(--fg-tertiary); }
+.search-close-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+}
+
+.search-filters-row {
+    display: flex;
+    gap: 4px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-hairline);
+    background: var(--bg-base);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+.search-filter-pill {
+    padding: 5px 10px;
+    border-radius: var(--r-xs);
+    color: var(--fg-tertiary);
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 140ms var(--ease);
+}
+.search-filter-pill:hover { color: var(--fg-primary); background: var(--bg-elevated); }
+.search-filter-pill.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+.search-results {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+}
+.search-results-list {
+    border-right: 1px solid var(--border-hairline);
+    overflow-y: auto;
+}
+.result-group-header {
+    padding: 10px 20px 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-tertiary);
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border-hairline);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.result-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-hairline);
+    cursor: pointer;
+    transition: background 120ms var(--ease);
+    position: relative;
+}
+.result-item:hover { background: var(--bg-elevated); }
+.result-item.active {
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated));
+}
+.result-item .ri-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+}
+.result-item .ri-num { color: var(--accent); }
+.result-item .ri-status {
+    display: flex;
+    align-items: center;
+}
+.result-item .ri-title {
+    font-size: 13.5px;
+    color: var(--fg-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.003em;
+    line-height: 1.35;
+}
+.result-item .ri-snippet {
+    font-size: 11.5px;
+    color: var(--fg-tertiary);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.result-item .ri-snippet mark {
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* Preview pane */
+.result-preview {
+    overflow-y: auto;
+    padding: 24px 28px;
+    background: var(--bg-base);
+}
+.rp-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-hairline);
+    margin-bottom: 18px;
+}
+.rp-num-line {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+.rp-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--fg-primary);
+    margin: 0 0 14px 0;
+}
+.rp-meta {
+    display: flex;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    align-items: center;
+    flex-wrap: wrap;
+}
+.rp-body {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--fg-secondary);
+}
+.rp-body h3 {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-tertiary);
+    margin: 20px 0 8px 0;
+    font-weight: 500;
+}
+.rp-body p { margin: 0 0 12px 0; }
+.rp-body mark {
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+.search-footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--border-hairline);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    background: var(--bg-base);
+}
+.search-footer .hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.search-footer .powered {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Dim the directory behind the search modal */
+#view-search .topbar,
+#view-search .page-container {
+    filter: brightness(0.55) saturate(0.8);
+    pointer-events: none;
+}
+
+/* Background directory for search view */
+#view-search { background: var(--bg-base); }
+
+/* ============================================================
+   ENTRANCE ANIMATION
+   ============================================================ */
+@keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.view.active .directory-hero,
+.view.active .table-toolbar,
+.view.active .rfc-row,
+.view.active .rfc-content-header,
+.view.active .rfc-prose > *,
+.view.active .search-modal {
+    animation: rise 420ms var(--ease) both;
+}
+.view.active .rfc-row:nth-child(1) { animation-delay: 40ms; }
+.view.active .rfc-row:nth-child(2) { animation-delay: 70ms; }
+.view.active .rfc-row:nth-child(3) { animation-delay: 100ms; }
+.view.active .rfc-row:nth-child(4) { animation-delay: 130ms; }
+.view.active .rfc-row:nth-child(5) { animation-delay: 160ms; }
+.view.active .rfc-row:nth-child(6) { animation-delay: 190ms; }
+.view.active .rfc-row:nth-child(7) { animation-delay: 220ms; }
+.view.active .rfc-row:nth-child(8) { animation-delay: 250ms; }
+.view.active .rfc-row:nth-child(9) { animation-delay: 280ms; }
+.view.active .rfc-row:nth-child(10) { animation-delay: 310ms; }
+.view.active .rfc-row:nth-child(11) { animation-delay: 340ms; }
+
+/* ============================================================
+   RESPONSIVE (light touch — mockup priority is desktop)
+   ============================================================ */
+@media (max-width: 1100px) {
+    .rfc-view { grid-template-columns: 200px minmax(0, 1fr); gap: 40px; }
+    .rfc-sidebar-right { display: none; }
+}
+@media (max-width: 800px) {
+    .rfc-view { grid-template-columns: 1fr; }
+    .rfc-sidebar-left { display: none; }
+    .rfc-row { grid-template-columns: 60px 1fr auto; }
+    .authors-cell, .updated-cell { display: none; }
+    .topbar { grid-template-columns: 1fr auto; padding: 0 20px; }
+    .topbar-search { display: none; }
+    .directory-stats { display: none; }
+}
+/* ============================================================
+   VIEW 4: API DOCS (Swagger/Redoc-style)
+   ============================================================ */
+.api-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 56px);
+}
+
+.api-sidebar {
+    border-right: 1px solid var(--border-hairline);
+    padding: 32px 20px 40px 32px;
+    position: sticky;
+    top: 56px;
+    align-self: start;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+}
+.api-sidebar-brand {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.api-sidebar-brand .api-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+.api-sidebar-brand .api-version {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.04em;
+}
+.api-sidebar-brand .api-version .v-tag {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 1px 6px;
+    border-radius: var(--r-xs);
+    margin-right: 6px;
+}
+
+.api-group {
+    margin-bottom: 22px;
+}
+.api-group-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 8px;
+    padding-left: 8px;
+}
+.api-endpoint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    transition: all 120ms var(--ease);
+    margin-bottom: 1px;
+}
+.api-endpoint:hover { background: var(--bg-raised); color: var(--fg-primary); }
+.api-endpoint.active {
+    background: var(--accent-bg);
+    color: var(--fg-primary);
+}
+.api-endpoint.active::before {
+    content: '';
+    position: absolute;
+}
+.api-endpoint .path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.005em;
+}
+
+/* HTTP method badges — colored, compact */
+.method {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: var(--r-xs);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    min-width: 44px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+.method.get    { color: var(--code-function); }
+.method.post   { color: var(--status-accepted); }
+.method.put    { color: var(--status-draft); }
+.method.patch  { color: var(--code-type); }
+.method.delete { color: var(--status-rejected); }
+
+.api-content {
+    padding: 40px 48px 80px 48px;
+    min-width: 0;
+}
+
+.api-endpoint-header {
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border-hairline);
+    margin-bottom: 32px;
+}
+.api-endpoint-header .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 12px;
+}
+.api-endpoint-header h1 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    margin: 0 0 16px 0;
+    color: var(--fg-primary);
+}
+.api-endpoint-header .path-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+.api-endpoint-header .path-line .full-path {
+    color: var(--code-fg);
+    flex: 1;
+    overflow-x: auto;
+}
+.api-endpoint-header .path-line .full-path .segment-var {
+    color: var(--code-number);
+}
+.api-endpoint-header .path-line .copy-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    border: 1px solid var(--border-hairline);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 120ms var(--ease);
+}
+.api-endpoint-header .path-line .copy-btn:hover { color: var(--accent); border-color: var(--accent-border); }
+.api-endpoint-header .description {
+    font-size: 15px;
+    color: var(--fg-secondary);
+    line-height: 1.65;
+    max-width: 72ch;
+    margin: 0;
+}
+
+.api-section {
+    margin-bottom: 40px;
+}
+.api-section-title {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-hairline);
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.api-section-title .count {
+    font-family: var(--font-mono);
+    color: var(--fg-muted);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+}
+
+/* Parameter table */
+.param-row {
+    display: grid;
+    grid-template-columns: 180px 110px 1fr;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-hairline);
+    font-size: 13px;
+}
+.param-row:last-child { border-bottom: none; }
+.param-row .p-name {
+    font-family: var(--font-mono);
+    color: var(--fg-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.param-row .p-name .required {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--status-rejected);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+.param-row .p-type {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--code-type);
+}
+.param-row .p-desc {
+    color: var(--fg-secondary);
+    line-height: 1.55;
+}
+.param-row .p-desc .default {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+}
+.param-row .p-desc .default code {
+    color: var(--code-keyword);
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Response blocks */
+.response-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.response-row:last-child { border-bottom: none; }
+.response-row .r-code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    text-align: center;
+    letter-spacing: 0.04em;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    line-height: 1.3;
+}
+.response-row .r-code.ok    { color: var(--status-accepted); }
+.response-row .r-code.redir { color: var(--code-function); }
+.response-row .r-code.err4  { color: var(--status-draft); }
+.response-row .r-code.err5  { color: var(--status-rejected); }
+.response-row .r-desc {
+    color: var(--fg-secondary);
+    font-size: 13px;
+}
+
+/* Example tabs + code */
+.example-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: -1px;
+}
+.example-tab {
+    padding: 9px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    background: color-mix(in srgb, var(--code-bg) 60%, transparent);
+    border: 1px solid var(--code-border);
+    border-bottom: none;
+    cursor: pointer;
+    border-radius: var(--r-xs) var(--r-xs) 0 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 120ms var(--ease);
+}
+.example-tab:hover { color: var(--fg-primary); }
+.example-tab.active {
+    color: var(--code-type);
+    background: var(--code-bg);
+    border-color: var(--code-border);
+}
+.example-tab + .example-tab { border-left: none; }
+.example-code {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 0 var(--r-xs) var(--r-xs) var(--r-xs);
+    padding: 18px 22px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--code-fg);
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+}
+
+/* "Try it" panel — optional panel on the right, hidden here but we keep a stub */
+.try-it {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--bg-raised));
+    border: 1px solid var(--accent-border);
+    border-radius: var(--r-sm);
+    margin: 24px 0;
+    font-size: 13px;
+    color: var(--fg-secondary);
+}
+.try-it-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+.try-it-cta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    transition: all 120ms var(--ease);
+}
+.try-it-cta:hover { background: var(--accent-bg); }
+
+/* ============================================================
+   VIEW 5: MCP DOCS
+   ============================================================ */
+.mcp-layout {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 48px 40px 96px 40px;
+}
+
+.mcp-hero {
+    padding-bottom: 36px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.mcp-hero .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mcp-hero .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+}
+.mcp-hero h1 {
+    font-family: var(--font-serif);
+    font-size: 44px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px 0;
+    color: var(--fg-primary);
+    max-width: 22ch;
+}
+.mcp-hero p {
+    font-size: 16px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+    max-width: 64ch;
+    margin: 0;
+}
+
+/* Card grid */
+.mcp-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 48px;
+}
+.mcp-card {
+    padding: 20px 22px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    transition: all 180ms var(--ease);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.mcp-card:hover {
+    border-color: var(--accent-border);
+    background: color-mix(in srgb, var(--accent) 3%, var(--bg-raised));
+    transform: translateY(-1px);
+}
+.mcp-card .c-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.mcp-card .c-title {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+}
+.mcp-card .c-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 7px;
+    border-radius: var(--r-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    line-height: 1.3;
+}
+.mcp-card .c-desc {
+    font-size: 13px;
+    color: var(--fg-secondary);
+    line-height: 1.55;
+    margin: 0;
+}
+.mcp-card .c-meta {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    border-top: 1px solid var(--border-hairline);
+}
+.mcp-card .c-meta .m-icon {
+    color: var(--fg-muted);
+}
+.mcp-card .c-arrow {
+    color: var(--fg-muted);
+    transition: transform 180ms var(--ease), color 180ms var(--ease);
+}
+.mcp-card:hover .c-arrow { color: var(--accent); transform: translateX(3px); }
+
+/* Section in MCP docs */
+.mcp-section {
+    margin-bottom: 48px;
+}
+.mcp-section h2 {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px 0;
+    color: var(--fg-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.mcp-section h2 .step {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+.mcp-section > p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin: 0 0 18px 0;
+    max-width: 72ch;
+}
+.mcp-section > p code,
+.mcp-section li code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 1px 6px;
+    border-radius: var(--r-xs);
+    color: var(--code-keyword);
+}
+.mcp-section ul {
+    font-size: 14.5px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+    padding-left: 22px;
+    margin: 0 0 20px 0;
+}
+.mcp-section li { margin-bottom: 6px; }
+.mcp-section li::marker { color: var(--fg-muted); }
+
+/* Downloads grid — more like artifact cards */
+.download-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 6px;
+}
+.download-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all 140ms var(--ease);
+}
+.download-item:hover {
+    border-color: var(--accent-border);
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg-raised));
+}
+.download-item .d-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.download-item .d-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-sm);
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    display: grid;
+    place-items: center;
+    color: var(--code-type);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.download-item .d-info {
+    min-width: 0;
+}
+.download-item .d-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--fg-primary);
+    letter-spacing: -0.003em;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.download-item .d-size {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+}
+.download-item .d-dl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--r-xs);
+    flex-shrink: 0;
+    transition: background 120ms var(--ease);
+}
+.download-item:hover .d-dl { background: var(--accent-bg); }
+
+@media (max-width: 900px) {
+    .api-layout { grid-template-columns: 1fr; }
+    .api-sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border-hairline); }
+    .mcp-cards, .download-grid { grid-template-columns: 1fr; }
+    .param-row { grid-template-columns: 1fr; gap: 6px; }
+    .response-row { grid-template-columns: 80px 1fr; }
+}
+/* ============================================================
+   VIEW 6: FRAMEWORKS
+   ============================================================ */
+.fw-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 56px);
+}
+
+.fw-sidebar {
+    border-right: 1px solid var(--border-hairline);
+    padding: 32px 16px 40px 32px;
+    position: sticky;
+    top: 56px;
+    align-self: start;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    font-family: var(--font-sans);
+}
+
+.fw-sidebar-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 14px;
+    padding-left: 8px;
+}
+
+/* Tree: root framework -> child frameworks -> sections */
+.fw-tree { list-style: none; padding: 0; margin: 0; }
+.fw-tree-root > li { margin-bottom: 4px; }
+
+.fw-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    transition: all 120ms var(--ease);
+    color: var(--fg-secondary);
+    font-size: 13px;
+    letter-spacing: -0.003em;
+}
+.fw-node:hover { background: var(--bg-raised); color: var(--fg-primary); }
+.fw-node.active {
+    background: var(--accent-bg);
+    color: var(--fg-primary);
+}
+.fw-node .caret {
+    color: var(--fg-muted);
+    font-size: 9px;
+    transition: transform 140ms var(--ease);
+    width: 10px;
+    flex-shrink: 0;
+}
+.fw-node.expanded .caret { transform: rotate(90deg); color: var(--accent); }
+.fw-node .fw-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fw-node .fw-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+    letter-spacing: 0;
+}
+
+/* Root "company framework" node - special treatment */
+.fw-node.root-node {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    padding: 9px 10px;
+    border: 1px solid var(--accent-border);
+    background: var(--accent-bg);
+    margin-bottom: 10px;
+    border-radius: var(--r-xs);
+}
+.fw-node.root-node:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.fw-node.root-node .caret { color: var(--accent); }
+
+.fw-children {
+    list-style: none;
+    padding: 4px 0 8px 18px;
+    margin: 0 0 4px 6px;
+    border-left: 1px solid var(--border-hairline);
+}
+.fw-children .fw-node {
+    padding: 6px 10px;
+    font-size: 12.5px;
+}
+
+/* Section-level children (AWS CIS: Account, EC2, IAM...) */
+.fw-sections {
+    list-style: none;
+    padding: 2px 0 4px 14px;
+    margin: 0;
+    border-left: 1px solid var(--border-hairline);
+}
+.fw-sections .fw-node {
+    padding: 5px 10px;
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    font-family: var(--font-mono);
+    letter-spacing: 0.01em;
+}
+.fw-sections .fw-node:hover { color: var(--fg-primary); }
+.fw-sections .fw-node.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* Content pane */
+.fw-content {
+    padding: 40px 48px 80px 48px;
+    min-width: 0;
+}
+
+/* Breadcrumb */
+.fw-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+    margin-bottom: 20px;
+}
+.fw-breadcrumb a { color: var(--fg-tertiary); transition: color 120ms var(--ease); cursor: pointer; }
+.fw-breadcrumb a:hover { color: var(--accent); }
+.fw-breadcrumb .sep { color: var(--fg-muted); }
+.fw-breadcrumb .current { color: var(--fg-primary); }
+
+/* Framework detail header */
+.fw-detail-header {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-hairline);
+    margin-bottom: 32px;
+}
+.fw-detail-header h1 {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    margin: 0 0 14px 0;
+    color: var(--fg-primary);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.fw-detail-header h1 .version {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 3px 9px;
+    border-radius: var(--r-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+}
+.fw-detail-header .fw-desc {
+    font-size: 15px;
+    color: var(--fg-secondary);
+    line-height: 1.65;
+    margin: 0 0 18px 0;
+    max-width: 72ch;
+}
+.fw-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.01em;
+}
+.fw-detail-meta .m-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.fw-detail-meta .m-label {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--fg-muted);
+}
+.fw-detail-meta .m-val {
+    color: var(--fg-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Expandable sections (Account, EC2, IAM...) */
+.fw-section-block {
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    background: var(--bg-raised);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.fw-section-block .fw-section-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 120ms var(--ease);
+}
+.fw-section-block .fw-section-head:hover { background: var(--bg-hover); }
+.fw-section-block.open .fw-section-head {
+    border-bottom: 1px solid var(--border-hairline);
+}
+.fw-section-block .fw-section-caret {
+    color: var(--fg-tertiary);
+    font-size: 10px;
+    transition: transform 160ms var(--ease);
+    width: 12px;
+    flex-shrink: 0;
+}
+.fw-section-block.open .fw-section-caret {
+    transform: rotate(90deg);
+    color: var(--accent);
+}
+.fw-section-block .fw-section-title {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    letter-spacing: -0.003em;
+    flex: 1;
+}
+.fw-section-block .fw-section-meta {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+}
+.fw-section-block .fw-section-meta .sev-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.fw-section-block .fw-section-body {
+    display: none;
+    background: var(--bg-base);
+}
+.fw-section-block.open .fw-section-body { display: block; }
+
+/* Rule row inside a section */
+.fw-rule-row {
+    display: grid;
+    grid-template-columns: 74px 1fr 110px 120px;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-hairline);
+    cursor: pointer;
+    transition: background 120ms var(--ease);
+}
+.fw-rule-row:last-child { border-bottom: none; }
+.fw-rule-row:hover { background: var(--bg-raised); }
+.fw-rule-row.active { background: color-mix(in srgb, var(--accent) 6%, var(--bg-raised)); }
+.fw-rule-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.fw-rule-title {
+    font-size: 13.5px;
+    color: var(--fg-primary);
+    letter-spacing: -0.003em;
+    line-height: 1.4;
+}
+.fw-rule-wiz {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.01em;
+    text-align: right;
+}
+
+/* Severity pill */
+.sev-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    justify-self: start;
+}
+.sev-pill.critical { color: var(--status-rejected); }
+.sev-pill.high     { color: #FF9E64; }
+.sev-pill.medium   { color: var(--status-draft); }
+.sev-pill.low      { color: var(--status-proposed); }
+.sev-pill.info     { color: var(--fg-tertiary); }
+
+/* Rule detail sheet */
+.fw-rule-detail {
+    margin-top: 36px;
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    background: var(--bg-raised);
+    overflow: hidden;
+}
+.fw-rule-detail-header {
+    padding: 24px 28px 20px 28px;
+    border-bottom: 1px solid var(--border-hairline);
+}
+.fw-rule-detail-header .rd-number {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.fw-rule-detail-header .rd-number::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--accent-border), transparent);
+    max-width: 140px;
+}
+.fw-rule-detail-header h2 {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin: 0 0 14px 0;
+    color: var(--fg-primary);
+}
+.fw-rule-detail-header .rd-meta-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+}
+.fw-rule-detail-header .rd-meta-row .divider { color: var(--fg-muted); }
+
+.fw-rule-detail-body {
+    padding: 24px 28px;
+}
+.fw-rule-detail-body > .rd-section + .rd-section { margin-top: 24px; }
+.rd-section {
+    margin-bottom: 0;
+}
+.rd-section-title {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fg-tertiary);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-hairline);
+    font-weight: 600;
+}
+.rd-section p {
+    font-size: 14.5px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+    margin: 0 0 12px 0;
+}
+.rd-section p:last-child { margin-bottom: 0; }
+
+/* Related panel — grid of reference cards */
+.rd-related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+.rd-ref-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all 140ms var(--ease);
+}
+.rd-ref-card:hover {
+    border-color: var(--accent-border);
+    background: color-mix(in srgb, var(--accent) 4%, var(--bg-base));
+}
+.rd-ref-card .rrc-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+.rd-ref-card .rrc-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--fg-primary);
+    letter-spacing: -0.003em;
+    word-break: break-word;
+}
+.rd-ref-card .rrc-value.link { color: var(--accent); }
+.rd-ref-card .rrc-sub {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.4;
+}
+
+/* Collapsible fix section */
+.fix-panel {
+    margin-top: 24px;
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    background: color-mix(in srgb, var(--status-accepted) 4%, var(--bg-base));
+    overflow: hidden;
+}
+.fix-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 120ms var(--ease);
+}
+.fix-panel-head:hover { background: color-mix(in srgb, var(--status-accepted) 8%, var(--bg-base)); }
+.fix-panel.open .fix-panel-head { border-bottom: 1px solid var(--border-hairline); }
+.fix-panel-caret {
+    color: var(--status-accepted);
+    font-size: 10px;
+    transition: transform 160ms var(--ease);
+    width: 12px;
+}
+.fix-panel.open .fix-panel-caret { transform: rotate(90deg); }
+.fix-panel-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--status-accepted);
+    font-weight: 600;
+    flex: 1;
+}
+.fix-panel-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.04em;
+}
+
+.fix-panel-body { display: none; padding: 20px 24px; }
+.fix-panel.open .fix-panel-body { display: block; }
+
+.fix-subsection { margin-bottom: 22px; }
+.fix-subsection:last-child { margin-bottom: 0; }
+.fix-subsection-title {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fix-subsection-title .fix-step-num {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+}
+.fix-subsection p {
+    font-size: 13.5px;
+    color: var(--fg-secondary);
+    line-height: 1.65;
+    margin: 0 0 10px 0;
+}
+
+/* Skill download item — like an MCP download but tagged */
+.skill-dl {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    margin-bottom: 8px;
+    transition: all 140ms var(--ease);
+    cursor: pointer;
+}
+.skill-dl:hover { border-color: var(--accent-border); }
+.skill-dl .skill-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-sm);
+    background: color-mix(in srgb, var(--code-keyword) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--code-keyword) 30%, transparent);
+    display: grid;
+    place-items: center;
+    color: var(--code-keyword);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.skill-dl .skill-info { flex: 1; min-width: 0; }
+.skill-dl .skill-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--fg-primary);
+    margin-bottom: 2px;
+}
+.skill-dl .skill-desc {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.4;
+}
+.skill-dl .skill-dl-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--r-xs);
+    flex-shrink: 0;
+    transition: background 120ms var(--ease);
+}
+.skill-dl:hover .skill-dl-btn { background: var(--accent-bg); }
+
+/* Prompt snippet */
+.prompt-block {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--r-sm);
+    padding: 14px 16px 14px 18px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--code-fg);
+    position: relative;
+    margin-bottom: 8px;
+}
+.prompt-block .prompt-copy {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-tertiary);
+    padding: 3px 7px;
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    background: var(--code-bg);
+    transition: all 120ms var(--ease);
+}
+.prompt-block .prompt-copy:hover { color: var(--accent); border-color: var(--accent-border); }
+.prompt-block .prompt-user {
+    color: var(--code-comment);
+    font-style: italic;
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+
+/* MCP call-to-action */
+.mcp-ref-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-hairline);
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    margin-top: 8px;
+}
+.mcp-ref-line .mcp-tag {
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    padding: 2px 7px;
+    border-radius: var(--r-xs);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .fw-layout { grid-template-columns: 1fr; }
+    .fw-sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border-hairline); }
+    .fw-rule-row { grid-template-columns: 70px 1fr; gap: 14px; }
+    .fw-rule-row .sev-pill,
+    .fw-rule-row .fw-rule-wiz { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- META: Mockup switcher (not part of the actual app UI) -->
+<div class="mockup-switcher">
+    <span class="label">MOCKUP</span>
+    <button class="active" data-view="directory">01 · Directory</button>
+    <button data-view="rfc">02 · RFC Page</button>
+    <button data-view="search">03 · Search</button>
+    <button data-view="api">04 · API</button>
+    <button data-view="mcp">05 · MCP</button>
+    <button data-view="frameworks">06 · Frameworks</button>
+</div>
+
+<!-- ============================================================
+     VIEW 1: DIRECTORY
+     ============================================================ -->
+<div class="view active" id="view-directory">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search" onclick="showView('search')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#" class="active">Directory</a>
+            <a href="#" onclick="showView('frameworks'); return false;">Frameworks</a>
+            <a href="#" onclick="showView('api'); return false;">API</a>
+            <a href="#" onclick="showView('mcp'); return false;">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="page-container directory">
+
+        <div class="directory-hero">
+            <div class="hero-eyebrow">/ docs / rfcs</div>
+            <h1 class="hero-title">Request for Comments</h1>
+            <div class="live-filter">
+                <svg class="lf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input class="lf-input" placeholder="Filter by title, number, or author" />
+                <span class="kbd">/</span>
+            </div>
+        </div>
+
+        <div class="table-toolbar">
+            <div class="toolbar-left">
+                <div class="filter-trigger" onclick="toggleFilterMenu()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="6" x2="20" y2="6"/>
+                        <line x1="7" y1="12" x2="17" y2="12"/>
+                        <line x1="10" y1="18" x2="14" y2="18"/>
+                    </svg>
+                </div>
+                <div class="filter-menu" id="filter-menu">
+                    <button class="filter-menu-item" onmouseover="showSubmenu('authors')">
+                        Authors
+                        <span class="arrow">▸</span>
+                    </button>
+                    <button class="filter-menu-item" onmouseover="showSubmenu('labels')">
+                        Labels
+                        <span class="arrow">▸</span>
+                    </button>
+
+                    <!-- Authors submenu -->
+                    <div class="filter-submenu" id="submenu-authors">
+                        <div class="submenu-item">donald</div>
+                        <div class="submenu-item">priya</div>
+                        <div class="submenu-item">sam</div>
+                        <div class="submenu-item">ameer</div>
+                    </div>
+
+                    <!-- Labels submenu -->
+                    <div class="filter-submenu" id="submenu-labels">
+                        <div class="submenu-item">platform</div>
+                        <div class="submenu-item">security</div>
+                        <div class="submenu-item">kubernetes</div>
+                        <div class="submenu-item">aws</div>
+                        <div class="submenu-item">iam</div>
+                        <div class="submenu-item">wiz</div>
+                        <div class="submenu-item">okta</div>
+                        <div class="submenu-item">argocd</div>
+                        <div class="submenu-item">backstage</div>
+                        <div class="submenu-item">docs</div>
+                        <div class="submenu-item">tooling</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar-right">
+                <div class="sort-control">
+                    <span class="sort-label">sort</span>
+                    <div class="sort-toggle">
+                        <button class="sort-opt active">updated ↓</button>
+                        <button class="sort-opt">number ↑</button>
+                    </div>
+                </div>
+                <div class="results-count">
+                    <span class="rc-label">Results</span>
+                    <span class="rc-value">11</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="rfc-table">
+
+            <div class="rfc-row">
+                <div class="rfc-number">0011</div>
+                <div class="rfc-title-cell">
+                    <div class="title">RFC portal for viewing and searching documents</div>
+                    <div class="labels">
+                        <span class="label-tag">platform</span>
+                        <span class="label-tag">docs</span>
+                        <span class="label-tag">tooling</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge draft">Draft</span></div>
+                <div class="authors-cell">donald</div>
+                <div class="updated-cell">2 hours ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0009</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Container image signing and admission policy</div>
+                    <div class="labels">
+                        <span class="label-tag">security</span>
+                        <span class="label-tag">kubernetes</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge proposed">Proposed</span></div>
+                <div class="authors-cell">donald, sam</div>
+                <div class="updated-cell">Yesterday</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0003</div>
+                <div class="rfc-title-cell">
+                    <div class="title">AWS multi-account organization structure</div>
+                    <div class="labels">
+                        <span class="label-tag">aws</span>
+                        <span class="label-tag">platform</span>
+                        <span class="label-tag">governance</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge superseded">Superseded</span></div>
+                <div class="authors-cell">donald</div>
+                <div class="updated-cell">3 days ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0010</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Secrets management via external-secrets and Vault</div>
+                    <div class="labels">
+                        <span class="label-tag">security</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge rejected">Rejected</span></div>
+                <div class="authors-cell">priya</div>
+                <div class="updated-cell">1 week ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0006</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Identity Center and Okta federation model</div>
+                    <div class="labels">
+                        <span class="label-tag">okta</span>
+                        <span class="label-tag">iam</span>
+                        <span class="label-tag">security</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald, priya</div>
+                <div class="updated-cell">2 weeks ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0008</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Wiz CSPM deployment and scope</div>
+                    <div class="labels">
+                        <span class="label-tag">wiz</span>
+                        <span class="label-tag">security</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald, priya</div>
+                <div class="updated-cell">3 weeks ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0007</div>
+                <div class="rfc-title-cell">
+                    <div class="title">ArgoCD application-of-applications pattern</div>
+                    <div class="labels">
+                        <span class="label-tag">argocd</span>
+                        <span class="label-tag">kubernetes</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">sam</div>
+                <div class="updated-cell">1 month ago</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0005</div>
+                <div class="rfc-title-cell">
+                    <div class="title">EKS cluster bootstrap and platform operator</div>
+                    <div class="labels">
+                        <span class="label-tag">kubernetes</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald</div>
+                <div class="updated-cell">Dec 2024</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0004</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Service control policies for baseline guardrails</div>
+                    <div class="labels">
+                        <span class="label-tag">aws</span>
+                        <span class="label-tag">security</span>
+                        <span class="label-tag">platform</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald, priya</div>
+                <div class="updated-cell">Nov 2024</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0002</div>
+                <div class="rfc-title-cell">
+                    <div class="title">Terraform + Terragrunt repository layout</div>
+                    <div class="labels">
+                        <span class="label-tag">platform</span>
+                        <span class="label-tag">iac</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald, sam</div>
+                <div class="updated-cell">Oct 2024</div>
+            </div>
+
+            <div class="rfc-row">
+                <div class="rfc-number">0001</div>
+                <div class="rfc-title-cell">
+                    <div class="title">RFC process and document conventions</div>
+                    <div class="labels">
+                        <span class="label-tag">docs</span>
+                        <span class="label-tag">process</span>
+                    </div>
+                </div>
+                <div class="status-cell"><span class="status-badge accepted">Accepted</span></div>
+                <div class="authors-cell">donald</div>
+                <div class="updated-cell">Sep 2024</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     VIEW 2: SINGLE RFC PAGE
+     ============================================================ -->
+<div class="view" id="view-rfc">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search" onclick="showView('search')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#" onclick="showView('directory'); return false;">Directory</a>
+            <a href="#" onclick="showView('frameworks'); return false;">Frameworks</a>
+            <a href="#" onclick="showView('api'); return false;">API</a>
+            <a href="#" onclick="showView('mcp'); return false;">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="rfc-view">
+
+        <aside class="rfc-sidebar-left">
+
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Metadata</div>
+                <div class="meta-row"><span class="key">Status</span><span class="val" style="color: var(--status-draft);">Draft</span></div>
+                <div class="meta-row"><span class="key">Author</span><span class="val">donald</span></div>
+                <div class="meta-row"><span class="key">Created</span><span class="val">2026-04-16</span></div>
+                <div class="meta-row"><span class="key">Updated</span><span class="val">2h ago</span></div>
+                <div class="meta-row"><span class="key">Revision</span><span class="val">4</span></div>
+                <div class="meta-row"><span class="key">PR</span><span class="val" style="color: var(--accent);">#412</span></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Labels</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <span class="label-tag">platform</span>
+                    <span class="label-tag">docs</span>
+                    <span class="label-tag">tooling</span>
+                </div>
+            </div>
+
+        </aside>
+
+        <article class="rfc-content">
+
+            <div class="rfc-content-header">
+                <div class="number-line">RFC / 0011</div>
+                <h1>Portal for RFCs and framework definitions</h1>
+                <div class="rfc-header-meta">
+                    <span class="status-badge draft">Draft</span>
+                    <span class="divider">·</span>
+                    <span>authored by <span style="color: var(--accent);">donald</span></span>
+                    <span class="divider">·</span>
+                    <span>revision 4</span>
+                    <span class="divider">·</span>
+                    <span>2 hours ago</span>
+                </div>
+            </div>
+
+            <div class="rfc-prose">
+
+                <h2 id="summary"><span class="hash">#</span>Summary</h2>
+                <p>An internal web portal that renders Markdown RFCs from a single Git repo (<code>rfcs</code>) as a nicer read experience than raw GitHub. Full-text search, cross-document linking, and a public read API. Authorship stays in Git; the portal is read-only. Deployed to Kubernetes via a Helm chart in the same repo.</p>
+
+                <div class="admonition note">
+                    <span class="adm-label">Note</span>
+                    <p>This RFC describes phase 1 &mdash; the RFC reading experience. A future RFC will cover rendering our custom Wiz security frameworks as a second content source, reusing the same ingester and API layer.</p>
+                </div>
+
+                <h2 id="motivation"><span class="hash">#</span>Motivation</h2>
+                <p>RFCs live as Markdown in Git. Reading them means cloning the repo or browsing GitHub, neither of which gives cross-document search, hover previews on RFC references, or a clean shareable URL for non-developers.</p>
+
+                <p>The Oxide <code>rfd-site</code> project (see <span class="rfc-link">RFC-0008<span class="preview-card"><span class="pc-num">RFC / 0008</span><span class="pc-title">Wiz CSPM deployment and scope</span><span class="pc-meta"><span class="pc-status"><span class="status-dot accepted"></span>ACCEPTED</span><span class="pc-dot">·</span><span>donald, priya</span><span class="pc-dot">·</span><span>Feb 2025</span></span></span></span>) validates the shape of the solution; we want the same reading experience against our Markdown + <code>docz</code> conventions with our stack and auth.</p>
+
+                <h2 id="goals"><span class="hash">#</span>Goals</h2>
+                <ul>
+                    <li>Unified read experience for RFCs in the <code>rfcs</code> repo.</li>
+                    <li>Full-text search with Meilisearch.</li>
+                    <li>Cross-document linking with hover previews (title, status, author, last-updated).</li>
+                    <li>Live Git sync within a few minutes of a merge to <code>main</code>.</li>
+                    <li>Public read API &mdash; <code>curl</code>-friendly JSON endpoints.</li>
+                    <li>Fits on the existing Kubernetes cluster; single Helm chart deploys the whole thing.</li>
+                </ul>
+
+                <h2 id="architecture"><span class="hash">#</span>Architecture</h2>
+                <p>Three components, one Helm chart, one repo. The ingester and API are the same Go binary in different subcommand modes; the frontend is a separate Bun + React service.</p>
+
+                <div class="ascii-diagram">                <span class="dim">┌────────────────┐</span>         <span class="dim">┌────────────────┐</span>
+                <span class="dim">│</span>  <span class="hl">rfcs repo</span>     <span class="dim">│</span> push    <span class="dim">│</span>  <span class="hl">ingester</span>      <span class="dim">│</span>
+                <span class="dim">│</span>  (github)      <span class="dim">├────────▶│</span>  (go, 10m)    <span class="dim">│</span>
+                <span class="dim">└────────────────┘</span> webhook <span class="dim">└───────┬────────┘</span>
+                                                 <span class="dim">│</span>
+                              <span class="dim">┌──────────────────────┼──────────────────────┐</span>
+                              <span class="dim">▼</span>                      <span class="dim">▼</span>                      <span class="dim">▼</span>
+                     <span class="dim">┌────────────┐</span>         <span class="dim">┌────────────┐</span>         <span class="dim">┌────────────┐</span>
+                     <span class="dim">│</span>  <span class="hl">postgres</span>  <span class="dim">│</span>         <span class="dim">│</span>  <span class="hl">meili</span>     <span class="dim">│</span>         <span class="dim">│</span>  object fs <span class="dim">│</span>
+                     <span class="dim">│</span>  metadata  <span class="dim">│</span>         <span class="dim">│</span>  search    <span class="dim">│</span>         <span class="dim">│</span>  (future)  <span class="dim">│</span>
+                     <span class="dim">└──────┬─────┘</span>         <span class="dim">└──────┬─────┘</span>         <span class="dim">└────────────┘</span>
+                            <span class="dim">│</span>                       <span class="dim">│</span>
+                            <span class="dim">└───────────┬───────────┘</span>
+                                        <span class="dim">▼</span>
+                              <span class="dim">┌──────────────────┐</span>
+                              <span class="dim">│</span>  <span class="hl">api</span> (go)       <span class="dim">│</span>
+                              <span class="dim">│</span>  /api/v1/rfcs    <span class="dim">│</span>
+                              <span class="dim">└─────────┬────────┘</span>
+                                        <span class="dim">▲</span>
+                              <span class="dim">┌─────────┴────────┐</span>
+                              <span class="dim">│</span>  <span class="hl">frontend</span>        <span class="dim">│</span>
+                              <span class="dim">│</span>  (bun + react)   <span class="dim">│</span>
+                              <span class="dim">└──────────────────┘</span></div>
+
+                <h3 id="components">Components</h3>
+                <p><strong>API (Go).</strong> HTTP service, stateless, reads Postgres + Meilisearch. Reuses <code>docz</code> Go code for Markdown + frontmatter parsing to guarantee the portal's understanding of an RFC matches the CLI's.</p>
+                <p><strong>Ingester.</strong> Same Go binary, different subcommand. Periodic reconcile loop plus optional GitHub webhook endpoint.</p>
+                <p><strong>Frontend (Bun + React).</strong> Server-rendered. Replicates the <span class="rfc-link">RFC-0008<span class="preview-card"><span class="pc-num">RFC / 0008</span><span class="pc-title">Wiz CSPM deployment and scope</span><span class="pc-meta"><span class="pc-status"><span class="status-dot accepted"></span>ACCEPTED</span><span class="pc-dot">·</span><span>donald, priya</span><span class="pc-dot">·</span><span>Feb 2025</span></span></span></span> reading experience: cmd+K search, hover previews on cross-RFC references, jump-to navigation.</p>
+
+                <h3 id="data-model">Data model</h3>
+                <p>Two tables. Documents are keyed by their zero-padded RFC number; cross-references are computed at ingest time and stored as directed edges.</p>
+
+                <span class="table-caption" id="tbl-schema">Table 1. <code>documents</code> schema</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td><code>text</code></td>
+                            <td>Zero-padded RFC number, e.g. <code>"0011"</code>. Primary key.</td>
+                        </tr>
+                        <tr>
+                            <td><code>source_path</code></td>
+                            <td><code>text</code></td>
+                            <td>Relative path in the repo, e.g. <code>rfc/0011-portal.md</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>source_ref</code></td>
+                            <td><code>text</code></td>
+                            <td>Commit SHA this record was derived from. Used to skip unchanged files on reconcile.</td>
+                        </tr>
+                        <tr>
+                            <td><code>title</code></td>
+                            <td><code>text</code></td>
+                            <td>From frontmatter.</td>
+                        </tr>
+                        <tr>
+                            <td><code>status</code></td>
+                            <td><code>text</code></td>
+                            <td>One of: <code>Draft</code>, <code>Proposed</code>, <code>Accepted</code>, <code>Rejected</code>, <code>Superseded</code>. Validated at ingest.</td>
+                        </tr>
+                        <tr>
+                            <td><code>authors</code></td>
+                            <td><code>text[]</code></td>
+                            <td>Array of author handles from frontmatter.</td>
+                        </tr>
+                        <tr>
+                            <td><code>labels</code></td>
+                            <td><code>text[]</code></td>
+                            <td>Array, also from frontmatter.</td>
+                        </tr>
+                        <tr>
+                            <td><code>frontmatter</code></td>
+                            <td><code>jsonb</code></td>
+                            <td>Full parsed frontmatter, preserved for extension.</td>
+                        </tr>
+                        <tr>
+                            <td><code>body_markdown</code></td>
+                            <td><code>text</code></td>
+                            <td>Raw source.</td>
+                        </tr>
+                        <tr>
+                            <td><code>body_html</code></td>
+                            <td><code>text</code></td>
+                            <td>Pre-rendered HTML, cached for API response speed.</td>
+                        </tr>
+                        <tr>
+                            <td><code>created_at</code></td>
+                            <td><code>timestamptz</code></td>
+                            <td>Earliest commit that introduced the file.</td>
+                        </tr>
+                        <tr>
+                            <td><code>updated_at</code></td>
+                            <td><code>timestamptz</code></td>
+                            <td>Commit that produced <code>source_ref</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>Frontmatter is parsed by the existing <code>docz</code> library:</p>
+
+                <div class="codeblock">
+                    <div class="codeblock-header">
+                        <span class="lang">go</span>
+                        <span class="caption">internal/ingest/parse.go</span>
+                    </div>
+<pre><span class="tok-kw">package</span> ingest
+
+<span class="tok-kw">import</span> (
+    <span class="tok-str">"context"</span>
+    <span class="tok-str">"fmt"</span>
+
+    <span class="tok-str">"github.com/donaldj/docz/frontmatter"</span>
+    <span class="tok-str">"github.com/yuin/goldmark"</span>
+)
+
+<span class="tok-cm">// ParseRFC reads a Markdown file, extracts frontmatter using the docz</span>
+<span class="tok-cm">// parser, renders the body to HTML, and returns a normalized Document.</span>
+<span class="tok-kw">func</span> <span class="tok-fn">ParseRFC</span>(ctx <span class="tok-ty">context.Context</span>, path <span class="tok-ty">string</span>, raw []<span class="tok-ty">byte</span>) (<span class="tok-ty">*Document</span>, <span class="tok-ty">error</span>) {
+    fm, body, err := frontmatter.<span class="tok-fn">Split</span>(raw)
+    <span class="tok-kw">if</span> err != <span class="tok-kw">nil</span> {
+        <span class="tok-kw">return</span> <span class="tok-kw">nil</span>, fmt.<span class="tok-fn">Errorf</span>(<span class="tok-str">"parse %s: %w"</span>, path, err)
+    }
+
+    <span class="tok-kw">var</span> buf bytes.Buffer
+    <span class="tok-kw">if</span> err := goldmark.<span class="tok-fn">Convert</span>(body, &buf); err != <span class="tok-kw">nil</span> {
+        <span class="tok-kw">return</span> <span class="tok-kw">nil</span>, fmt.<span class="tok-fn">Errorf</span>(<span class="tok-str">"render %s: %w"</span>, path, err)
+    }
+
+    <span class="tok-kw">return</span> &Document{
+        ID:           fm.<span class="tok-fn">RFCNumber</span>(),
+        Title:        fm.Title,
+        Status:       fm.Status,
+        Authors:      fm.Authors,
+        Labels:       fm.Labels,
+        BodyMarkdown: <span class="tok-fn">string</span>(body),
+        BodyHTML:     buf.<span class="tok-fn">String</span>(),
+    }, <span class="tok-kw">nil</span>
+}</pre>
+                </div>
+
+                <h3 id="api-surface">API surface</h3>
+                <p>The read API is public, rate-limited, JSON-only. Example:</p>
+
+                <div class="codeblock">
+                    <div class="codeblock-header">
+                        <span class="lang">shell</span>
+                        <span class="caption">fetch a single RFC</span>
+                    </div>
+<pre><span class="tok-cm"># fetch a single RFC by id</span>
+$ curl -s https://rfcs.internal/api/v1/rfcs/0011 | jq <span class="tok-str">'.title, .status, .labels'</span>
+<span class="tok-str">"Portal for RFCs and framework definitions"</span>
+<span class="tok-str">"Draft"</span>
+[
+  <span class="tok-str">"platform"</span>,
+  <span class="tok-str">"docs"</span>,
+  <span class="tok-str">"tooling"</span>
+]
+
+<span class="tok-cm"># list all accepted RFCs with the security label</span>
+$ curl -s <span class="tok-str">'https://rfcs.internal/api/v1/rfcs?status=Accepted&label=security'</span> \
+    | jq <span class="tok-str">'.items[] | {id, title}'</span></pre>
+                </div>
+
+                <span class="table-caption" id="tbl-endpoints">Table 2. API endpoints &mdash; v1</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Path</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/api/v1/rfcs</code></td>
+                            <td>List RFCs with optional filters: <code>status</code>, <code>label</code>, <code>author</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/api/v1/rfcs/{id}</code></td>
+                            <td>Single RFC with rendered body and metadata.</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/api/v1/rfcs/{id}/links</code></td>
+                            <td>Outgoing and incoming cross-references.</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/api/v1/search</code></td>
+                            <td>Full-text search, proxied to Meilisearch. Required: <code>q</code>. Optional: <code>status</code>, <code>label</code>, <code>limit</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>GET</code></td>
+                            <td><code>/healthz</code></td>
+                            <td>Liveness probe.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="ingest"><span class="hash">#</span>Ingest flow</h2>
+                <p>The ingester runs on a schedule and reconciles the desired state (the contents of <code>main</code>) with the stored state (what's in Postgres). Each iteration is idempotent; missed runs are recovered on the next tick.</p>
+
+                <div class="mermaid-diagram">
+                    <svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+                        <!-- edges -->
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#7C8380"/>
+                            </marker>
+                        </defs>
+
+                        <!-- Start -->
+                        <rect x="280" y="20" width="160" height="40" rx="20" fill="#161B1A" stroke="#48D597" stroke-width="1.5"/>
+                        <text x="360" y="45" text-anchor="middle" fill="#48D597" font-size="12" font-weight="500">tick (every 10 min)</text>
+
+                        <!-- Fetch -->
+                        <rect x="260" y="90" width="200" height="40" fill="#101413" stroke="#2A312E"/>
+                        <text x="360" y="115" text-anchor="middle" fill="#ECECEA" font-size="12">fetch rfcs repo @ main</text>
+
+                        <!-- Diff -->
+                        <rect x="260" y="160" width="200" height="40" fill="#101413" stroke="#2A312E"/>
+                        <text x="360" y="185" text-anchor="middle" fill="#ECECEA" font-size="12">diff source_ref per file</text>
+
+                        <!-- Decision -->
+                        <polygon points="360,220 440,250 360,280 280,250" fill="#101413" stroke="#E8B55C" stroke-width="1.5"/>
+                        <text x="360" y="255" text-anchor="middle" fill="#E8B55C" font-size="11">changed?</text>
+
+                        <!-- Skip -->
+                        <rect x="540" y="230" width="140" height="40" fill="#101413" stroke="#2A312E"/>
+                        <text x="610" y="255" text-anchor="middle" fill="#7C8380" font-size="12">skip</text>
+
+                        <!-- Parse &amp; upsert -->
+                        <rect x="40" y="230" width="200" height="40" fill="#101413" stroke="#3DB8E8"/>
+                        <text x="140" y="250" text-anchor="middle" fill="#3DB8E8" font-size="12">parse &amp; upsert</text>
+                        <text x="140" y="263" text-anchor="middle" fill="#7C8380" font-size="10">pg + meili</text>
+
+                        <!-- Lines -->
+                        <line x1="360" y1="60" x2="360" y2="85" stroke="#7C8380" stroke-width="1" marker-end="url(#arrow)"/>
+                        <line x1="360" y1="130" x2="360" y2="155" stroke="#7C8380" stroke-width="1" marker-end="url(#arrow)"/>
+                        <line x1="360" y1="200" x2="360" y2="215" stroke="#7C8380" stroke-width="1" marker-end="url(#arrow)"/>
+                        <line x1="440" y1="250" x2="535" y2="250" stroke="#7C8380" stroke-width="1" marker-end="url(#arrow)"/>
+                        <line x1="280" y1="250" x2="245" y2="250" stroke="#7C8380" stroke-width="1" marker-end="url(#arrow)"/>
+
+                        <!-- labels -->
+                        <text x="487" y="245" text-anchor="middle" fill="#525855" font-size="10">no</text>
+                        <text x="263" y="245" text-anchor="middle" fill="#525855" font-size="10">yes</text>
+                    </svg>
+                </div>
+                <span class="mermaid-caption">Fig 1. Reconcile loop. Webhook pushes trigger the same flow out-of-schedule.</span>
+
+                <div class="admonition tip">
+                    <span class="adm-label">Tip</span>
+                    <p>The reconcile is intentionally idempotent. Operators can force a reindex by truncating <code>documents.source_ref</code> and waiting for the next tick &mdash; no special tooling required.</p>
+                </div>
+
+                <div class="admonition warning">
+                    <span class="adm-label">Warning</span>
+                    <p>GitHub webhooks are best-effort. Do not rely on them for correctness &mdash; the reconcile loop is the source of truth. If webhooks are delayed or lost, the worst case is 10 minutes of stale content.</p>
+                </div>
+
+                <h2 id="rollout"><span class="hash">#</span>Rollout</h2>
+                <p>Four phases, each independently shippable.</p>
+
+                <span class="table-caption" id="tbl-phases">Table 3. Rollout phases</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Scope</th>
+                            <th>Estimate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Read-only portal, periodic reconcile, Meilisearch, no auth</td>
+                            <td>2&ndash;4 weekends</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Webhook ingest, hover previews, cmd+K, print styles</td>
+                            <td>1&ndash;2 weekends</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Okta OIDC on frontend, admin endpoints</td>
+                            <td>1 weekend</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Wiz framework rendering (separate RFC)</td>
+                            <td>TBD</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="admonition caution">
+                    <span class="adm-label">Caution</span>
+                    <p>Okta integration is deferred to phase 3, but the portal will be on a public ingress before then. If content sensitivity demands it, put a cluster-internal ingress in front of phase 1 and defer public exposure until phase 3 ships.</p>
+                </div>
+
+                <h2 id="open-questions"><span class="hash">#</span>Open Questions</h2>
+                <ol>
+                    <li><strong>Webhooks in v1 or v2?</strong> Leaning v2. Polling is simpler and works without inbound exposure.</li>
+                    <li><strong>Frontend framework &mdash; Next.js, Remix, or something lighter?</strong> Defer to the implementer.</li>
+                    <li><strong>Does this absorb ADRs and other docz types?</strong> Same format, trivial to include. UX question of one unified directory vs per-type sections. Recommend RFC-only in v1.</li>
+                </ol>
+
+                <blockquote>The periodic reconcile is the source of correctness. Webhooks are an optimization; a missed webhook costs at most 10 minutes of staleness.</blockquote>
+
+            </div>
+
+            <!-- References footer — at the bottom of the article, not in the sidebar -->
+            <footer class="rfc-footer">
+                <div class="rfc-footer-col">
+                    <div class="rfc-footer-heading">References</div>
+                    <ul class="rfc-footer-list">
+                        <li>
+                            <a class="rfc-footer-ref" href="#">
+                                <span class="r-num">RFC-0008</span>
+                                <span class="r-title">Wiz CSPM deployment and scope</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="rfc-footer-ref" href="#">
+                                <span class="r-num">RFC-0006</span>
+                                <span class="r-title">Identity Center and Okta federation model</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="rfc-footer-ref" href="#">
+                                <span class="r-num">RFC-0001</span>
+                                <span class="r-title">RFC process and document conventions</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="rfc-footer-col">
+                    <div class="rfc-footer-heading">Referenced by</div>
+                    <ul class="rfc-footer-list">
+                        <li class="rfc-footer-empty">None yet &mdash; no other RFCs reference this one.</li>
+                    </ul>
+                </div>
+            </footer>
+        </article>
+
+        <aside class="rfc-sidebar-right">
+            <div class="sidebar-section">
+                <div class="sidebar-heading">On this page</div>
+                <ul class="toc-list">
+                    <li><a href="#summary">Summary</a></li>
+                    <li><a href="#motivation">Motivation</a></li>
+                    <li><a href="#goals">Goals</a></li>
+                    <li><a href="#architecture" class="current">Architecture</a></li>
+                    <li class="nested"><a href="#components">Components</a></li>
+                    <li class="nested"><a href="#data-model">Data model</a></li>
+                    <li class="nested"><a href="#api-surface">API surface</a></li>
+                    <li><a href="#ingest">Ingest flow</a></li>
+                    <li><a href="#rollout">Rollout</a></li>
+                    <li><a href="#open-questions">Open questions</a></li>
+                </ul>
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+<!-- ============================================================
+     VIEW 3: SEARCH
+     ============================================================ -->
+<div class="view" id="view-search">
+
+    <!-- Dimmed directory as background -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#">Directory</a>
+            <a href="#" onclick="showView('frameworks'); return false;">Frameworks</a>
+            <a href="#" onclick="showView('api'); return false;">API</a>
+            <a href="#" onclick="showView('mcp'); return false;">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="page-container directory">
+        <div class="directory-hero">
+            <div class="hero-eyebrow">/ docs / rfcs</div>
+            <h1 class="hero-title">Request for Comments</h1>
+            <div class="live-filter">
+                <svg class="lf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input class="lf-input" placeholder="Filter by title, number, or author" disabled />
+                <span class="kbd">/</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search overlay modal -->
+    <div class="search-overlay">
+        <div class="search-modal">
+
+            <div class="search-input-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input class="search-input" value="wiz framework" autofocus>
+                <div class="search-close-hint">
+                    <span class="kbd">esc</span><span>to close</span>
+                </div>
+            </div>
+
+            <div class="search-filters-row">
+                <button class="search-filter-pill active">all results <span style="color: var(--accent-dim); margin-left: 4px;">12</span></button>
+                <button class="search-filter-pill">titles</button>
+                <button class="search-filter-pill">body</button>
+                <button class="search-filter-pill">authors</button>
+                <button class="search-filter-pill">labels</button>
+            </div>
+
+            <div class="search-results">
+
+                <div class="search-results-list">
+                    <div class="result-group-header">RFCs — 8 matches</div>
+
+                    <div class="result-item active">
+                        <div class="ri-top">
+                            <span class="ri-num">RFC-0125</span>
+                            <span class="ri-status"><span class="status-badge sm accepted">Accepted</span></span>
+                        </div>
+                        <div class="ri-title">Okta group → <mark>Wiz</mark> SAML access provisioning</div>
+                        <div class="ri-snippet">An automated workflow using Zluri → JSM → Go service → Okta to provision <mark>Wiz</mark> SAML application access based on Okta group membership&hellip;</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="ri-top">
+                            <span class="ri-num">RFC-0124</span>
+                            <span class="ri-status"><span class="status-badge sm accepted">Accepted</span></span>
+                        </div>
+                        <div class="ri-title">Backstage ↔ <mark>Wiz</mark> bidirectional sync via composite CRD</div>
+                        <div class="ri-snippet">A composite CRD operator (<code>WizTeamWorkspace</code>) reconciles team-to-<mark>framework</mark> mappings between Backstage and <mark>Wiz</mark>&hellip;</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="ri-top">
+                            <span class="ri-num">RFC-0098</span>
+                            <span class="ri-status"><span class="status-badge sm accepted">Accepted</span></span>
+                        </div>
+                        <div class="ri-title"><mark>Wiz</mark> SDK generator from GraphQL schema</div>
+                        <div class="ri-snippet">Modeled after AWS SDK v2 patterns: codegen produces typed Go clients for <mark>Wiz</mark>'s GraphQL API&hellip;</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="ri-top">
+                            <span class="ri-num">RFC-0076</span>
+                            <span class="ri-status"><span class="status-badge sm accepted">Accepted</span></span>
+                        </div>
+                        <div class="ri-title">Custom <mark>Wiz</mark> security <mark>frameworks</mark> &mdash; <code>fwsync</code></div>
+                        <div class="ri-snippet">A CLI tool for managing <mark>Wiz</mark> security <mark>frameworks</mark> as HCL config files in a Git repo. Applies diffs to the <mark>Wiz</mark> API&hellip;</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="ri-top">
+                            <span class="ri-num">RFC-0054</span>
+                            <span class="ri-status"><span class="status-badge sm superseded">Superseded</span></span>
+                        </div>
+                        <div class="ri-title"><mark>Wiz</mark> RBAC automation via GraphQL</div>
+                        <div class="ri-snippet">Early tooling for programmatic <mark>Wiz</mark> permission grants. Superseded by RFC-0098 (SDK) and RFC-0125 (Okta integration)&hellip;</div>
+                    </div>
+
+                    <div class="result-group-header">Labels — 1 match</div>
+
+                    <div class="result-item">
+                        <div class="ri-top">
+                            <span class="ri-num" style="color: var(--fg-tertiary);">LABEL</span>
+                            <span class="ri-status">9 RFCs</span>
+                        </div>
+                        <div class="ri-title"><mark>wiz</mark></div>
+                        <div class="ri-snippet">Used across 9 RFCs covering integrations, SDK, <mark>frameworks</mark>, and automation.</div>
+                    </div>
+
+                </div>
+
+                <!-- Preview pane -->
+                <div class="result-preview">
+                    <div class="rp-header">
+                        <div class="rp-num-line">RFC / 0125</div>
+                        <h3 class="rp-title">Okta group → Wiz SAML access provisioning</h3>
+                        <div class="rp-meta">
+                            <span class="status-badge accepted">Accepted</span>
+                            <span style="color: var(--fg-muted);">·</span>
+                            <span>donald, priya</span>
+                            <span style="color: var(--fg-muted);">·</span>
+                            <span>3 days ago</span>
+                        </div>
+                    </div>
+                    <div class="rp-body">
+                        <h3>Summary</h3>
+                        <p>An automated workflow using Zluri → JSM → Go service → Okta to provision <mark>Wiz</mark> SAML application access based on Okta group membership. Eliminates manual ticket-driven access grants for <mark>Wiz</mark>'s console.</p>
+
+                        <h3>Motivation</h3>
+                        <p>Today, granting a developer access to <mark>Wiz</mark> requires a manual ticket through JSM, which routes to the security team, who manually add the user to the <mark>Wiz</mark> SAML application in Okta. This creates a 1–3 day delay and a consistent backlog in the security queue.</p>
+
+                        <p>Since we already represent team membership and role in Okta groups, and since <mark>Wiz</mark> access follows directly from team role, this mapping can be fully automated.</p>
+
+                        <h3>Proposed Solution</h3>
+                        <p>Introduce a Go service (<code>wiz-access-sync</code>) that reads Okta group membership on a 5-minute cadence and reconciles it to <mark>Wiz</mark> SAML application assignments via the Okta Admin API&hellip;</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="search-footer">
+                <span class="hint"><span class="kbd">↑</span><span class="kbd">↓</span> navigate</span>
+                <span class="hint"><span class="kbd">↵</span> open</span>
+                <span class="hint"><span class="kbd">tab</span> preview</span>
+                <span class="powered">
+                    <span>meilisearch</span>
+                    <span style="color: var(--accent);">● 12ms</span>
+                </span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     VIEW 4: API DOCS
+     ============================================================ -->
+<div class="view" id="view-api">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search" onclick="showView('search')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#" onclick="showView('directory'); return false;">Directory</a>
+            <a href="#" onclick="showView('frameworks'); return false;">Frameworks</a>
+            <a href="#" class="active">API</a>
+            <a href="#" onclick="showView('mcp'); return false;">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="api-layout">
+
+        <aside class="api-sidebar">
+            <div class="api-sidebar-brand">
+                <div class="api-title">Portal API</div>
+                <div class="api-version"><span class="v-tag">v1</span>OpenAPI 3.1</div>
+            </div>
+
+            <div class="api-group">
+                <div class="api-group-title">RFCs</div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/rfcs</span></div>
+                <div class="api-endpoint active"><span class="method get">GET</span><span class="path">/api/v1/rfcs/{id}</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/rfcs/{id}/links</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/rfcs/{id}/raw</span></div>
+            </div>
+
+            <div class="api-group">
+                <div class="api-group-title">Search</div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/search</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/search/labels</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/search/authors</span></div>
+            </div>
+
+            <div class="api-group">
+                <div class="api-group-title">Meta</div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/sources</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/api/v1/stats</span></div>
+                <div class="api-endpoint"><span class="method get">GET</span><span class="path">/healthz</span></div>
+            </div>
+
+            <div class="api-group">
+                <div class="api-group-title">Admin (v2+)</div>
+                <div class="api-endpoint" style="opacity: 0.5;"><span class="method post">POST</span><span class="path">/api/v1/admin/reindex</span></div>
+                <div class="api-endpoint" style="opacity: 0.5;"><span class="method post">POST</span><span class="path">/api/v1/admin/sources</span></div>
+            </div>
+        </aside>
+
+        <main class="api-content">
+
+            <div class="api-endpoint-header">
+                <div class="eyebrow">RFCs</div>
+                <h1>Fetch a single RFC by ID</h1>
+                <div class="path-line">
+                    <span class="method get">GET</span>
+                    <span class="full-path">/api/v1/rfcs/<span class="segment-var">{id}</span></span>
+                    <span class="copy-btn">copy</span>
+                </div>
+                <p class="description">Returns a single RFC record with fully rendered HTML body, parsed frontmatter, label list, authors, and resolved cross-document links. The <code>id</code> is the zero-padded RFC number (e.g. <code>0011</code>).</p>
+            </div>
+
+            <div class="try-it">
+                <span class="try-it-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    Try it
+                </span>
+                <span>Public read — no authentication required</span>
+                <span class="try-it-cta">send request →</span>
+            </div>
+
+            <div class="api-section">
+                <div class="api-section-title">Path parameters <span class="count">1</span></div>
+                <div class="param-row">
+                    <div class="p-name">id <span class="required">required</span></div>
+                    <div class="p-type">string</div>
+                    <div class="p-desc">Zero-padded RFC number. Must match the pattern <code>^\d{4}$</code>.<br><span class="default">Example: <code>"0011"</code></span></div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <div class="api-section-title">Query parameters <span class="count">2</span></div>
+                <div class="param-row">
+                    <div class="p-name">include</div>
+                    <div class="p-type">string[]</div>
+                    <div class="p-desc">Optional comma-separated list of expensive fields to include. Supported values: <code>body_html</code>, <code>body_markdown</code>, <code>links</code>, <code>activity</code>.<br><span class="default">Default: <code>body_html,links</code></span></div>
+                </div>
+                <div class="param-row">
+                    <div class="p-name">ref</div>
+                    <div class="p-type">string</div>
+                    <div class="p-desc">Optional git commit SHA to pin the returned content to a specific revision. Useful for linking to an immutable version.<br><span class="default">Default: latest on <code>main</code></span></div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <div class="api-section-title">Responses</div>
+                <div class="response-row">
+                    <div class="r-code ok">200</div>
+                    <div class="r-desc">RFC found. Returns an <code>RFC</code> object as JSON.</div>
+                </div>
+                <div class="response-row">
+                    <div class="r-code err4">404</div>
+                    <div class="r-desc">No RFC with that ID in the configured source repo.</div>
+                </div>
+                <div class="response-row">
+                    <div class="r-code err4">429</div>
+                    <div class="r-desc">Rate limit exceeded. Default limit is 60 req/min per IP.</div>
+                </div>
+                <div class="response-row">
+                    <div class="r-code err5">500</div>
+                    <div class="r-desc">Internal error — Postgres or Meilisearch unavailable.</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <div class="api-section-title">Example request</div>
+                <div class="example-tabs">
+                    <button class="example-tab active">curl</button>
+                    <button class="example-tab">go</button>
+                    <button class="example-tab">typescript</button>
+                </div>
+                <pre class="example-code"><span class="tok-cm"># fetch RFC 0011 with cross-document links</span>
+$ curl -s <span class="tok-str">'https://rfcs.internal/api/v1/rfcs/0011?include=body_html,links'</span> \
+    | jq <span class="tok-str">'.id, .title, .status, .labels'</span>
+</pre>
+            </div>
+
+            <div class="api-section">
+                <div class="api-section-title">Example response</div>
+                <pre class="example-code"><span class="tok-p">{</span>
+  <span class="tok-key">"id"</span><span class="tok-p">:</span>            <span class="tok-str">"0011"</span><span class="tok-p">,</span>
+  <span class="tok-key">"title"</span><span class="tok-p">:</span>         <span class="tok-str">"RFC portal for viewing and searching documents"</span><span class="tok-p">,</span>
+  <span class="tok-key">"status"</span><span class="tok-p">:</span>        <span class="tok-str">"Draft"</span><span class="tok-p">,</span>
+  <span class="tok-key">"authors"</span><span class="tok-p">:</span>       <span class="tok-p">[</span><span class="tok-str">"donald"</span><span class="tok-p">],</span>
+  <span class="tok-key">"labels"</span><span class="tok-p">:</span>        <span class="tok-p">[</span><span class="tok-str">"platform"</span><span class="tok-p">,</span> <span class="tok-str">"docs"</span><span class="tok-p">,</span> <span class="tok-str">"tooling"</span><span class="tok-p">],</span>
+  <span class="tok-key">"source_path"</span><span class="tok-p">:</span>   <span class="tok-str">"rfc/0011-rfc-portal.md"</span><span class="tok-p">,</span>
+  <span class="tok-key">"source_ref"</span><span class="tok-p">:</span>    <span class="tok-str">"a3f91c8"</span><span class="tok-p">,</span>
+  <span class="tok-key">"created_at"</span><span class="tok-p">:</span>    <span class="tok-str">"2026-04-14T09:22:11Z"</span><span class="tok-p">,</span>
+  <span class="tok-key">"updated_at"</span><span class="tok-p">:</span>    <span class="tok-str">"2026-04-17T14:03:44Z"</span><span class="tok-p">,</span>
+  <span class="tok-key">"body_html"</span><span class="tok-p">:</span>     <span class="tok-str">"&lt;h2 id=\"summary\"&gt;Summary&lt;/h2&gt;..."</span><span class="tok-p">,</span>
+  <span class="tok-key">"links"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
+    <span class="tok-key">"references"</span><span class="tok-p">:</span>    <span class="tok-p">[</span><span class="tok-str">"0008"</span><span class="tok-p">,</span> <span class="tok-str">"0006"</span><span class="tok-p">],</span>
+    <span class="tok-key">"referenced_by"</span><span class="tok-p">:</span> <span class="tok-p">[]</span>
+  <span class="tok-p">}</span>
+<span class="tok-p">}</span>
+</pre>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ============================================================
+     VIEW 5: MCP DOCS
+     ============================================================ -->
+<div class="view" id="view-mcp">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search" onclick="showView('search')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#" onclick="showView('directory'); return false;">Directory</a>
+            <a href="#" onclick="showView('frameworks'); return false;">Frameworks</a>
+            <a href="#" onclick="showView('api'); return false;">API</a>
+            <a href="#" class="active">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="mcp-layout">
+
+        <div class="mcp-hero">
+            <div class="eyebrow">Model Context Protocol</div>
+            <h1>Pull RFCs directly into your editor.</h1>
+            <p>The portal ships a small MCP server that exposes the read API as callable tools. Connect Claude Code, Cursor, or any MCP-aware client and search, fetch, and reference RFCs without leaving your editor. The same server also serves as the reference implementation for our internal docs.</p>
+        </div>
+
+        <!-- Two related MCP servers -->
+        <div class="mcp-cards">
+            <div class="mcp-card">
+                <div class="c-head">
+                    <div class="c-title">rfcs-mcp</div>
+                    <span class="c-tag">this server</span>
+                </div>
+                <p class="c-desc">Exposes the portal's RFC read API as MCP tools — <code>list_rfcs</code>, <code>get_rfc</code>, <code>search_rfcs</code>, <code>get_links</code>. No write operations; authoring still happens in Git.</p>
+                <div class="c-meta">
+                    <span><span class="m-icon">▸</span> v0.4.2</span>
+                    <span><span class="m-icon">▸</span> Go 1.22+</span>
+                    <span style="margin-left: auto; color: var(--accent);">view source →</span>
+                </div>
+            </div>
+
+            <div class="mcp-card">
+                <div class="c-head">
+                    <div class="c-title">docs-mcp</div>
+                    <span class="c-tag" style="color: var(--status-draft); background: color-mix(in srgb, var(--status-draft) 10%, transparent); border-color: color-mix(in srgb, var(--status-draft) 30%, transparent);">related</span>
+                </div>
+                <p class="c-desc">Sibling project. Same architecture, but indexes MkDocs/Backstage TechDocs across your service repos. Useful when you want both RFCs <em>and</em> service documentation available as tools.</p>
+                <div class="c-meta">
+                    <span><span class="m-icon">▸</span> v0.2.0</span>
+                    <span><span class="m-icon">▸</span> Go 1.22+</span>
+                    <span style="margin-left: auto; color: var(--accent);">view source →</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setup steps -->
+        <div class="mcp-section">
+            <h2><span class="step">1</span>Install the server</h2>
+            <p>Download the binary for your platform, or install with <code>go install</code>. The server is a single static binary with no runtime dependencies — drop it anywhere on your <code>PATH</code>.</p>
+
+            <div class="download-grid">
+                <div class="download-item">
+                    <div class="d-left">
+                        <div class="d-icon">⌘</div>
+                        <div class="d-info">
+                            <div class="d-name">rfcs-mcp_0.4.2_darwin_arm64.tar.gz</div>
+                            <div class="d-size">macOS · Apple Silicon · 8.2 MB</div>
+                        </div>
+                    </div>
+                    <span class="d-dl">download</span>
+                </div>
+                <div class="download-item">
+                    <div class="d-left">
+                        <div class="d-icon">⌘</div>
+                        <div class="d-info">
+                            <div class="d-name">rfcs-mcp_0.4.2_darwin_amd64.tar.gz</div>
+                            <div class="d-size">macOS · Intel · 8.4 MB</div>
+                        </div>
+                    </div>
+                    <span class="d-dl">download</span>
+                </div>
+                <div class="download-item">
+                    <div class="d-left">
+                        <div class="d-icon">🐧</div>
+                        <div class="d-info">
+                            <div class="d-name">rfcs-mcp_0.4.2_linux_amd64.tar.gz</div>
+                            <div class="d-size">Linux · x86_64 · 8.1 MB</div>
+                        </div>
+                    </div>
+                    <span class="d-dl">download</span>
+                </div>
+                <div class="download-item">
+                    <div class="d-left">
+                        <div class="d-icon">🐧</div>
+                        <div class="d-info">
+                            <div class="d-name">rfcs-mcp_0.4.2_linux_arm64.tar.gz</div>
+                            <div class="d-size">Linux · ARM64 · 8.0 MB</div>
+                        </div>
+                    </div>
+                    <span class="d-dl">download</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 18px;">Or build from source:</p>
+            <pre class="example-code" style="margin-top: 8px;"><span class="tok-cm"># requires Go 1.22+</span>
+$ go install github.com/your-org/rfcs-mcp/cmd/rfcs-mcp@latest
+$ rfcs-mcp --version
+<span class="tok-str">rfcs-mcp v0.4.2 (commit 3f8e2a1, built 2026-04-12)</span>
+</pre>
+        </div>
+
+        <div class="mcp-section">
+            <h2><span class="step">2</span>Configure your client</h2>
+            <p>Add the server to your MCP client config. The exact path varies by client; examples below cover the common ones.</p>
+
+            <div class="example-tabs">
+                <button class="example-tab active">Claude Code</button>
+                <button class="example-tab">Cursor</button>
+                <button class="example-tab">Claude Desktop</button>
+            </div>
+            <pre class="example-code"><span class="tok-cm">// ~/.config/claude-code/mcp.json</span>
+<span class="tok-p">{</span>
+  <span class="tok-key">"mcpServers"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
+    <span class="tok-key">"rfcs"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
+      <span class="tok-key">"command"</span><span class="tok-p">:</span> <span class="tok-str">"rfcs-mcp"</span><span class="tok-p">,</span>
+      <span class="tok-key">"args"</span><span class="tok-p">:</span> <span class="tok-p">[</span>
+        <span class="tok-str">"--api-url"</span><span class="tok-p">,</span> <span class="tok-str">"https://rfcs.internal/api/v1"</span>
+      <span class="tok-p">],</span>
+      <span class="tok-key">"env"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
+        <span class="tok-key">"RFCS_MCP_TOKEN"</span><span class="tok-p">:</span> <span class="tok-str">"$RFCS_READ_TOKEN"</span>
+      <span class="tok-p">}</span>
+    <span class="tok-p">}</span>
+  <span class="tok-p">}</span>
+<span class="tok-p">}</span>
+</pre>
+        </div>
+
+        <div class="mcp-section">
+            <h2><span class="step">3</span>Available tools</h2>
+            <p>Once connected, the following tools are available to your LLM. All are read-only and safe to invoke without confirmation.</p>
+            <ul>
+                <li><code>list_rfcs</code> &mdash; list all RFCs with optional <code>status</code> and <code>label</code> filters. Returns id, title, status, authors, updated_at.</li>
+                <li><code>get_rfc</code> &mdash; fetch a single RFC by id, including rendered markdown body and resolved cross-references.</li>
+                <li><code>search_rfcs</code> &mdash; full-text search across titles, bodies, authors, and labels. Returns ranked results with highlighted snippets.</li>
+                <li><code>get_links</code> &mdash; get the full reference graph for an RFC: what it references, what references it, and transitive depth.</li>
+                <li><code>get_activity</code> &mdash; recent changes across all RFCs, useful for "what's happening this week" prompts.</li>
+            </ul>
+        </div>
+
+        <div class="mcp-section">
+            <h2><span class="step">4</span>Verify it works</h2>
+            <p>Restart your client and ask it to summarize a recent RFC. The client should invoke <code>get_rfc</code> and return a coherent summary. A good sanity check prompt:</p>
+            <pre class="example-code"><span class="tok-cm"># in your LLM chat:</span>
+<span class="tok-str">"Summarize RFC 0011 in three bullet points and list any RFCs it references."</span>
+</pre>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================================
+     VIEW 6: FRAMEWORKS
+     ============================================================ -->
+<div class="view" id="view-frameworks">
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">R</div>
+            <span class="brand-name">rfcs</span>
+            <span class="brand-sub">/ portal</span>
+        </div>
+        <div class="topbar-search" onclick="showView('search')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Search RFCs, authors, labels&hellip;</span>
+            <span class="kbd-group"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+        <nav class="topbar-nav">
+            <a href="#" onclick="showView('directory'); return false;">Directory</a>
+            <a href="#" class="active">Frameworks</a>
+            <a href="#" onclick="showView('api'); return false;">API</a>
+            <a href="#" onclick="showView('mcp'); return false;">MCP</a>
+            <a href="#">About</a>
+            <div class="topbar-avatar">DJ</div>
+        </nav>
+    </header>
+
+    <div class="fw-layout">
+
+        <!-- Sidebar: framework tree -->
+        <aside class="fw-sidebar">
+            <div class="fw-sidebar-title">Frameworks</div>
+
+            <ul class="fw-tree fw-tree-root">
+                <li>
+                    <div class="fw-node root-node expanded">
+                        <span class="caret">▸</span>
+                        <span class="fw-name">Our Framework</span>
+                    </div>
+
+                    <ul class="fw-children">
+                        <li>
+                            <div class="fw-node expanded active">
+                                <span class="caret">▸</span>
+                                <span class="fw-name">AWS CIS Foundations</span>
+                                <span class="fw-count">v3.0</span>
+                            </div>
+                            <ul class="fw-sections">
+                                <li><div class="fw-node">Account</div></li>
+                                <li><div class="fw-node active">IAM</div></li>
+                                <li><div class="fw-node">Logging</div></li>
+                                <li><div class="fw-node">Monitoring</div></li>
+                                <li><div class="fw-node">Networking</div></li>
+                                <li><div class="fw-node">EC2</div></li>
+                                <li><div class="fw-node">S3</div></li>
+                                <li><div class="fw-node">RDS</div></li>
+                                <li><div class="fw-node">EFS</div></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <div class="fw-node">
+                                <span class="caret">▸</span>
+                                <span class="fw-name">OWASP AI Top 10</span>
+                                <span class="fw-count">2025</span>
+                            </div>
+                        </li>
+
+                        <li>
+                            <div class="fw-node">
+                                <span class="caret">▸</span>
+                                <span class="fw-name">CIS Kubernetes Benchmark</span>
+                                <span class="fw-count">v1.9</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content -->
+        <main class="fw-content">
+
+            <div class="fw-breadcrumb">
+                <a>Our Framework</a>
+                <span class="sep">/</span>
+                <a>AWS CIS Foundations</a>
+                <span class="sep">/</span>
+                <span class="current">IAM</span>
+            </div>
+
+            <div class="fw-detail-header">
+                <h1>AWS CIS Foundations Benchmark <span class="version">v3.0</span></h1>
+                <p class="fw-desc">The CIS AWS Foundations Benchmark provides prescriptive guidance for configuring security options for AWS services. Our organization adopts v3.0 as the baseline for all production accounts; deviations require an exception filed via the RFC process.</p>
+                <div class="fw-detail-meta">
+                    <span class="m-group"><span class="m-label">controls</span><span class="m-val">52</span></span>
+                    <span class="m-group"><span class="m-label">sections</span><span class="m-val">9</span></span>
+                    <span class="m-group"><span class="m-label">coverage</span><span class="m-val">94%</span></span>
+                    <span class="m-group"><span class="m-label">wiz rules</span><span class="m-val">49</span></span>
+                    <span class="m-group"><span class="m-label">last sync</span><span class="m-val">3h ago</span></span>
+                </div>
+            </div>
+
+            <!-- Expandable sections: IAM is open as the selected context -->
+            <div class="fw-section-block">
+                <div class="fw-section-head" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="fw-section-caret">▸</span>
+                    <span class="fw-section-title">Account</span>
+                    <span class="fw-section-meta">
+                        <span>3 controls</span>
+                        <span style="color: var(--fg-muted);">·</span>
+                        <span>3 passing</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="fw-section-block open">
+                <div class="fw-section-head" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="fw-section-caret">▸</span>
+                    <span class="fw-section-title">IAM</span>
+                    <span class="fw-section-meta">
+                        <span>18 controls</span>
+                        <span style="color: var(--fg-muted);">·</span>
+                        <span style="color: var(--status-draft);">3 findings</span>
+                    </span>
+                </div>
+                <div class="fw-section-body">
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.4</div>
+                        <div class="fw-rule-title">Ensure no 'root' user account access key exists</div>
+                        <span class="sev-pill critical">Critical</span>
+                        <div class="fw-rule-wiz">wiz:iam-root-key-01</div>
+                    </div>
+
+                    <div class="fw-rule-row active">
+                        <div class="fw-rule-num">1.8</div>
+                        <div class="fw-rule-title">Ensure IAM password policy requires minimum length of 14 or greater</div>
+                        <span class="sev-pill medium">Medium</span>
+                        <div class="fw-rule-wiz">wiz:iam-pw-length-14</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.10</div>
+                        <div class="fw-rule-title">Ensure MFA is enabled for all IAM users that have a console password</div>
+                        <span class="sev-pill high">High</span>
+                        <div class="fw-rule-wiz">wiz:iam-mfa-console</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.12</div>
+                        <div class="fw-rule-title">Ensure credentials unused for 45 days or more are disabled</div>
+                        <span class="sev-pill medium">Medium</span>
+                        <div class="fw-rule-wiz">wiz:iam-stale-creds-45</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.14</div>
+                        <div class="fw-rule-title">Ensure access keys are rotated every 90 days or less</div>
+                        <span class="sev-pill medium">Medium</span>
+                        <div class="fw-rule-wiz">wiz:iam-key-rotation-90</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.16</div>
+                        <div class="fw-rule-title">Ensure IAM policies that allow full "*:*" administrative privileges are not attached</div>
+                        <span class="sev-pill high">High</span>
+                        <div class="fw-rule-wiz">wiz:iam-admin-star</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.17</div>
+                        <div class="fw-rule-title">Ensure a support role has been created to manage incidents with AWS Support</div>
+                        <span class="sev-pill low">Low</span>
+                        <div class="fw-rule-wiz">wiz:iam-support-role</div>
+                    </div>
+
+                    <div class="fw-rule-row">
+                        <div class="fw-rule-num">1.22</div>
+                        <div class="fw-rule-title">Ensure IAM instance roles are used for AWS resource access from instances</div>
+                        <span class="sev-pill medium">Medium</span>
+                        <div class="fw-rule-wiz">wiz:iam-instance-role</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="fw-section-block">
+                <div class="fw-section-head" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="fw-section-caret">▸</span>
+                    <span class="fw-section-title">Logging</span>
+                    <span class="fw-section-meta">
+                        <span>11 controls</span>
+                        <span style="color: var(--fg-muted);">·</span>
+                        <span>11 passing</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="fw-section-block">
+                <div class="fw-section-head" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="fw-section-caret">▸</span>
+                    <span class="fw-section-title">Monitoring</span>
+                    <span class="fw-section-meta">
+                        <span>14 controls</span>
+                        <span style="color: var(--fg-muted);">·</span>
+                        <span style="color: var(--status-draft);">1 finding</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="fw-section-block">
+                <div class="fw-section-head" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="fw-section-caret">▸</span>
+                    <span class="fw-section-title">Networking</span>
+                    <span class="fw-section-meta">
+                        <span>5 controls</span>
+                        <span style="color: var(--fg-muted);">·</span>
+                        <span>5 passing</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Rule detail sheet (shows when a rule is selected) -->
+            <div class="fw-rule-detail">
+
+                <div class="fw-rule-detail-header">
+                    <div class="rd-number">CIS 1.8</div>
+                    <h2>Ensure IAM password policy requires minimum length of 14 or greater</h2>
+                    <div class="rd-meta-row">
+                        <span class="sev-pill medium">Medium</span>
+                        <span class="divider">·</span>
+                        <span>compliance: <span style="color: var(--status-accepted);">passing</span></span>
+                        <span class="divider">·</span>
+                        <span>last checked: 42 min ago</span>
+                        <span class="divider">·</span>
+                        <span>applies to: 187 accounts</span>
+                    </div>
+                </div>
+
+                <div class="fw-rule-detail-body">
+
+                    <div class="rd-section">
+                        <div class="rd-section-title">Description</div>
+                        <p>Password policies are used to enforce password complexity requirements. IAM password policies can be used to ensure passwords are of a given length. It is recommended that the password policy require a minimum password length of 14 characters.</p>
+                        <p>Setting a password complexity policy increases account resiliency against brute-force login attempts.</p>
+                    </div>
+
+                    <div class="rd-section">
+                        <div class="rd-section-title">Related</div>
+                        <div class="rd-related-grid">
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">Wiz Rule</div>
+                                <div class="rrc-value link">wiz:iam-pw-length-14 →</div>
+                                <div class="rrc-sub">View this rule's findings, suppressions, and attached evidence in the Wiz console.</div>
+                            </div>
+
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">RFC</div>
+                                <div class="rrc-value link">RFC-0006 →</div>
+                                <div class="rrc-sub">Identity Center and Okta federation model — sets our baseline IAM password standards.</div>
+                            </div>
+
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">RFC</div>
+                                <div class="rrc-value link">RFC-0004 →</div>
+                                <div class="rrc-sub">Service control policies for baseline guardrails — enforces this rule as an SCP.</div>
+                            </div>
+
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">Cross-framework</div>
+                                <div class="rrc-value">NIST 800-53 IA-5(1)</div>
+                                <div class="rrc-sub">Authenticator management — complexity requirements.</div>
+                            </div>
+
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">Cross-framework</div>
+                                <div class="rrc-value">PCI DSS 8.3.6</div>
+                                <div class="rrc-sub">Passwords/passphrases must have a minimum length of at least 12 characters.</div>
+                            </div>
+
+                            <div class="rd-ref-card">
+                                <div class="rrc-label">Owner</div>
+                                <div class="rrc-value">Platform Security</div>
+                                <div class="rrc-sub">Contact #platform-security in Slack for exceptions or waivers.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rd-section">
+                        <div class="rd-section-title">Rationale</div>
+                        <p>A minimum password length of 14 characters significantly increases resistance to brute-force attacks. Our baseline chose 14 over the CIS-recommended minimum of 8 based on RFC-0006, which cites current NIST guidance and internal threat modeling.</p>
+                    </div>
+
+                    <!-- Expandable fix section -->
+                    <div class="fix-panel open">
+                        <div class="fix-panel-head" onclick="this.parentElement.classList.toggle('open')">
+                            <span class="fix-panel-caret">▸</span>
+                            <span class="fix-panel-title">Suggested fix</span>
+                            <span class="fix-panel-hint">claude skill + prompt examples</span>
+                        </div>
+                        <div class="fix-panel-body">
+
+                            <div class="fix-subsection">
+                                <div class="fix-subsection-title"><span class="fix-step-num">1</span>Download the Claude Skill</div>
+                                <p>A prebuilt Claude Skill is available that audits, plans, and applies this fix to an AWS account. Drop into <code>~/.claude/skills/</code> and invoke via Claude Code or the MCP server.</p>
+
+                                <div class="skill-dl">
+                                    <div class="skill-icon">S</div>
+                                    <div class="skill-info">
+                                        <div class="skill-name">aws-cis-1.8-iam-password-policy</div>
+                                        <div class="skill-desc">Audits current password policy, proposes a plan to reach compliance, and applies the change on approval. Idempotent.</div>
+                                    </div>
+                                    <span class="skill-dl-btn">download</span>
+                                </div>
+
+                                <div class="skill-dl">
+                                    <div class="skill-icon">S</div>
+                                    <div class="skill-info">
+                                        <div class="skill-name">aws-cis-iam-bundle</div>
+                                        <div class="skill-desc">All 18 IAM controls in one skill. Useful when remediating multiple IAM findings in a single session.</div>
+                                    </div>
+                                    <span class="skill-dl-btn">download</span>
+                                </div>
+                            </div>
+
+                            <div class="fix-subsection">
+                                <div class="fix-subsection-title"><span class="fix-step-num">2</span>Example prompts</div>
+                                <p>Paste into Claude Code (or any MCP-aware client) to trigger the skill against your current AWS credentials.</p>
+
+                                <div class="prompt-block">
+                                    <span class="prompt-copy">copy</span>
+                                    <div class="prompt-user">User:</div>Audit my current AWS account's IAM password policy against CIS 1.8 and report any drift. Do not make changes.
+                                </div>
+
+                                <div class="prompt-block">
+                                    <span class="prompt-copy">copy</span>
+                                    <div class="prompt-user">User:</div>Review CIS 1.8 for account 123456789012, propose a remediation plan, and apply it after I approve. Include a rollback command.
+                                </div>
+
+                                <div class="prompt-block">
+                                    <span class="prompt-copy">copy</span>
+                                    <div class="prompt-user">User:</div>Using the aws-cis-iam-bundle skill, fix all failing IAM controls across my dev accounts. Dry-run first.
+                                </div>
+                            </div>
+
+                            <div class="fix-subsection">
+                                <div class="fix-subsection-title"><span class="fix-step-num">3</span>Via MCP</div>
+                                <p>If you're using the <code>rfcs-mcp</code> server (see MCP page), the skill is automatically exposed as a tool. Your LLM can invoke it directly without a download step.</p>
+
+                                <div class="mcp-ref-line">
+                                    <span class="mcp-tag">tool</span>
+                                    <span>get_fix</span>
+                                    <span style="color: var(--fg-muted);">·</span>
+                                    <span style="color: var(--fg-tertiary);">rule: <span style="color: var(--fg-primary);">cis:1.8</span></span>
+                                    <span style="color: var(--fg-muted);">·</span>
+                                    <span style="color: var(--fg-tertiary);">scope: <span style="color: var(--fg-primary);">account:current</span></span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    function showView(name) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-' + name).classList.add('active');
+        document.querySelectorAll('.mockup-switcher button').forEach(b => b.classList.remove('active'));
+        document.querySelector('.mockup-switcher button[data-view="' + name + '"]').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+    document.querySelectorAll('.mockup-switcher button').forEach(b => {
+        b.addEventListener('click', () => showView(b.dataset.view));
+    });
+
+    // Close search on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('view-search').classList.contains('active')) {
+            showView('directory');
+        }
+        // Cmd+K from anywhere
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            showView('search');
+        }
+        // Focus live filter on "/" key — works from any view, lands on directory
+        if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+            e.preventDefault();
+            if (!document.getElementById('view-directory').classList.contains('active')) {
+                showView('directory');
+            }
+            setTimeout(() => {
+                const lf = document.querySelector('#view-directory .lf-input');
+                if (lf) lf.focus();
+            }, 0);
+        }
+        if (e.key === 'Escape') {
+            const fm = document.getElementById('filter-menu');
+            if (fm) fm.classList.remove('open');
+            document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+            document.querySelector('.filter-trigger')?.classList.remove('active');
+        }
+    });
+
+    function toggleFilterMenu() {
+        const fm = document.getElementById('filter-menu');
+        const tr = document.querySelector('.filter-trigger');
+        const isOpen = fm.classList.toggle('open');
+        tr.classList.toggle('active', isOpen);
+        if (!isOpen) {
+            document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+        }
+    }
+
+    function showSubmenu(name) {
+        document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+        document.querySelectorAll('.filter-menu-item').forEach(i => i.classList.remove('active'));
+        const sub = document.getElementById('submenu-' + name);
+        if (sub) sub.classList.add('open');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Click outside closes filter menu
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.toolbar-left')) {
+            document.getElementById('filter-menu')?.classList.remove('open');
+            document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+            document.querySelector('.filter-trigger')?.classList.remove('active');
+        }
+    });
+</script>
+
+</body>
+</html>

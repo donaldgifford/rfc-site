@@ -36,9 +36,7 @@ export function ReferencesFooter({ doc }: ReferencesFooterProps) {
       <div>
         <h2 className={styles.heading}>Referenced by</h2>
         <ul className={styles.list}>
-          <li className={styles.empty}>
-            None yet &mdash; back-references arrive once rfc-api exposes the endpoint.
-          </li>
+          <li className={styles.empty}>None yet &mdash; no other RFCs reference this one.</li>
         </ul>
       </div>
     </footer>

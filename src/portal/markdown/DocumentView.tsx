@@ -42,13 +42,38 @@ export function DocumentView({ bodyHtml }: DocumentViewProps) {
   }, [bodyHtml, navigate]);
 
   useEffect(() => {
+    const node = articleRef.current;
+    if (node === null) return;
     void hydrateMermaid();
+    // Self-healing: if React (during hydration commit or a downstream
+    // re-render of `dangerouslySetInnerHTML`) recreates the article's
+    // children, the `pre[data-mermaid-source]` placeholder comes back —
+    // detaching our previously-mutated `<pre>` and leaving the source
+    // text visible. Watch for that and re-run `hydrateMermaid` on the
+    // freshly-mounted placeholder.
+    const observer = new MutationObserver(() => {
+      if (node.querySelector("pre[data-mermaid-source]") !== null) {
+        void hydrateMermaid();
+      }
+    });
+    observer.observe(node, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+    };
   }, [bodyHtml]);
 
   return (
     <article
       ref={articleRef}
       className="markdown-body"
+      // `suppressHydrationWarning` tells React not to compare or touch this
+      // element's children during hydration — load-bearing because
+      // `hydrateMermaid` mutates `innerHTML` (replacing the
+      // `<pre data-mermaid-source>` placeholder with the rendered SVG).
+      // Without this flag React 19 was re-applying `dangerouslySetInnerHTML`
+      // on the hydration path and clobbering the SVG injection, producing
+      // the "hard refresh shows raw source, SPA nav works" symptom.
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: bodyHtml }}
     />
   );

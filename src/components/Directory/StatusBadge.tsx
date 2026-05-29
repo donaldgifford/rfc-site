@@ -30,11 +30,15 @@ interface StatusBadgeProps {
  * nearest sibling (accepted / superseded) per the mockup's rule.
  */
 export function StatusBadge({ status, size = "md", className }: StatusBadgeProps) {
-  const variantClass = statusToVariantClass[status as KnownStatus] ?? styles.draft;
+  // rfc-api emits status title-cased (e.g. "Accepted") while our variant map
+  // is keyed by the lowercase form — normalise before lookup so case doesn't
+  // shunt every badge into the draft fallback.
+  const normalised = status.toLowerCase();
+  const variantClass = statusToVariantClass[normalised as KnownStatus] ?? styles.draft;
   const sizeClass = size === "sm" ? styles.sm : "";
   return (
     <span className={[styles.badge, variantClass, sizeClass, className].filter(Boolean).join(" ")}>
-      {labelFor(status)}
+      {labelFor(normalised)}
     </span>
   );
 }

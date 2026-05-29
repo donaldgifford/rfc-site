@@ -114,31 +114,39 @@ describe("visual parity — mermaid container styling (mockup §1157-1167)", () 
     // No layout jump between SSR/no-JS view and the hydrated state.
     expect(stylesCss).toMatch(/pre\[data-mermaid-source\][^}]*background:\s*var\(--bg-raised\)/);
   });
+
+  it("styles .mermaid-caption per mockup §1170-1179 (mono, centered, fg-tertiary)", () => {
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*text-align:\s*center/);
+    expect(stylesCss).toMatch(/\.mermaid-caption[^}]*color:\s*var\(--fg-tertiary\)/);
+  });
 });
 
-describe("visual parity — language badge (mockup §812-823)", () => {
+describe("visual parity — codeblock chrome (mockup §930-973)", () => {
   const stylesPath = resolve(projectRoot, "src/portal/markdown/styles.css");
   const stylesCss = readFileSync(stylesPath, "utf8");
 
-  it("targets pre[data-language] (adapted from mockup's pre[data-lang] — Shiki emits this attr name)", () => {
-    expect(stylesCss).toContain("pre[data-language]");
-    expect(stylesCss).toMatch(/pre\[data-language\]::before/);
+  it("wraps code blocks in a `.codeblock` container", () => {
+    expect(stylesCss).toMatch(/\.codeblock\s*\{/);
+    expect(stylesCss).toMatch(/\.codeblock[^}]*background:\s*var\(--code-bg\)/);
   });
 
-  it("uses content: attr(data-language) to derive the badge label", () => {
-    expect(stylesCss).toMatch(/content:\s*attr\(data-language\)/);
+  it("renders the language label + caption inside a `.codeblock-header` bar", () => {
+    expect(stylesCss).toMatch(/\.codeblock-header\s*\{/);
+    expect(stylesCss).toMatch(/\.codeblock-header[^}]*justify-content:\s*space-between/);
   });
 
-  it("uses --code-type for the badge color", () => {
-    expect(stylesCss).toMatch(/pre\[data-language\]::before[^}]*color:\s*var\(--code-type\)/);
+  it("colours the language label with --code-type per mockup", () => {
+    expect(stylesCss).toMatch(/\.codeblock-header\s+\.lang[^}]*color:\s*var\(--code-type\)/);
   });
 
-  it("uses --font-mono and uppercase styling per mockup", () => {
-    expect(stylesCss).toMatch(/pre\[data-language\]::before[^}]*font-family:\s*var\(--font-mono\)/);
-    expect(stylesCss).toMatch(/pre\[data-language\]::before[^}]*text-transform:\s*uppercase/);
+  it("uses mono + uppercase styling on the header", () => {
+    expect(stylesCss).toMatch(/\.codeblock-header[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(stylesCss).toMatch(/\.codeblock-header[^}]*text-transform:\s*uppercase/);
   });
 
-  it('excludes pre[data-language="mermaid"] from the badge (defensive — mermaid bypasses Shiki)', () => {
-    expect(stylesCss).toMatch(/pre\[data-language="mermaid"\]::before[^}]*content:\s*none/);
+  it("strips the inner pre's chrome so the wrapper owns it", () => {
+    expect(stylesCss).toMatch(/\.codeblock pre[^}]*background:\s*transparent/);
+    expect(stylesCss).toMatch(/\.codeblock pre[^}]*border:\s*none/);
   });
 });

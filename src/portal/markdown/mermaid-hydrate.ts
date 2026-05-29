@@ -28,11 +28,44 @@ import type MermaidModule from "mermaid";
 
 const MERMAID_SELECTOR = "pre[data-mermaid-source]";
 
+// Module-scoped cache of rendered SVG keyed by source text. The
+// `<DocumentView>` MutationObserver pattern (and React.StrictMode's
+// dev-mode double-mount) cause `hydrateMermaid` to run multiple times
+// against the same diagram source. Without a cache each call paid the
+// full `mermaid.render` cost, producing a visible flash of the source
+// text before the second render landed.
+const SVG_CACHE = new Map<string, string>();
+
+function applySvgToBlock(block: HTMLPreElement, svg: string): void {
+  block.innerHTML = svg;
+  block.classList.add("mermaid-diagram");
+  block.removeAttribute("data-mermaid-source");
+}
+
 export async function hydrateMermaid(): Promise<void> {
   if (typeof document === "undefined") return;
 
   const blocks = Array.from(document.querySelectorAll<HTMLPreElement>(MERMAID_SELECTOR));
   if (blocks.length === 0) return;
+
+  // Cache-hit synchronous path: serve any block whose source we've
+  // already rendered before this turn yields to mermaid's async
+  // import — avoids the flash.
+  const pendingBlocks: { block: HTMLPreElement; source: string }[] = [];
+  for (const block of blocks) {
+    const source = block.textContent.trim();
+    if (source.length === 0) {
+      block.removeAttribute("data-mermaid-source");
+      continue;
+    }
+    const cached = SVG_CACHE.get(source);
+    if (cached !== undefined) {
+      applySvgToBlock(block, cached);
+      continue;
+    }
+    pendingBlocks.push({ block, source });
+  }
+  if (pendingBlocks.length === 0) return;
 
   let mermaid: typeof MermaidModule;
   try {
@@ -43,25 +76,24 @@ export async function hydrateMermaid(): Promise<void> {
     return;
   }
 
+  // `securityLevel: "loose"` renders the SVG inline. The previous "strict"
+  // value wraps the SVG in a sandboxed iframe whose `srcdoc` HTML doesn't
+  // surface visibly when assigned to `innerHTML` on a `<pre>`. The mermaid
+  // source comes from rfc-api's already-sanitised markdown body, so the
+  // extra iframe sandbox doesn't buy us anything.
   mermaid.initialize({
     startOnLoad: false,
     theme: "base",
-    securityLevel: "strict",
+    securityLevel: "loose",
     themeVariables: mermaidThemeFromTokens(),
   });
 
-  for (const block of blocks) {
-    const source = block.textContent.trim();
-    if (source.length === 0) {
-      block.removeAttribute("data-mermaid-source");
-      continue;
-    }
+  for (const { block, source } of pendingBlocks) {
     try {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       const { svg } = await mermaid.render(id, source);
-      block.innerHTML = svg;
-      block.classList.add("mermaid-diagram");
-      block.removeAttribute("data-mermaid-source");
+      SVG_CACHE.set(source, svg);
+      applySvgToBlock(block, svg);
     } catch (err) {
       console.error("[mermaid-hydrate] render failed:", err);
       // Leave the source text in place so the diagram code is still
@@ -69,6 +101,11 @@ export async function hydrateMermaid(): Promise<void> {
       // stays on the element so a future hydrate call can try again.
     }
   }
+}
+
+/** Test-only — flush the SVG cache between runs. */
+export function _clearMermaidCache(): void {
+  SVG_CACHE.clear();
 }
 
 /**
@@ -90,26 +127,58 @@ export function mermaidThemeFromTokens(): Record<string, string> {
     const value = style.getPropertyValue(name).trim();
     return value.length > 0 ? value : fallback;
   };
+
+  const bgRaised = read("--bg-raised", "#121722");
+  const bgElevated = read("--bg-elevated", "#181e2b");
+  const borderStrong = read("--border-strong", "#34405a");
+  const fgPrimary = read("--fg-primary", "#e8ebf0");
+  const fgTertiary = read("--fg-tertiary", "#7a8396");
+
+  // Stick to the documented mermaid v11 theme variables. Earlier we
+  // experimented with extras (`nodeTextColor`, `arrowheadColor`,
+  // `labelTextColor`, plus passing the full CSS font-mono stack with
+  // embedded quotes); that broke `mermaid.render` silently and left
+  // the source text visible. Minimal set, ASCII font name.
+  //
+  // The contrast goal (mockup §1157-1167): dark node fill, visible-but-
+  // quiet borders, light text, muted (not accent) arrows. The previous
+  // bright-cyan-everywhere rendering came from `lineColor: --accent`
+  // plus mermaid deriving `nodeBorder` from `primaryColor` for lack of
+  // an explicit override.
   return {
-    primaryColor: read("--bg-raised", "#1a1d28"),
-    primaryTextColor: read("--fg-primary", "#e0e6ed"),
-    primaryBorderColor: read("--border-hairline", "#2a2f3a"),
-    lineColor: read("--accent", "#7aa2f7"),
-    secondaryColor: read("--bg-elevated", "#161922"),
-    tertiaryColor: read("--bg-base", "#0b0e0d"),
-    fontFamily: read("--font-mono", "monospace"),
+    primaryColor: bgElevated,
+    primaryBorderColor: borderStrong,
+    primaryTextColor: fgPrimary,
+    secondaryColor: bgRaised,
+    secondaryBorderColor: borderStrong,
+    tertiaryColor: bgRaised,
+    tertiaryBorderColor: borderStrong,
+    mainBkg: bgElevated,
+    nodeBorder: borderStrong,
+    lineColor: fgTertiary,
+    clusterBkg: bgRaised,
+    clusterBorder: borderStrong,
+    titleColor: fgPrimary,
+    fontFamily: "monospace",
     fontSize: "13px",
   };
 }
 
 function defaultMermaidTheme(): Record<string, string> {
   return {
-    primaryColor: "#1a1d28",
-    primaryTextColor: "#e0e6ed",
-    primaryBorderColor: "#2a2f3a",
-    lineColor: "#7aa2f7",
-    secondaryColor: "#161922",
-    tertiaryColor: "#0b0e0d",
+    primaryColor: "#181e2b",
+    primaryBorderColor: "#34405a",
+    primaryTextColor: "#e8ebf0",
+    secondaryColor: "#121722",
+    secondaryBorderColor: "#34405a",
+    tertiaryColor: "#121722",
+    tertiaryBorderColor: "#34405a",
+    mainBkg: "#181e2b",
+    nodeBorder: "#34405a",
+    lineColor: "#7a8396",
+    clusterBkg: "#121722",
+    clusterBorder: "#34405a",
+    titleColor: "#e8ebf0",
     fontFamily: "monospace",
     fontSize: "13px",
   };

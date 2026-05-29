@@ -8,10 +8,12 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSanitize, { defaultSchema, type Options as SanitizeOptions } from "rehype-sanitize";
 
+import { captureCodeMeta } from "./plugins/capture-code-meta";
 import { remarkGithubAlerts } from "./plugins/github-alerts";
 import mermaidMarker from "./plugins/mermaid-marker";
 import normalizeHastProperties from "./plugins/normalize-hast-properties";
 import stripDoczBoilerplate from "./plugins/strip-docz-boilerplate";
+import wrapCodeblock from "./plugins/wrap-codeblock";
 
 const defaultAttrs = defaultSchema.attributes ?? {};
 const defaultStarAttrs = defaultAttrs["*"] ?? [];
@@ -58,7 +60,7 @@ export const sanitizeSchema: SanitizeOptions = {
     "*": [...defaultStarAttrs, "className", "id", "title"],
     a: [...aAttrsMergedClassName, "ariaHidden", "target", "rel", "dataCrossDoc"],
     code: [...defaultCodeAttrs, "style", "dataLanguage", "tabIndex"],
-    pre: ["className", "tabIndex", "style", "dataLanguage", "dataMermaidSource"],
+    pre: ["className", "tabIndex", "style", "dataLanguage", "dataCaption", "dataMermaidSource"],
     span: ["className", "style", "dataBrokenLink"],
     // GFM alerts → admonition div (remark-github-alerts plugin).
     div: ["className"],
@@ -180,6 +182,13 @@ const codeColorsToCssVariables: ShikiTransformer = {
     if (lang !== null && lang !== "text" && lang !== "plain") {
       node.properties.dataLanguage = lang;
     }
+    // Code-fence meta string → caption shown in the codeblock header
+    // (mockup §930-973). `wrap-codeblock` picks this up after Shiki to
+    // build the `<div class="codeblock-header">` chrome.
+    const metaRaw = readMetaRaw(this.options.meta);
+    if (metaRaw !== null) {
+      node.properties.dataCaption = metaRaw;
+    }
   },
   span(node) {
     const style = readString(node.properties.style);
@@ -198,12 +207,25 @@ function readString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function readMetaRaw(meta: unknown): string | null {
+  if (meta === null || typeof meta !== "object") return null;
+  const raw = (meta as { __raw?: unknown }).__raw;
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 // Plugins consumed by `react-markdown`'s `remarkPlugins` prop.
 // `remark-parse` / `remark-rehype` are owned by react-markdown itself.
 // `strip-docz-boilerplate` runs before `remark-rehype` (it operates on mdast)
 // to drop tooling artefacts (markdownlint comments + auto-TOC blocks).
 // `remark-github-alerts` runs after GFM so the blockquote tokens exist.
-export const remarkPlugins: PluggableList = [remarkGfm, stripDoczBoilerplate, remarkGithubAlerts];
+export const remarkPlugins: PluggableList = [
+  remarkGfm,
+  stripDoczBoilerplate,
+  remarkGithubAlerts,
+  captureCodeMeta,
+];
 
 // Rehype plugin chain split across two exports so callers that need to
 // insert their own pass (e.g. `renderMarkdown.ts` injecting a hast
@@ -245,6 +267,7 @@ export const rehypePluginsCore: PluggableList = [
       transformers: [codeColorsToCssVariables],
     },
   ],
+  wrapCodeblock,
   normalizeHastProperties,
 ];
 

@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from "react";
-import { Link, NavLink, useNavigate, useSearchParams } from "react-router";
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router";
 import { SearchModal } from "../SearchModal/SearchModal";
 import { Kbd } from "./Kbd";
+import { deriveBrand } from "./brand";
 import styles from "./Topbar.module.css";
 
 /**
@@ -18,8 +19,10 @@ import styles from "./Topbar.module.css";
  */
 export function Topbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const modalOpen = searchParams.get("modal") === "1";
+  const brand = deriveBrand(location.pathname);
 
   const openModal = useCallback(() => {
     setSearchParams(
@@ -59,10 +62,15 @@ export function Topbar() {
   return (
     <>
       <header className={styles.topbar}>
-        <Link to="/" className={styles.brand}>
-          <span className={styles.brandMark}>R</span>
-          <span className={styles.brandName}>rfcs</span>
-          <span className={styles.brandSub}>/ portal</span>
+        <Link to="/" className={styles.brand} aria-label={`${brand.name} ${brand.sub}`}>
+          <span
+            className={styles.brandMark}
+            style={{ color: brand.color, borderColor: brand.color }}
+          >
+            {brand.mark}
+          </span>
+          <span className={styles.brandName}>{brand.name}</span>
+          <span className={styles.brandSub}>/ {brand.sub}</span>
         </Link>
 
         <button

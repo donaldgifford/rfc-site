@@ -29,6 +29,32 @@ describe("<StatusBadge>", () => {
     expect(badge.className).toMatch(/draft/);
   });
 
+  it.each([
+    ["Accepted", "accepted"],
+    ["Rejected", "rejected"],
+    ["Superseded", "superseded"],
+    ["Proposed", "proposed"],
+    ["DRAFT", "draft"],
+  ])(
+    "normalises case so title-cased rfc-api values pick the right variant: %s → %s",
+    (input, expectedVariant) => {
+      const { container } = render(<StatusBadge status={input} />);
+      const badge = container.firstChild as HTMLElement;
+      expect(badge.className).toMatch(new RegExp(expectedVariant));
+    },
+  );
+
+  it("renders a consistent label regardless of input casing", () => {
+    const lowered = render(<StatusBadge status="accepted" />);
+    expect(lowered.getByText("Accepted")).toBeInTheDocument();
+    lowered.unmount();
+    const titled = render(<StatusBadge status="Accepted" />);
+    expect(titled.getByText("Accepted")).toBeInTheDocument();
+    titled.unmount();
+    const upper = render(<StatusBadge status="ACCEPTED" />);
+    expect(upper.getByText("Accepted")).toBeInTheDocument();
+  });
+
   it("respects the size prop", () => {
     const { container } = render(<StatusBadge status="draft" size="sm" />);
     const badge = container.firstChild as HTMLElement;

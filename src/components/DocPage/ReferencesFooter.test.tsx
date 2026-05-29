@@ -64,7 +64,7 @@ describe("<ReferencesFooter>", () => {
 
   it("renders the back-references empty state", () => {
     renderFooter(fixture());
-    expect(screen.getByText(/back-references arrive once rfc-api/i)).toBeInTheDocument();
+    expect(screen.getByText(/no other RFCs reference this one/i)).toBeInTheDocument();
   });
 
   it("ignores incoming links — only outgoing references are rendered", () => {
