@@ -1,0 +1,54 @@
+/* Mockup §1825-1865 — `.example-tabs` + `.example-tab` + `.example-code` */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: -1px;
+}
+
+.tab {
+  padding: 9px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-tertiary);
+  background: color-mix(in srgb, var(--code-bg) 60%, transparent);
+  border: 1px solid var(--code-border);
+  border-bottom: none;
+  cursor: pointer;
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 120ms var(--ease);
+}
+
+.tab:hover {
+  color: var(--fg-primary);
+}
+
+.tab + .tab {
+  border-left: none;
+}
+
+.tabActive {
+  color: var(--code-type);
+  background: var(--code-bg);
+  border-color: var(--code-border);
+}
+
+.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 0 var(--r-xs) var(--r-xs) var(--r-xs);
+  padding: 18px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--code-fg);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+.codeComment {
+  color: var(--code-comment);
+  font-style: italic;
+}

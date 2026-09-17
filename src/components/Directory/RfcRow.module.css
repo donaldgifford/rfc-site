@@ -1,0 +1,92 @@
+/* Mockup §521-637 — `.rfc-row` + cell rules */
+.row {
+  display: grid;
+  grid-template-columns: 72px 1fr 120px 160px 100px;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 8px;
+  border-bottom: 1px solid var(--border-hairline);
+  cursor: pointer;
+  transition: background 120ms var(--ease);
+  position: relative;
+  color: inherit;
+}
+
+.row:hover {
+  background: var(--bg-raised);
+}
+
+.number {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.titleCell {
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.005em;
+}
+
+.labels {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.labelTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  background: var(--bg-elevated);
+  color: var(--fg-tertiary);
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border-hairline);
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.authorsCell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.updatedCell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-tertiary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 800px) {
+  .row {
+    grid-template-columns: 60px 1fr auto;
+  }
+  .authorsCell,
+  .updatedCell {
+    display: none;
+  }
+}

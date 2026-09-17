@@ -22,3 +22,9 @@ declare namespace NodeJS {
     readonly API_MODE?: "msw";
   }
 }
+
+// Vite `?raw` import — vendored OpenAPI spec (Phase 4b).
+declare module "*.yaml?raw" {
+  const content: string;
+  export default content;
+}

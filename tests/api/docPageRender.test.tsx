@@ -1,104 +1,110 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
-import DocPage, {
-  loader as docLoader,
-  HydrateFallback,
-  ErrorBoundary,
-} from "../../src/routes/$type.$id";
-import { mockProblem } from "./server";
+import DocPageRoute, { loader } from "../../src/routes/$type.$id";
 import { setupMswLifecycle } from "../utils/msw";
 import { renderRoute } from "../utils/renderRoute";
 
+class IntersectionObserverMock {
+  callback: IntersectionObserverCallback;
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+  observe() {
+    // noop
+  }
+  unobserve() {
+    // noop
+  }
+  disconnect() {
+    // noop
+  }
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+  root: Element | Document | null = null;
+  rootMargin = "";
+  thresholds: readonly number[] = [];
+}
+
+beforeEach(() => {
+  // jsdom doesn't ship IntersectionObserver; the TOC scroll-spy uses it.
+  globalThis.IntersectionObserver = IntersectionObserverMock;
+});
+
 setupMswLifecycle();
 
-const docPageFixture = {
-  path: "/:type/:id",
-  Component: DocPage,
-  loader: docLoader,
-  HydrateFallback,
-  ErrorBoundary,
-} as const;
+function mountDocPage(initial = "/rfc/0001") {
+  return renderRoute(
+    {
+      path: "/:type/:id",
+      Component: DocPageRoute,
+      loader,
+    },
+    [initial],
+  );
+}
 
-/**
- * Full-route integration test: mounts `$type.$id` via `createRoutesStub`
- * so the loader runs against the shared fixture-backed MSW handlers
- * (IMPL-0002 Phase 4). The happy path asserts against the canonical
- * RFC-0001 fixture (`tests/examples/docs/rfc/0001-adopt-msw-dev-mode.md`).
- *
- * Pairs with `tests/api/docPage.test.ts` (loader-only) — the loader
- * test covers control flow + error throwing; this one covers the
- * actual rendered output.
- */
-describe("/$type/$id route — full render", () => {
-  it("renders title, Badge (md), id, body, and authors line", async () => {
-    const { container } = renderRoute(docPageFixture, ["/rfc/0001"]);
+// Post-IMPL-0006 the loader runs the full Shiki pipeline server-side,
+// which has a one-time WASM cold-start cost. Locally ~2s; on GitHub
+// Actions runners ~8s (the perf test logs `cold=8040ms`). Bumping
+// waitFor's polling timeout so the first test in the file doesn't
+// race the warmup. Stays comfortably under vitest's testTimeout=15s.
+const WAITFOR_TIMEOUT = 12000;
 
+describe("/$type/$id route render", () => {
+  it("renders the NumberLine eyebrow + serif h1 from the loader data", async () => {
+    mountDocPage();
+    await waitFor(
+      () => {
+        expect(screen.getByText(/RFC \/ 0001/)).toBeInTheDocument();
+      },
+      { timeout: WAITFOR_TIMEOUT },
+    );
+    // Post-IMPL-0006: the rendered Markdown body now lives in the same
+    // tree as the <DocHeader>, so two h1s exist (one from <DocHeader>,
+    // one from the Markdown body's `# Title`). The DocHeader h1 is the
+    // first match — getAllByRole returns DOM order.
+    const titles = screen.getAllByRole("heading", { level: 1, name: /Adopt MSW-backed dev mode/ });
+    expect(titles.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders the metadata sidebar with the status colour mapped from doc.status", async () => {
+    mountDocPage();
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", {
-          level: 1,
-          name: "Adopt MSW-backed dev mode for the portal",
-        }),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Metadata")).toBeInTheDocument();
     });
+    // Default fixture status is "proposed".
+    const headerMeta = screen.getAllByText(/Proposed/);
+    expect(headerMeta.length).toBeGreaterThan(0);
+  });
 
-    // Status humanises "proposed" → "Proposed" in the Badge label.
-    // Appears in both the header Badge and the Phase 8a DocSidebar Status block.
-    expect(screen.getAllByText("Proposed").length).toBeGreaterThanOrEqual(2);
-    // "RFC-0001" appears in both the breadcrumb and the dateline — assert ≥1.
-    expect(screen.getAllByText(/RFC-0001/).length).toBeGreaterThanOrEqual(2);
-    // The byline appears in the header; individual authors appear in the sidebar list.
-    expect(screen.getByText(/Sam Author, Riley Reviewer/)).toBeInTheDocument();
-    // The body now renders as proper Markdown HTML — heading from fixture
-    // + a distinctive substring from the body. The Phase 5 swap means
-    // the body lives across multiple text nodes (per react-markdown
-    // tokenisation) so use a textContent substring assertion.
+  it("renders the References footer with empty back-references", async () => {
+    mountDocPage();
     await waitFor(() => {
-      // The heading's accessible name combines the prepended anchor's
-      // aria-label ("Permalink to Motivation") with the heading text
-      // ("Motivation"). Match either via a regex.
+      expect(screen.getByText("References")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Referenced by")).toBeInTheDocument();
+    expect(screen.getByText(/no other RFCs reference this one/i)).toBeInTheDocument();
+  });
+
+  it("renders the rendered Markdown body inside the article column", async () => {
+    mountDocPage();
+    // Post-IMPL-0006: the loader server-side renders Markdown to HTML
+    // and DocumentView injects it via dangerouslySetInnerHTML. Headings
+    // are present in the very first paint — no Suspense fallback flash.
+    await waitFor(() => {
       expect(screen.getByRole("heading", { level: 2, name: /Motivation/i })).toBeInTheDocument();
     });
-    expect(container.textContent).toContain("Iterating on the portal currently");
-    expect(screen.getByRole("link", { name: /directory/i })).toHaveAttribute("href", "/");
   });
 
-  it("renders the not-found surface when getDoc returns ErrNotFound", async () => {
-    mockProblem("*/api/v1/:type/:id", 404, {
-      type: "/problems/not-found",
-      title: "Resource not found",
-      status: 404,
-      detail: "rfc RFC-9999 not found",
-      request_id: "01HTZ-INTEGRATION",
-    });
-
-    renderRoute(docPageFixture, ["/rfc/9999"]);
-
+  it("renders the article HTML with the markdown-body class (SSR'd via dangerouslySetInnerHTML)", async () => {
+    const { container } = mountDocPage();
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /document not found/i })).toBeInTheDocument();
+      const article = container.querySelector("article.markdown-body");
+      expect(article).not.toBeNull();
+      // The article element should have actual content (the rendered HTML),
+      // not just be an empty Suspense placeholder.
+      expect(article?.innerHTML.length ?? 0).toBeGreaterThan(0);
     });
-
-    expect(screen.getByText(/rfc RFC-9999 not found/i)).toBeInTheDocument();
-    expect(screen.getByText("01HTZ-INTEGRATION")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /back to the directory/i })).toBeInTheDocument();
-  });
-
-  it("renders the generic error surface (with request_id) for non-404 problems", async () => {
-    mockProblem("*/api/v1/:type/:id", 500, {
-      type: "/problems/internal",
-      title: "Internal server error",
-      status: 500,
-      request_id: "01HTZ-INTEGRATION-500",
-    });
-
-    renderRoute(docPageFixture, ["/rfc/0001"]);
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /500 — internal server error/i }),
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("01HTZ-INTEGRATION-500")).toBeInTheDocument();
   });
 });

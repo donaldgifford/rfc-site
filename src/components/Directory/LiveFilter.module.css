@@ -1,0 +1,46 @@
+/* Mockup §313-352 — `.live-filter` */
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 620px;
+  padding: 0 16px;
+  height: 46px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  transition: all 160ms var(--ease);
+}
+
+.wrapper:focus-within {
+  border-color: var(--accent-border);
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg-raised));
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.icon {
+  color: var(--fg-tertiary);
+  flex-shrink: 0;
+}
+
+.wrapper:focus-within .icon {
+  color: var(--accent);
+}
+
+.input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--fg-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  /* Strip the default `search` cancel/clear chrome — the mockup is pill-flat. */
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--fg-tertiary);
+}

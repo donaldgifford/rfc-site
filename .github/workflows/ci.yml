@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   check:
@@ -20,8 +19,6 @@ jobs:
           experimental: true
 
       - name: Install dependencies
-        env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun install --frozen-lockfile
 
       # Drift check per ADR-0001 — see scripts/gen-api-check.sh.

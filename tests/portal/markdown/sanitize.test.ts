@@ -73,12 +73,16 @@ describe("sanitize schema — adversarial inputs", () => {
     expect(out).not.toContain("srcset");
   });
 
-  it("strips dangerous <a target=_blank> rel-less attacks", async () => {
-    // `target` is not in the default allowlist — strips it (prevents
-    // tabnabbing). Phase 4's `<Anchor>` adds `rel="noopener noreferrer"`
-    // to actual external links via the React component layer.
+  it("preserves <a target=_blank> when it reaches sanitize — defence shifts upstream", async () => {
+    // Pre-IMPL-0006 this test asserted that target was stripped, but the
+    // post-migration design lets `resolveAnchorLinks` set `target=_blank`
+    // + `rel=noopener noreferrer` together for external links, so
+    // `target` is now in the allowlist on `<a>`. The defense against
+    // raw-HTML tabnabbing moves upstream — `remark-rehype` runs with
+    // `allowDangerousHtml: false`, so user-authored `<a target=…>` HTML
+    // in Markdown source never reaches the hast tree to begin with.
     const out = await sanitize('<a href="https://evil" target="_blank">x</a>');
-    expect(out).not.toContain('target="_blank"');
+    expect(out).toContain('target="_blank"');
   });
 
   it("preserves allowlisted GFM markup", async () => {

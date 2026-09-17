@@ -1,17 +1,13 @@
 import { defineConfig } from "vitest/config";
 
 /**
- * Mirrors donaldgifford/design-system/vitest.config.ts so promoted
- * candidate tests run as-is on the destination. Differences:
- * - Adds `setupFiles` for @testing-library/jest-dom matchers (RTL).
- * - `resolve.dedupe` for react / react-dom — required while the
- *   design-system is consumed via `bun link`. The linked dist resolves
- *   `react` through node_modules, but without dedupe Vitest can wire
- *   two React instances (one per resolution root), producing the
- *   classic "Cannot read properties of null (reading 'useState')"
- *   crash. Safe to keep when consuming the published package.
- * - Coverage thresholds dropped until the portal has source code to
- *   meaningfully cover; re-add per Phase 5 / 6.
+ * Vitest config for rfc-site.
+ *
+ * - `resolve.dedupe` keeps React singleton — guards against any future
+ *   nested-resolution path mounting two React instances and crashing
+ *   jsdom with "Cannot read properties of null (reading 'useState')".
+ * - `testTimeout: 15000` covers Shiki's WASM regex cold-start (markdown
+ *   pipeline tests can exceed the 5s default on the GitHub Actions runner).
  */
 export default defineConfig({
   resolve: {
@@ -22,12 +18,6 @@ export default defineConfig({
     globals: false,
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
-    // Shiki's first invocation in any worker loads its WASM regex
-    // engine + onig grammars from disk, which on the GitHub Actions
-    // runner can exceed the 5s vitest default. Tests that hit the
-    // markdown pipeline (pipeline.test.tsx, $type.$id full-render,
-    // <Anchor>, <Pre>) all paid this cost. 15s leaves headroom for
-    // the cold-start case without papering over a real regression.
     testTimeout: 15000,
     coverage: {
       provider: "v8",

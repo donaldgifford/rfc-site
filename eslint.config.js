@@ -5,9 +5,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettier from "eslint-config-prettier";
 
-// Mirrors donaldgifford/design-system/eslint.config.js so promoted
-// candidates pass lint in both repos with no churn. Differences are
-// scoped to the `ignores` block (paths only).
+// React 19 + TypeScript flat config. Scoped to src/ and tests/.
 export default tseslint.config(
   {
     ignores: [

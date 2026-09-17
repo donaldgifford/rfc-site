@@ -1,59 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
-
-import Search, {
-  loader as searchLoader,
-  HydrateFallback,
-  ErrorBoundary,
-} from "../../src/routes/search";
+import SearchRoute, { loader } from "../../src/routes/search";
 import { setupMswLifecycle } from "../utils/msw";
 import { renderRoute } from "../utils/renderRoute";
 
 setupMswLifecycle();
 
-const searchRouteFixture = {
-  path: "/search",
-  Component: Search,
-  loader: searchLoader,
-  HydrateFallback,
-  ErrorBoundary,
-} as const;
+function mountSearch(initial = "/search") {
+  return renderRoute(
+    {
+      path: "/search",
+      Component: SearchRoute,
+      loader,
+    },
+    [initial],
+  );
+}
 
-describe("/search route — full render", () => {
-  it("renders the prompt state when no q is provided", async () => {
-    renderRoute(searchRouteFixture, ["/search"]);
+describe("/search route render", () => {
+  it("renders the heading + the no-JS fallback form when q is empty", async () => {
+    mountSearch();
     await waitFor(() => {
-      expect(screen.getByRole("search")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: /Search documents/i }),
+      ).toBeInTheDocument();
     });
-    expect(screen.getByText(/Enter a query/i)).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: /search/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^search$/i })).toBeInTheDocument();
+    expect(screen.getByText(/Start typing above/)).toBeInTheDocument();
   });
 
-  it("renders results from the seeded MSW corpus and links each title to the portal route (URL form)", async () => {
-    renderRoute(searchRouteFixture, ["/search?q=postgres"]);
-
+  it("renders search results when q matches fixture content", async () => {
+    mountSearch("/search?q=postgres");
     await waitFor(() => {
-      // ADR-0001 fixture mentions postgres — assert the heading link exists.
-      expect(screen.getByRole("heading", { level: 2, name: /Postgres/i })).toBeInTheDocument();
+      // ADR-0001 matches `postgres` in the fixture corpus.
+      expect(screen.getByText("ADR-0001")).toBeInTheDocument();
     });
-
-    // The hit's link uses the URL form (`/adr/0001`), NOT the canonical
-    // form (`/ADR-0001`) — see CLAUDE.md §Hard rules.
-    const link = screen.getByRole("link", { name: /Postgres/i });
-    expect(link.getAttribute("href")).toMatch(/^\/adr\/0001/);
+    // Result rows are anchor wrappers — there should be at least one match link
+    // pointing into the portal.
+    const link = screen.getByText("ADR-0001").closest("a");
+    expect(link).toHaveAttribute("href", "/adr/0001");
   });
 
-  it("renders the synthesised <em>postgres</em> snippet from the MSW handler", async () => {
-    const { container } = renderRoute(searchRouteFixture, ["/search?q=postgres"]);
+  it("renders the empty state when q yields no matches", async () => {
+    mountSearch("/search?q=zzznevermatchesanyfixturezzz");
     await waitFor(() => {
-      expect(container.querySelector(".snippet em")).not.toBeNull();
-    });
-    expect(container.querySelector(".snippet em")?.textContent).toBe("postgres");
-  });
-
-  it("renders the no-results state when the query has zero matches", async () => {
-    renderRoute(searchRouteFixture, ["/search?q=zzznonsense"]);
-    await waitFor(() => {
-      expect(screen.getByText(/No results for/i)).toBeInTheDocument();
+      expect(screen.getByText(/No results/)).toBeInTheDocument();
     });
   });
 });

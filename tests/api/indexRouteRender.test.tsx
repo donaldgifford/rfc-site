@@ -1,106 +1,64 @@
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
 import { screen, waitFor } from "@testing-library/react";
-import IndexRoute, { loader as indexLoader, HydrateFallback } from "../../src/routes/_index";
+import type { Document } from "../../src/portal/api/__generated__/model";
+import IndexRoute, { loader } from "../../src/routes/_index";
 import { server } from "./server";
 import { setupMswLifecycle } from "../utils/msw";
 import { renderRoute } from "../utils/renderRoute";
 
 setupMswLifecycle();
 
-const indexFixture = {
-  path: "/",
-  Component: IndexRoute,
-  loader: indexLoader,
-  HydrateFallback,
-} as const;
+function doc(overrides: Partial<Document>): Document {
+  return {
+    id: "RFC-0001",
+    type: "rfc",
+    title: "Default fixture",
+    status: "proposed",
+    authors: [{ name: "donald", handle: "donald" }],
+    labels: [],
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    source: { repo: "x/y", path: "z.md", commit: "deadbeef" },
+    ...overrides,
+  };
+}
 
-/**
- * Full-route integration test: mounts `_index` via `createRoutesStub`
- * (RR7's purpose-built test harness) so the loader runs against the
- * shared fixture-backed MSW handlers (IMPL-0002 Phase 4) and the
- * rendered card grid is exercised end-to-end. Catches regressions in
- * the JSX wiring, Badge integration, DocCard linking, and pagination
- * link generation that loader-only tests miss.
- */
-describe("/ index route — full render", () => {
-  it("renders a card per fixture with id, title, and humanised Badge", async () => {
-    renderRoute(indexFixture, ["/"]);
+function mountIndex(initial = "/") {
+  return renderRoute(
+    {
+      path: "/",
+      Component: IndexRoute,
+      loader,
+    },
+    [initial],
+  );
+}
 
+describe("/ route render", () => {
+  it("renders the directory hero + serif title", async () => {
+    mountIndex();
     await waitFor(() => {
-      expect(screen.getByText("Use PostgreSQL for primary storage")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Request for Comments" }),
+      ).toBeInTheDocument();
     });
-
-    // Spot-check several fixtures from across the type tree.
-    expect(screen.getByText("ADR-0001")).toBeInTheDocument();
-    expect(screen.getByText("RFC-0001")).toBeInTheDocument();
-    expect(screen.getByText("Adopt MSW-backed dev mode for the portal")).toBeInTheDocument();
-    // Badges humanise statuses: "accepted" → "Accepted", "proposed" → "Proposed", "draft" → "Draft".
-    expect(screen.getAllByText("Accepted").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Proposed").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Draft").length).toBeGreaterThanOrEqual(1);
-    // Card links target /$type/$id:
-    // Card link target uses the URL-form id (`/adr/0001`), not the
-    // canonical id, per the OpenAPI contract — see `src/portal/api/docId.ts`.
-    expect(
-      screen.getByRole("link", { name: "Use PostgreSQL for primary storage" }),
-    ).toHaveAttribute("href", "/adr/0001");
+    expect(screen.getByText("/ docs / rfcs")).toBeInTheDocument();
   });
 
-  it("emits prev/next pagination links from the Link header cursors", async () => {
-    // The fixture handler only emits `rel="next"` — override so we
-    // exercise both cursor states in a single render.
-    server.use(
-      http.get("*/api/v1/docs", () =>
-        HttpResponse.json(
-          [
-            {
-              id: "RFC-0001",
-              type: "rfc",
-              title: "Pagination probe",
-              status: "accepted",
-              created_at: "2026-04-20T00:00:00Z",
-              updated_at: "2026-04-20T00:00:00Z",
-              source: { repo: "donaldgifford/rfc-site", path: "fixtures/rfc/0001.md" },
-            },
-          ],
-          {
-            status: 200,
-            headers: {
-              link: '</api/v1/docs?cursor=NEXT&limit=24>; rel="next", </api/v1/docs?cursor=PREV&limit=24>; rel="prev"',
-            },
-          },
-        ),
-      ),
-    );
-
-    renderRoute(indexFixture, ["/"]);
-
+  it("renders one row per doc from the loader (default MSW handler, RFC-only)", async () => {
+    mountIndex();
+    // The MSW fixture corpus has 2 RFC docs. After the auto-pinned filter,
+    // both come through.
     await waitFor(() => {
-      expect(screen.getByText("Pagination probe")).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole("link", { name: /previous/i })).toHaveAttribute(
-      "href",
-      "/?cursor=PREV",
-    );
-    expect(screen.getByRole("link", { name: /next/i })).toHaveAttribute("href", "/?cursor=NEXT");
-  });
-
-  it("renders the empty-state message when listDocs returns no docs", async () => {
-    server.use(http.get("*/api/v1/docs", () => HttpResponse.json([], { status: 200 })));
-
-    renderRoute(indexFixture, ["/"]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/no documents yet/i)).toBeInTheDocument();
+      const links = screen
+        .getAllByRole("link")
+        .filter((el) => el.getAttribute("href")?.startsWith("/rfc/"));
+      expect(links.length).toBe(2);
     });
   });
 
-  it("renders the filter-aware empty state when a filter narrows to zero matches", async () => {
-    // X-Total-Count-Unfiltered=8 signals the filter is active and the
-    // corpus is non-empty; the empty array means the filter narrowed to
-    // zero matches. _index.tsx branches the surface text accordingly.
+  it("renders the filter-aware empty state when filter narrows to zero", async () => {
     server.use(
       http.get("*/api/v1/docs", () =>
         HttpResponse.json([], {
@@ -113,12 +71,43 @@ describe("/ index route — full render", () => {
       ),
     );
 
-    renderRoute(indexFixture, ["/?filter=type:nonexistent"]);
-
+    mountIndex();
     await waitFor(() => {
       expect(screen.getByText(/no documents match this filter/i)).toBeInTheDocument();
     });
-    // The "no docs at all" surface should NOT render under this branch.
-    expect(screen.queryByText(/no documents yet/i)).toBeNull();
+  });
+
+  it("renders the no-docs empty state when the corpus is empty and no filter is active", async () => {
+    server.use(
+      http.get("*/api/v1/docs", () =>
+        HttpResponse.json([], {
+          status: 200,
+          headers: { "X-Total-Count": "0" },
+        }),
+      ),
+    );
+
+    mountIndex();
+    await waitFor(() => {
+      expect(screen.getByText(/no documents yet/i)).toBeInTheDocument();
+    });
+  });
+
+  it("renders the results count widget with the filtered total", async () => {
+    server.use(
+      http.get("*/api/v1/docs", () =>
+        HttpResponse.json([doc({ id: "RFC-0001" }), doc({ id: "RFC-0002", title: "Two" })], {
+          status: 200,
+          headers: { "X-Total-Count": "2", "X-Total-Count-Unfiltered": "8" },
+        }),
+      ),
+    );
+
+    mountIndex();
+    await waitFor(() => {
+      expect(screen.getByText("Results")).toBeInTheDocument();
+    });
+    // shownCount == totalCount → single number rendered
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 });

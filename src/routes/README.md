@@ -18,7 +18,4 @@ See the [React Router v7 docs](https://reactrouter.com/start/framework/routing) 
 ## Where things live
 
 - **Routes here**: top-level URL → component bindings. Loaders, actions, `meta`, and the page composition belong here.
-- **Reusable page chrome**: `src/components/portal/` (e.g., `<ThemeToggle>`, `<SiteHeader>`).
-- **Page-specific composites that are too narrow for `portal/`**: `src/pages/<page>/`.
-
-Never import from `src/components/ds-candidates/` directly — those imports are scoped to the candidates themselves and the routes/pages that consume them as drop-in primitives.
+- **Reusable view components**: `src/components/<View>/` — flat layout, one directory per view per RFC-0001 + DESIGN-0003. No `portal/` / `ds-candidates/` subfolders.

@@ -1,0 +1,12 @@
+/* Mockup §517-520 — `.rfc-table` */
+.table {
+  margin-top: 4px;
+}
+
+.empty {
+  padding: 48px 0;
+  color: var(--fg-tertiary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}

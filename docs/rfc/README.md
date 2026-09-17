@@ -33,4 +33,5 @@ docz create rfc "Your RFC Title"
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
+| RFC-0001 | Defer the design-system promotion model and iterate rfc-site against the mockup | Draft | 2026-05-15 | Donald Gifford | [0001-defer-the-design-system-promotion-model-and-iterate-rfc-site.md](0001-defer-the-design-system-promotion-model-and-iterate-rfc-site.md) |
 <!-- END DOCZ AUTO-GENERATED -->
